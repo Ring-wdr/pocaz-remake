@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// User & Auth
+// ============================================
+model User {
+  id           String    @id @default(uuid())
+  supabaseId   String    @unique // Supabase Auth user.id
+  email        String?   @unique
+  nickname     String
+  profileImage String?
+  score        Int       @default(0)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  artistId     String?
+  artist       Artist?   @relation(fields: [artistId], references: [id])
+
+  posts        Post[]
+  replies      Reply[]
+  markets      Market[]
+  likes        Like[]
+  chatMessages ChatMessage[]
+  chatRooms    ChatRoomMember[]
+}
+
+// ============================================
+// Artist & Group
+// ============================================
+model Agency {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  groups    ArtistGroup[]
+}
+
+model ArtistGroup {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  agencyId  String?
+  agency    Agency?  @relation(fields: [agencyId], references: [id])
+
+  artists   Artist[]
+}
+
+model Artist {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  groupId   String?
+  group     ArtistGroup? @relation(fields: [groupId], references: [id])
+
+  users      User[]
+  photocards Photocard[]
+}
+
+// ============================================
+// Photocard
+// ============================================
+model Photocard {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  artistId    String?
+  artist      Artist?  @relation(fields: [artistId], references: [id])
+
+  galmangPocas GalmangPoca[]
+}
+
+model GalmangPoca {
+  id          String   @id @default(uuid())
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+
+  photocardId String
+  photocard   Photocard @relation(fields: [photocardId], references: [id])
+}
+
+// ============================================
+// Post & Reply
+// ============================================
+model Post {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  images    PostImage[]
+  replies   Reply[]
+  likes     Like[]
+}
+
+model PostImage {
+  id        String   @id @default(uuid())
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Reply {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+// ============================================
+// Market
+// ============================================
+model Market {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  price       Int?
+  status      String   @default("available") // available, sold, reserved
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  images      MarketImage[]
+}
+
+model MarketImage {
+  id        String   @id @default(uuid())
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  marketId  String
+  market    Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// Like
+// ============================================
+model Like {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+// ============================================
+// Chat (Supabase Realtime용)
+// ============================================
+model ChatRoom {
+  id        String   @id @default(uuid())
+  name      String?
+  createdAt DateTime @default(now())
+
+  members   ChatRoomMember[]
+  messages  ChatMessage[]
+}
+
+model ChatRoomMember {
+  id        String   @id @default(uuid())
+  joinedAt  DateTime @default(now())
+
+  roomId    String
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([roomId, userId])
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  roomId    String
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}

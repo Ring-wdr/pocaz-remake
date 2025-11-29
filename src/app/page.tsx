@@ -1,6 +1,4 @@
 import * as stylex from "@stylexjs/stylex";
-import { Suspense } from "react";
-import { SuspenseTest } from "@/components/suspense-test";
 import { globalTokens as $, spacing, text } from "./global-tokens.stylex";
 
 export default function Home() {
@@ -12,9 +10,6 @@ export default function Home() {
 				<h1 {...stylex.props(styles.title)}>
 					Build Something
 					<span {...stylex.props(styles.gradient)}> Amazing</span>
-					<Suspense fallback={<div>Loading...</div>}>
-						<SuspenseTest />
-					</Suspense>
 				</h1>
 				<p {...stylex.props(styles.subtitle)}>
 					Create modern web applications with cutting-edge technology. Fast,
