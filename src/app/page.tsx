@@ -1,4 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
+import { Suspense } from "react";
+import { SuspenseTest } from "@/components/suspense-test";
 import { globalTokens as $, spacing, text } from "./global-tokens.stylex";
 
 export default function Home() {
@@ -10,10 +12,13 @@ export default function Home() {
 				<h1 {...stylex.props(styles.title)}>
 					Build Something
 					<span {...stylex.props(styles.gradient)}> Amazing</span>
+					<Suspense fallback={<div>Loading...</div>}>
+						<SuspenseTest />
+					</Suspense>
 				</h1>
 				<p {...stylex.props(styles.subtitle)}>
-					Create modern web applications with cutting-edge technology.
-					Fast, scalable, and beautifully designed.
+					Create modern web applications with cutting-edge technology. Fast,
+					scalable, and beautifully designed.
 				</p>
 				<div {...stylex.props(styles.buttonGroup)}>
 					<button {...stylex.props(styles.button, styles.primaryButton)}>
@@ -52,9 +57,7 @@ export default function Home() {
 
 			{/* Footer */}
 			<footer {...stylex.props(styles.footer)}>
-				<p {...stylex.props(styles.footerText)}>
-					Built with Next.js & StyleX
-				</p>
+				<p {...stylex.props(styles.footerText)}>Built with Next.js & StyleX</p>
 			</footer>
 		</main>
 	);
@@ -104,8 +107,10 @@ const styles = stylex.create({
 		width: "600px",
 		height: "600px",
 		backgroundImage: {
-			default: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
-			[DARK]: "radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%)",
+			default:
+				"radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+			[DARK]:
+				"radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%)",
 		},
 		borderRadius: "50%",
 		pointerEvents: "none",
@@ -129,7 +134,8 @@ const styles = stylex.create({
 		},
 	},
 	gradient: {
-		backgroundImage: "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)",
+		backgroundImage:
+			"linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)",
 		backgroundSize: "200% auto",
 		backgroundClip: "text",
 		color: "transparent",

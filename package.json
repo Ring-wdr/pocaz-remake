@@ -10,9 +10,11 @@
 		"start": "next start"
 	},
 	"dependencies": {
+		"@elysiajs/eden": "^1.4.5",
 		"@stylexjs/open-props": "^0.11.1",
 		"@stylexjs/stylex": "0.17.1",
 		"@stylexswc/nextjs-plugin": "0.13.0",
+		"elysia": "^1.4.16",
 		"next": "^16.0.5",
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0"
