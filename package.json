@@ -1,25 +1,33 @@
 {
-  "name": "pocaz-remake",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "biome check",
-    "format": "biome format --write"
-  },
-  "dependencies": {
-    "next": "16.0.5",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.2.0",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "babel-plugin-react-compiler": "1.0.0",
-    "typescript": "^5"
-  }
+	"name": "@stylexswc/next-turbopack-example",
+	"version": "0.13.1-rc.2",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"prestart": "pnpm run build",
+		"serve": "next start --port 3016",
+		"start": "next start"
+	},
+	"dependencies": {
+		"@stylexjs/open-props": "^0.11.1",
+		"@stylexjs/stylex": "0.17.1",
+		"@stylexswc/nextjs-plugin": "0.13.0",
+		"next": "^16.0.5",
+		"react": "^19.2.0",
+		"react-dom": "^19.2.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.8",
+		"@stylexjs/eslint-plugin": "^0.16.3",
+		"@stylexswc/postcss-plugin": "0.13.0",
+		"@stylexswc/rs-compiler": "0.13.0",
+		"@stylexswc/turbopack-plugin": "0.13.0",
+		"@types/node": "^24.9.2",
+		"@types/react": "^19.2.2",
+		"@types/react-dom": "^19.2.2",
+		"autoprefixer": "^10.4.21",
+		"babel-plugin-react-compiler": "^1.0.0",
+		"typescript": "^5.9.3"
+	}
 }

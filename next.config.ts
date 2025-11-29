@@ -1,8 +1,19 @@
-import type { NextConfig } from "next";
+import path from "node:path";
+import stylexPlugin from "@stylexswc/nextjs-plugin/turbopack";
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
-};
-
-export default nextConfig;
+export default stylexPlugin({
+	rsOptions: {
+		aliases: {
+			"@/*": [path.join(__dirname, "src", "*")],
+		},
+		unstable_moduleResolution: {
+			type: "commonJS",
+		},
+		runtimeInjection: false,
+		treeshakeCompensation: true,
+	},
+	stylexImports: ["stylex", "@stylexjs/stylex"],
+})({
+	reactCompiler: true,
+	transpilePackages: ["@stylexjs/open-props"],
+});
