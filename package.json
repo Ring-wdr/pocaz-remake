@@ -7,10 +7,14 @@
 		"build": "next build",
 		"prestart": "pnpm run build",
 		"serve": "next start --port 3016",
-		"start": "next start"
+		"start": "next start",
+		"lint": "biome lint",
+		"check": "biome check",
+		"format": "biome format"
 	},
 	"dependencies": {
 		"@elysiajs/eden": "^1.4.5",
+		"@elysiajs/openapi": "^1.4.11",
 		"@prisma/adapter-pg": "^7.0.1",
 		"@prisma/client": "^7.0.1",
 		"@stylexjs/open-props": "^0.11.1",

@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { type CookieOptions, createServerClient } from "@supabase/ssr";
 
 /**
  * Elysia API Route에서 사용할 Supabase 클라이언트 생성
@@ -21,7 +21,13 @@ export function createSupabaseElysiaClient(request: Request) {
 						value,
 					}));
 				},
-				setAll(_cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+				setAll(
+					_cookiesToSet: {
+						name: string;
+						value: string;
+						options?: CookieOptions;
+					}[],
+				) {
 					// Elysia에서는 response header로 cookie를 설정해야 함
 					// Auth Guard에서는 읽기만 하므로 빈 구현
 				},

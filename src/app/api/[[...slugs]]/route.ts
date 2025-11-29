@@ -1,26 +1,19 @@
+import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 import { authGuard, optionalAuth } from "@/lib/elysia/auth";
-// User
-import { publicUserRoutes, userRoutes } from "@/lib/elysia/routes/users";
-// Post
-import { publicPostRoutes, postRoutes } from "@/lib/elysia/routes/posts";
-// Market
-import { publicMarketRoutes, marketRoutes } from "@/lib/elysia/routes/markets";
-// Artist
-import { publicArtistRoutes, artistRoutes } from "@/lib/elysia/routes/artists";
-// Photocard
+import { artistRoutes, publicArtistRoutes } from "@/lib/elysia/routes/artists";
+import { chatRoutes } from "@/lib/elysia/routes/chat";
+import { likeRoutes } from "@/lib/elysia/routes/likes";
+import { marketRoutes, publicMarketRoutes } from "@/lib/elysia/routes/markets";
 import {
-	publicPhotocardRoutes,
+	galmangPocaRoutes,
 	photocardRoutes,
 	publicGalmangPocaRoutes,
-	galmangPocaRoutes,
+	publicPhotocardRoutes,
 } from "@/lib/elysia/routes/photocards";
-// Like
-import { likeRoutes } from "@/lib/elysia/routes/likes";
-// Chat
-import { chatRoutes } from "@/lib/elysia/routes/chat";
-// Storage
+import { postRoutes, publicPostRoutes } from "@/lib/elysia/routes/posts";
 import { storageRoutes } from "@/lib/elysia/routes/storage";
+import { publicUserRoutes, userRoutes } from "@/lib/elysia/routes/users";
 
 // ==============================================
 // Public Routes (인증 불필요)
@@ -74,6 +67,7 @@ const protectedRoutes = new Elysia({ prefix: "/protected" })
 // ==============================================
 export const app = new Elysia({ prefix: "/api" })
 	.get("/", () => ({ message: "Pocaz API", version: "1.0.0" }))
+	.use(openapi({ enabled: process.env.NODE_ENV === "development" }))
 	// Core Routes
 	.use(publicRoutes)
 	.use(authRoutes)

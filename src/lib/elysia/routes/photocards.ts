@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
-import { photocardService, galmangPocaService } from "@/lib/services/photocard";
+import { galmangPocaService, photocardService } from "@/lib/services/photocard";
 
 /**
  * Public Photocard Routes (인증 불필요 - 조회)
@@ -12,7 +12,7 @@ export const publicPhotocardRoutes = new Elysia({ prefix: "/photocards" })
 		async ({ query }) => {
 			const result = await photocardService.findAll({
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit) : 20,
+				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
 			});
 
 			return {
@@ -53,7 +53,7 @@ export const publicPhotocardRoutes = new Elysia({ prefix: "/photocards" })
 
 			const result = await photocardService.search(query.keyword, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit) : 20,
+				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
 			});
 
 			return {
@@ -109,7 +109,10 @@ export const publicPhotocardRoutes = new Elysia({ prefix: "/photocards" })
 										id: pc.artist.group.id,
 										name: pc.artist.group.name,
 										agency: pc.artist.group.agency
-											? { id: pc.artist.group.agency.id, name: pc.artist.group.agency.name }
+											? {
+													id: pc.artist.group.agency.id,
+													name: pc.artist.group.agency.name,
+												}
 											: null,
 									}
 								: null,
@@ -262,7 +265,10 @@ export const publicGalmangPocaRoutes = new Elysia({ prefix: "/galmang-poca" })
 									id: gp.photocard.artist.id,
 									name: gp.photocard.artist.name,
 									group: gp.photocard.artist.group
-										? { id: gp.photocard.artist.group.id, name: gp.photocard.artist.group.name }
+										? {
+												id: gp.photocard.artist.group.id,
+												name: gp.photocard.artist.group.name,
+											}
 										: null,
 								}
 							: null,
@@ -344,7 +350,10 @@ export const galmangPocaRoutes = new Elysia({ prefix: "/galmang-poca" })
 				return { error: "GalmangPoca not found" };
 			}
 
-			const gp = await galmangPocaService.updateQuantity(params.id, body.quantity);
+			const gp = await galmangPocaService.updateQuantity(
+				params.id,
+				body.quantity,
+			);
 			return {
 				id: gp.id,
 				quantity: gp.quantity,

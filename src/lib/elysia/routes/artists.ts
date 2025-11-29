@@ -87,9 +87,9 @@ export const publicArtistRoutes = new Elysia()
 		{ params: t.Object({ id: t.String() }) },
 	)
 	.get(
-		"/agencies/:agencyId/groups",
+		"/agencies/:id/groups",
 		async ({ params }) => {
-			const groups = await artistGroupService.findByAgencyId(params.agencyId);
+			const groups = await artistGroupService.findByAgencyId(params.id);
 			return {
 				items: groups.map((group) => ({
 					id: group.id,
@@ -98,7 +98,7 @@ export const publicArtistRoutes = new Elysia()
 				})),
 			};
 		},
-		{ params: t.Object({ agencyId: t.String() }) },
+		{ params: t.Object({ id: t.String() }) },
 	)
 	// ============================================
 	// Artist Routes
@@ -173,9 +173,9 @@ export const publicArtistRoutes = new Elysia()
 		{ params: t.Object({ id: t.String() }) },
 	)
 	.get(
-		"/groups/:groupId/artists",
+		"/groups/:id/artists",
 		async ({ params }) => {
-			const artists = await artistService.findByGroupId(params.groupId);
+			const artists = await artistService.findByGroupId(params.id);
 			return {
 				items: artists.map((artist) => ({
 					id: artist.id,
@@ -183,7 +183,7 @@ export const publicArtistRoutes = new Elysia()
 				})),
 			};
 		},
-		{ params: t.Object({ groupId: t.String() }) },
+		{ params: t.Object({ id: t.String() }) },
 	);
 
 /**

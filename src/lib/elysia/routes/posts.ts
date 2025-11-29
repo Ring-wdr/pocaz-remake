@@ -280,9 +280,9 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			}),
 		},
 	)
-	// PUT /api/posts/:postId/replies/:replyId - 댓글 수정
+	// PUT /api/posts/:id/replies/:replyId - 댓글 수정
 	.put(
-		"/:postId/replies/:replyId",
+		"/:id/replies/:replyId",
 		async ({ auth, params, body, set }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
@@ -306,7 +306,7 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 		},
 		{
 			params: t.Object({
-				postId: t.String(),
+				id: t.String(),
 				replyId: t.String(),
 			}),
 			body: t.Object({
@@ -314,9 +314,9 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			}),
 		},
 	)
-	// DELETE /api/posts/:postId/replies/:replyId - 댓글 삭제
+	// DELETE /api/posts/:id/replies/:replyId - 댓글 삭제
 	.delete(
-		"/:postId/replies/:replyId",
+		"/:id/replies/:replyId",
 		async ({ auth, params, set }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
@@ -336,7 +336,7 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 		},
 		{
 			params: t.Object({
-				postId: t.String(),
+				id: t.String(),
 				replyId: t.String(),
 			}),
 		},
@@ -375,9 +375,9 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			}),
 		},
 	)
-	// DELETE /api/posts/:postId/images/:imageId - 이미지 삭제
+	// DELETE /api/posts/:id/images/:imageId - 이미지 삭제
 	.delete(
-		"/:postId/images/:imageId",
+		"/:id/images/:imageId",
 		async ({ auth, params, set }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
@@ -385,7 +385,7 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				return { error: "User not found" };
 			}
 
-			const isOwner = await postService.isOwner(params.postId, user.id);
+			const isOwner = await postService.isOwner(params.id, user.id);
 			if (!isOwner) {
 				set.status = 403;
 				return { error: "Forbidden" };
@@ -397,7 +397,7 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 		},
 		{
 			params: t.Object({
-				postId: t.String(),
+				id: t.String(),
 				imageId: t.String(),
 			}),
 		},

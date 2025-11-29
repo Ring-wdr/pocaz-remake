@@ -329,9 +329,9 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 			}),
 		},
 	)
-	// DELETE /api/markets/:marketId/images/:imageId - 이미지 삭제
+	// DELETE /api/markets/:id/images/:imageId - 이미지 삭제
 	.delete(
-		"/:marketId/images/:imageId",
+		"/:id/images/:imageId",
 		async ({ auth, params, set }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
@@ -339,7 +339,7 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				return { error: "User not found" };
 			}
 
-			const isOwner = await marketService.isOwner(params.marketId, user.id);
+			const isOwner = await marketService.isOwner(params.id, user.id);
 			if (!isOwner) {
 				set.status = 403;
 				return { error: "Forbidden" };
@@ -351,7 +351,7 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 		},
 		{
 			params: t.Object({
-				marketId: t.String(),
+				id: t.String(),
 				imageId: t.String(),
 			}),
 		},
