@@ -1,7 +1,44 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
-import { marketService, marketImageService } from "@/lib/services/market";
+import { marketImageService, marketService } from "@/lib/services/market";
 import { userService } from "@/lib/services/user";
+
+// 공통 스키마
+const UserSchema = t.Object({
+	id: t.String(),
+	nickname: t.String(),
+	profileImage: t.Nullable(t.String()),
+});
+
+const ImageSchema = t.Object({
+	id: t.String(),
+	imageUrl: t.String(),
+});
+
+const MarketItemSchema = t.Object({
+	id: t.String(),
+	title: t.String(),
+	description: t.Nullable(t.String()),
+	price: t.Nullable(t.Number()),
+	status: t.String(),
+	createdAt: t.String(),
+	user: UserSchema,
+	images: t.Array(ImageSchema),
+});
+
+const PaginatedMarketsSchema = t.Object({
+	items: t.Array(MarketItemSchema),
+	nextCursor: t.Nullable(t.String()),
+	hasMore: t.Boolean(),
+});
+
+const ErrorSchema = t.Object({
+	error: t.String(),
+});
+
+const MessageSchema = t.Object({
+	message: t.String(),
+});
 
 /**
  * Public Market Routes (인증 불필요)
@@ -36,6 +73,12 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedMarketsSchema,
+			detail: {
+				tags: ["Markets"],
+				summary: "장터 목록 조회",
+				description: "장터 목록을 페이지네이션하여 조회합니다.",
+			},
 		},
 	)
 	// GET /api/markets/search - 장터 검색
@@ -72,6 +115,12 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedMarketsSchema,
+			detail: {
+				tags: ["Markets"],
+				summary: "장터 검색",
+				description: "키워드로 장터를 검색합니다.",
+			},
 		},
 	)
 	// GET /api/markets/status/:status - 상태별 조회
@@ -114,6 +163,13 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedMarketsSchema,
+			detail: {
+				tags: ["Markets"],
+				summary: "상태별 장터 조회",
+				description:
+					"장터 상태(available, sold, reserved)별로 목록을 조회합니다.",
+			},
 		},
 	)
 	// GET /api/markets/:id - 장터 상세
@@ -143,6 +199,25 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 			params: t.Object({
 				id: t.String(),
 			}),
+			response: {
+				200: t.Object({
+					id: t.String(),
+					title: t.String(),
+					description: t.Nullable(t.String()),
+					price: t.Nullable(t.Number()),
+					status: t.String(),
+					createdAt: t.String(),
+					updatedAt: t.String(),
+					user: UserSchema,
+					images: t.Array(ImageSchema),
+				}),
+				404: ErrorSchema,
+			},
+			detail: {
+				tags: ["Markets"],
+				summary: "장터 상세 조회",
+				description: "장터의 상세 정보를 조회합니다.",
+			},
 		},
 	)
 	// GET /api/markets/user/:userId - 특정 사용자의 장터 글
@@ -177,6 +252,12 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedMarketsSchema,
+			detail: {
+				tags: ["Markets"],
+				summary: "특정 사용자의 장터 조회",
+				description: "특정 사용자가 작성한 장터 목록을 조회합니다.",
+			},
 		},
 	);
 
@@ -223,6 +304,12 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				price: t.Optional(t.Number({ minimum: 0 })),
 				imageUrls: t.Optional(t.Array(t.String())),
 			}),
+			response: MarketItemSchema,
+			detail: {
+				tags: ["Markets"],
+				summary: "장터 글 작성",
+				description: "새 장터 글을 작성합니다.",
+			},
 		},
 	)
 	// PUT /api/markets/:id - 장터 글 수정
@@ -265,8 +352,31 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				title: t.Optional(t.String({ minLength: 1 })),
 				description: t.Optional(t.String()),
 				price: t.Optional(t.Number({ minimum: 0 })),
-				status: t.Optional(t.Union([t.Literal("available"), t.Literal("sold"), t.Literal("reserved")])),
+				status: t.Optional(
+					t.Union([
+						t.Literal("available"),
+						t.Literal("sold"),
+						t.Literal("reserved"),
+					]),
+				),
 			}),
+			response: {
+				200: t.Object({
+					id: t.String(),
+					title: t.String(),
+					description: t.Nullable(t.String()),
+					price: t.Nullable(t.Number()),
+					status: t.String(),
+					updatedAt: t.String(),
+				}),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Markets"],
+				summary: "장터 글 수정",
+				description: "장터 글을 수정합니다.",
+			},
 		},
 	)
 	// DELETE /api/markets/:id - 장터 글 삭제
@@ -293,6 +403,16 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 			params: t.Object({
 				id: t.String(),
 			}),
+			response: {
+				200: MessageSchema,
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Markets"],
+				summary: "장터 글 삭제",
+				description: "장터 글을 삭제합니다.",
+			},
 		},
 	)
 	// POST /api/markets/:id/images - 이미지 추가
@@ -327,6 +447,16 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 			body: t.Object({
 				imageUrls: t.Array(t.String(), { minItems: 1 }),
 			}),
+			response: {
+				201: t.Object({ images: t.Array(ImageSchema) }),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Markets"],
+				summary: "장터 이미지 추가",
+				description: "장터 글에 이미지를 추가합니다.",
+			},
 		},
 	)
 	// DELETE /api/markets/:id/images/:imageId - 이미지 삭제
@@ -354,5 +484,15 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				id: t.String(),
 				imageId: t.String(),
 			}),
+			response: {
+				200: MessageSchema,
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Markets"],
+				summary: "장터 이미지 삭제",
+				description: "장터 글에서 이미지를 삭제합니다.",
+			},
 		},
 	);

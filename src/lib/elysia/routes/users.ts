@@ -1,6 +1,31 @@
 import { Elysia, t } from "elysia";
-import { authGuard, optionalAuth } from "@/lib/elysia/auth";
+import { authGuard } from "@/lib/elysia/auth";
 import { userService } from "@/lib/services/user";
+
+// 공통 응답 스키마
+const UserResponseSchema = t.Object({
+	id: t.String(),
+	supabaseId: t.String(),
+	email: t.Nullable(t.String()),
+	nickname: t.String(),
+	profileImage: t.Nullable(t.String()),
+	score: t.Number(),
+	artistId: t.Nullable(t.String()),
+	createdAt: t.String(),
+});
+
+const PublicUserSchema = t.Object({
+	id: t.String(),
+	nickname: t.String(),
+	profileImage: t.Nullable(t.String()),
+	score: t.Number(),
+	artistId: t.Optional(t.Nullable(t.String())),
+});
+
+const ErrorSchema = t.Object({
+	error: t.String(),
+	message: t.Optional(t.String()),
+});
 
 /**
  * User API Routes
@@ -9,32 +34,44 @@ import { userService } from "@/lib/services/user";
 export const userRoutes = new Elysia({ prefix: "/users" })
 	.use(authGuard)
 	// GET /api/users/me - 현재 사용자 정보 (Prisma User)
-	.get("/me", async ({ auth }) => {
-		const user = await userService.findOrCreate(
-			auth.user.id,
-			auth.user.email,
-			auth.user.user_metadata?.full_name,
-			auth.user.user_metadata?.avatar_url,
-		);
+	.get(
+		"/me",
+		async ({ auth }) => {
+			const user = await userService.findOrCreate(
+				auth.user.id,
+				auth.user.email,
+				auth.user.user_metadata?.full_name,
+				auth.user.user_metadata?.avatar_url,
+			);
 
-		return {
-			id: user.id,
-			supabaseId: user.supabaseId,
-			email: user.email,
-			nickname: user.nickname,
-			profileImage: user.profileImage,
-			score: user.score,
-			artistId: user.artistId,
-			createdAt: user.createdAt.toISOString(),
-		};
-	})
+			return {
+				id: user.id,
+				supabaseId: user.supabaseId,
+				email: user.email,
+				nickname: user.nickname,
+				profileImage: user.profileImage,
+				score: user.score,
+				artistId: user.artistId,
+				createdAt: user.createdAt.toISOString(),
+			};
+		},
+		{
+			response: UserResponseSchema,
+			detail: {
+				tags: ["Users"],
+				summary: "현재 사용자 정보 조회",
+				description: "인증된 사용자의 Prisma User 정보를 조회합니다.",
+			},
+		},
+	)
 	// PUT /api/users/me - 현재 사용자 정보 수정
 	.put(
 		"/me",
-		async ({ auth, body }) => {
+		async ({ auth, body, set }) => {
 			const existingUser = await userService.findBySupabaseId(auth.user.id);
 
 			if (!existingUser) {
+				set.status = 404;
 				return {
 					error: "User not found",
 					message: "Please complete registration first",
@@ -64,25 +101,57 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				profileImage: t.Optional(t.Nullable(t.String())),
 				artistId: t.Optional(t.Nullable(t.String())),
 			}),
+			response: {
+				200: t.Object({
+					id: t.String(),
+					supabaseId: t.String(),
+					email: t.Nullable(t.String()),
+					nickname: t.String(),
+					profileImage: t.Nullable(t.String()),
+					score: t.Number(),
+					artistId: t.Nullable(t.String()),
+					updatedAt: t.String(),
+				}),
+				404: ErrorSchema,
+			},
+			detail: {
+				tags: ["Users"],
+				summary: "현재 사용자 정보 수정",
+				description: "인증된 사용자의 프로필 정보를 수정합니다.",
+			},
 		},
 	)
 	// DELETE /api/users/me - 회원 탈퇴 (soft delete)
-	.delete("/me", async ({ auth, set }) => {
-		const existingUser = await userService.findBySupabaseId(auth.user.id);
+	.delete(
+		"/me",
+		async ({ auth, set }) => {
+			const existingUser = await userService.findBySupabaseId(auth.user.id);
 
-		if (!existingUser) {
-			set.status = 404;
+			if (!existingUser) {
+				set.status = 404;
+				return {
+					error: "User not found",
+				};
+			}
+
+			await userService.softDelete(existingUser.id);
+
 			return {
-				error: "User not found",
+				message: "User deleted successfully",
 			};
-		}
-
-		await userService.softDelete(existingUser.id);
-
-		return {
-			message: "User deleted successfully",
-		};
-	})
+		},
+		{
+			response: {
+				200: t.Object({ message: t.String() }),
+				404: t.Object({ error: t.String() }),
+			},
+			detail: {
+				tags: ["Users"],
+				summary: "회원 탈퇴",
+				description: "인증된 사용자의 계정을 삭제합니다 (soft delete).",
+			},
+		},
+	)
 	// GET /api/users/:id - 특정 사용자 조회 (공개 정보만)
 	.get(
 		"/:id",
@@ -108,6 +177,15 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			params: t.Object({
 				id: t.String(),
 			}),
+			response: {
+				200: PublicUserSchema,
+				404: t.Object({ error: t.String() }),
+			},
+			detail: {
+				tags: ["Users"],
+				summary: "특정 사용자 조회",
+				description: "특정 사용자의 공개 정보를 조회합니다.",
+			},
 		},
 	);
 
@@ -116,13 +194,31 @@ export const userRoutes = new Elysia({ prefix: "/users" })
  */
 export const publicUserRoutes = new Elysia({ prefix: "/users" })
 	// GET /api/users - 전체 사용자 목록 (공개 정보만)
-	.get("/", async ({ query }) => {
-		const users = await userService.findAll();
+	.get(
+		"/",
+		async () => {
+			const users = await userService.findAll();
 
-		return users.map((user) => ({
-			id: user.id,
-			nickname: user.nickname,
-			profileImage: user.profileImage,
-			score: user.score,
-		}));
-	});
+			return users.map((user) => ({
+				id: user.id,
+				nickname: user.nickname,
+				profileImage: user.profileImage,
+				score: user.score,
+			}));
+		},
+		{
+			response: t.Array(
+				t.Object({
+					id: t.String(),
+					nickname: t.String(),
+					profileImage: t.Nullable(t.String()),
+					score: t.Number(),
+				}),
+			),
+			detail: {
+				tags: ["Users"],
+				summary: "전체 사용자 목록 조회",
+				description: "모든 사용자의 공개 정보를 조회합니다.",
+			},
+		},
+	);

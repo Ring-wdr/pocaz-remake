@@ -1,5 +1,5 @@
+import type { Session, User } from "@supabase/supabase-js";
 import { Elysia } from "elysia";
-import type { User, Session } from "@supabase/supabase-js";
 import { createSupabaseElysiaClient } from "@/lib/supabase/elysia";
 
 /**
@@ -49,24 +49,27 @@ export const authPlugin = new Elysia({ name: "auth" }).derive(
  * Protected routes에 적용
  */
 export const authGuard = new Elysia({ name: "auth-guard" })
-	.derive({ as: "global" }, async ({ request }): Promise<{ auth: AuthenticatedContext }> => {
-		const supabase = createSupabaseElysiaClient(request);
+	.derive(
+		{ as: "global" },
+		async ({ request }): Promise<{ auth: AuthenticatedContext }> => {
+			const supabase = createSupabaseElysiaClient(request);
 
-		const {
-			data: { user },
-		} = await supabase.auth.getUser();
+			const {
+				data: { user },
+			} = await supabase.auth.getUser();
 
-		const {
-			data: { session },
-		} = await supabase.auth.getSession();
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
 
-		return {
-			auth: {
-				user: user!,
-				session: session!,
-			},
-		};
-	})
+			return {
+				auth: {
+					user: user!,
+					session: session!,
+				},
+			};
+		},
+	)
 	.onBeforeHandle(({ auth, set }) => {
 		if (!auth.user || !auth.session) {
 			set.status = 401;

@@ -2,6 +2,106 @@ import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
 import { galmangPocaService, photocardService } from "@/lib/services/photocard";
 
+// 공통 스키마
+const GroupSchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+});
+
+const ArtistSchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+	group: t.Nullable(GroupSchema),
+});
+
+const ArtistWithAgencySchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+	group: t.Nullable(
+		t.Object({
+			id: t.String(),
+			name: t.String(),
+			agency: t.Nullable(
+				t.Object({
+					id: t.String(),
+					name: t.String(),
+				}),
+			),
+		}),
+	),
+});
+
+const PhotocardItemSchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+	description: t.Nullable(t.String()),
+	imageUrl: t.Nullable(t.String()),
+	createdAt: t.String(),
+	artist: t.Nullable(ArtistSchema),
+});
+
+const PhotocardDetailSchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+	description: t.Nullable(t.String()),
+	imageUrl: t.Nullable(t.String()),
+	createdAt: t.String(),
+	artist: t.Nullable(ArtistWithAgencySchema),
+});
+
+const SimplePhotocardItemSchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+	description: t.Nullable(t.String()),
+	imageUrl: t.Nullable(t.String()),
+	createdAt: t.String(),
+});
+
+const PaginatedPhotocardsSchema = t.Object({
+	items: t.Array(PhotocardItemSchema),
+	nextCursor: t.Nullable(t.String()),
+	hasMore: t.Boolean(),
+});
+
+const SimplePaginatedPhotocardsSchema = t.Object({
+	items: t.Array(SimplePhotocardItemSchema),
+	nextCursor: t.Nullable(t.String()),
+	hasMore: t.Boolean(),
+});
+
+const SimpleArtistSchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+});
+
+const GalmangPocaPhotocardSchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+	imageUrl: t.Nullable(t.String()),
+	artist: t.Nullable(ArtistSchema),
+});
+
+const GalmangPocaItemSchema = t.Object({
+	id: t.String(),
+	quantity: t.Number(),
+	createdAt: t.String(),
+	photocard: GalmangPocaPhotocardSchema,
+});
+
+const PaginatedGalmangPocaSchema = t.Object({
+	items: t.Array(GalmangPocaItemSchema),
+	nextCursor: t.Nullable(t.String()),
+	hasMore: t.Boolean(),
+});
+
+const ErrorSchema = t.Object({
+	error: t.String(),
+});
+
+const MessageSchema = t.Object({
+	message: t.String(),
+});
+
 /**
  * Public Photocard Routes (인증 불필요 - 조회)
  */
@@ -41,6 +141,12 @@ export const publicPhotocardRoutes = new Elysia({ prefix: "/photocards" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedPhotocardsSchema,
+			detail: {
+				tags: ["Photocards"],
+				summary: "포토카드 목록 조회",
+				description: "포토카드 목록을 페이지네이션하여 조회합니다.",
+			},
 		},
 	)
 	// GET /api/photocards/search - 포토카드 검색
@@ -83,6 +189,12 @@ export const publicPhotocardRoutes = new Elysia({ prefix: "/photocards" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedPhotocardsSchema,
+			detail: {
+				tags: ["Photocards"],
+				summary: "포토카드 검색",
+				description: "키워드로 포토카드를 검색합니다.",
+			},
 		},
 	)
 	// GET /api/photocards/:id - 포토카드 상세
@@ -120,7 +232,18 @@ export const publicPhotocardRoutes = new Elysia({ prefix: "/photocards" })
 					: null,
 			};
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			response: {
+				200: PhotocardDetailSchema,
+				404: ErrorSchema,
+			},
+			detail: {
+				tags: ["Photocards"],
+				summary: "포토카드 상세 조회",
+				description: "포토카드의 상세 정보를 조회합니다.",
+			},
+		},
 	)
 	// GET /api/photocards/artist/:artistId - 아티스트별 포토카드
 	.get(
@@ -149,6 +272,12 @@ export const publicPhotocardRoutes = new Elysia({ prefix: "/photocards" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: SimplePaginatedPhotocardsSchema,
+			detail: {
+				tags: ["Photocards"],
+				summary: "아티스트별 포토카드 조회",
+				description: "특정 아티스트의 포토카드 목록을 조회합니다.",
+			},
 		},
 	);
 
@@ -185,6 +314,19 @@ export const photocardRoutes = new Elysia({ prefix: "/photocards" })
 				imageUrl: t.Optional(t.String()),
 				artistId: t.Optional(t.String()),
 			}),
+			response: t.Object({
+				id: t.String(),
+				name: t.String(),
+				description: t.Nullable(t.String()),
+				imageUrl: t.Nullable(t.String()),
+				createdAt: t.String(),
+				artist: t.Nullable(SimpleArtistSchema),
+			}),
+			detail: {
+				tags: ["Photocards"],
+				summary: "포토카드 생성",
+				description: "새 포토카드를 생성합니다.",
+			},
 		},
 	)
 	// PUT /api/photocards/:id - 포토카드 수정
@@ -220,6 +362,21 @@ export const photocardRoutes = new Elysia({ prefix: "/photocards" })
 				imageUrl: t.Optional(t.Nullable(t.String())),
 				artistId: t.Optional(t.Nullable(t.String())),
 			}),
+			response: {
+				200: t.Object({
+					id: t.String(),
+					name: t.String(),
+					description: t.Nullable(t.String()),
+					imageUrl: t.Nullable(t.String()),
+					artist: t.Nullable(SimpleArtistSchema),
+				}),
+				404: ErrorSchema,
+			},
+			detail: {
+				tags: ["Photocards"],
+				summary: "포토카드 수정",
+				description: "포토카드 정보를 수정합니다.",
+			},
 		},
 	)
 	// DELETE /api/photocards/:id - 포토카드 삭제
@@ -235,7 +392,18 @@ export const photocardRoutes = new Elysia({ prefix: "/photocards" })
 			await photocardService.delete(params.id);
 			return { message: "Photocard deleted successfully" };
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			response: {
+				200: MessageSchema,
+				404: ErrorSchema,
+			},
+			detail: {
+				tags: ["Photocards"],
+				summary: "포토카드 삭제",
+				description: "포토카드를 삭제합니다.",
+			},
+		},
 	);
 
 /**
@@ -283,6 +451,12 @@ export const publicGalmangPocaRoutes = new Elysia({ prefix: "/galmang-poca" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedGalmangPocaSchema,
+			detail: {
+				tags: ["GalmangPoca"],
+				summary: "갈망포카 목록 조회",
+				description: "갈망포카 목록을 페이지네이션하여 조회합니다.",
+			},
 		},
 	)
 	// GET /api/galmang-poca/:id - 갈망포카 상세
@@ -305,7 +479,27 @@ export const publicGalmangPocaRoutes = new Elysia({ prefix: "/galmang-poca" })
 				},
 			};
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			response: {
+				200: t.Object({
+					id: t.String(),
+					quantity: t.Number(),
+					createdAt: t.String(),
+					photocard: t.Object({
+						id: t.String(),
+						name: t.String(),
+						imageUrl: t.Nullable(t.String()),
+					}),
+				}),
+				404: ErrorSchema,
+			},
+			detail: {
+				tags: ["GalmangPoca"],
+				summary: "갈망포카 상세 조회",
+				description: "갈망포카의 상세 정보를 조회합니다.",
+			},
+		},
 	);
 
 /**
@@ -338,6 +532,20 @@ export const galmangPocaRoutes = new Elysia({ prefix: "/galmang-poca" })
 				photocardId: t.String(),
 				quantity: t.Optional(t.Number({ minimum: 1 })),
 			}),
+			response: t.Object({
+				id: t.String(),
+				quantity: t.Number(),
+				createdAt: t.String(),
+				photocard: t.Object({
+					id: t.String(),
+					name: t.String(),
+				}),
+			}),
+			detail: {
+				tags: ["GalmangPoca"],
+				summary: "갈망포카 추가",
+				description: "새 갈망포카를 추가합니다.",
+			},
 		},
 	)
 	// PUT /api/galmang-poca/:id - 갈망포카 수량 수정
@@ -364,6 +572,18 @@ export const galmangPocaRoutes = new Elysia({ prefix: "/galmang-poca" })
 			body: t.Object({
 				quantity: t.Number({ minimum: 1 }),
 			}),
+			response: {
+				200: t.Object({
+					id: t.String(),
+					quantity: t.Number(),
+				}),
+				404: ErrorSchema,
+			},
+			detail: {
+				tags: ["GalmangPoca"],
+				summary: "갈망포카 수량 수정",
+				description: "갈망포카 수량을 수정합니다.",
+			},
 		},
 	)
 	// DELETE /api/galmang-poca/:id - 갈망포카 삭제
@@ -379,5 +599,16 @@ export const galmangPocaRoutes = new Elysia({ prefix: "/galmang-poca" })
 			await galmangPocaService.delete(params.id);
 			return { message: "GalmangPoca deleted successfully" };
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			response: {
+				200: MessageSchema,
+				404: ErrorSchema,
+			},
+			detail: {
+				tags: ["GalmangPoca"],
+				summary: "갈망포카 삭제",
+				description: "갈망포카를 삭제합니다.",
+			},
+		},
 	);

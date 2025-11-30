@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 /**
  * 채팅 메시지 타입
@@ -30,19 +30,19 @@ export function useChatRealtime(
 	roomId: string | null,
 	onNewMessage?: (message: ChatMessage) => void,
 ) {
-	const supabase = createSupabaseBrowserClient();
-	const channelRef = useRef<RealtimeChannel | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
+	const channelRef = useRef<RealtimeChannel | null>(null);
+	const onNewMessageRef = useRef(onNewMessage);
+	onNewMessageRef.current = onNewMessage;
 
 	const subscribe = useCallback(() => {
 		if (!roomId) return;
 
-		// 기존 구독 해제
+		const supabase = createSupabaseBrowserClient();
+
 		if (channelRef.current) {
 			supabase.removeChannel(channelRef.current);
 		}
-
-		// 새 채널 구독
 		const channel = supabase
 			.channel(`chat:${roomId}`)
 			.on(
@@ -54,7 +54,6 @@ export function useChatRealtime(
 					filter: `roomId=eq.${roomId}`,
 				},
 				async (payload) => {
-					// 새 메시지가 들어오면 사용자 정보와 함께 전달
 					const newMessage = payload.new as {
 						id: string;
 						content: string;
@@ -62,12 +61,11 @@ export function useChatRealtime(
 						userId: string;
 					};
 
-					// 사용자 정보 조회 (간단한 API 호출)
 					try {
 						const response = await fetch(`/api/users/${newMessage.userId}`);
 						if (response.ok) {
 							const userData = await response.json();
-							onNewMessage?.({
+							onNewMessageRef.current?.({
 								id: newMessage.id,
 								content: newMessage.content,
 								createdAt: newMessage.createdAt,
@@ -80,8 +78,7 @@ export function useChatRealtime(
 						}
 					} catch (error) {
 						console.error("Failed to fetch user data for message:", error);
-						// 사용자 정보 없이 메시지만 전달
-						onNewMessage?.({
+						onNewMessageRef.current?.({
 							id: newMessage.id,
 							content: newMessage.content,
 							createdAt: newMessage.createdAt,
@@ -99,15 +96,16 @@ export function useChatRealtime(
 			});
 
 		channelRef.current = channel;
-	}, [roomId, onNewMessage, supabase]);
+	}, [roomId]);
 
 	const unsubscribe = useCallback(() => {
 		if (channelRef.current) {
+			const supabase = createSupabaseBrowserClient();
 			supabase.removeChannel(channelRef.current);
 			channelRef.current = null;
 			setIsConnected(false);
 		}
-	}, [supabase]);
+	}, []);
 
 	useEffect(() => {
 		subscribe();
@@ -134,17 +132,19 @@ export function useChatBroadcast(
 	roomId: string | null,
 	onNewMessage?: (message: ChatMessage) => void,
 ) {
-	const supabase = createSupabaseBrowserClient();
-	const channelRef = useRef<RealtimeChannel | null>(null);
 	const [isConnected, setIsConnected] = useState(false);
+	const channelRef = useRef<RealtimeChannel | null>(null);
+	const onNewMessageRef = useRef(onNewMessage);
+	onNewMessageRef.current = onNewMessage;
 
 	useEffect(() => {
 		if (!roomId) return;
 
+		const supabase = createSupabaseBrowserClient();
 		const channel = supabase
 			.channel(`chat-broadcast:${roomId}`)
 			.on("broadcast", { event: "new_message" }, ({ payload }) => {
-				onNewMessage?.(payload as ChatMessage);
+				onNewMessageRef.current?.(payload as ChatMessage);
 			})
 			.subscribe((status) => {
 				setIsConnected(status === "SUBSCRIBED");
@@ -155,20 +155,17 @@ export function useChatBroadcast(
 		return () => {
 			supabase.removeChannel(channel);
 		};
-	}, [roomId, onNewMessage, supabase]);
+	}, [roomId]);
 
-	const sendMessage = useCallback(
-		async (message: ChatMessage) => {
-			if (!channelRef.current) return;
+	const sendMessage = useCallback(async (message: ChatMessage) => {
+		if (!channelRef.current) return;
 
-			await channelRef.current.send({
-				type: "broadcast",
-				event: "new_message",
-				payload: message,
-			});
-		},
-		[],
-	);
+		await channelRef.current.send({
+			type: "broadcast",
+			event: "new_message",
+			payload: message,
+		});
+	}, []);
 
 	return {
 		isConnected,
@@ -186,7 +183,6 @@ export function useChatPresence(
 	userId: string | null,
 	userInfo: { nickname: string; profileImage: string | null },
 ) {
-	const supabase = createSupabaseBrowserClient();
 	const channelRef = useRef<RealtimeChannel | null>(null);
 	const [onlineUsers, setOnlineUsers] = useState<
 		Array<{
@@ -198,7 +194,7 @@ export function useChatPresence(
 
 	useEffect(() => {
 		if (!roomId || !userId) return;
-
+		const supabase = createSupabaseBrowserClient();
 		const channel = supabase.channel(`presence:${roomId}`, {
 			config: {
 				presence: {
@@ -211,7 +207,13 @@ export function useChatPresence(
 			.on("presence", { event: "sync" }, () => {
 				const state = channel.presenceState();
 				const users = Object.values(state).flatMap((presences) =>
-					(presences as unknown as Array<{ user_id: string; nickname: string; profile_image: string | null }>).map((p) => ({
+					(
+						presences as unknown as Array<{
+							user_id: string;
+							nickname: string;
+							profile_image: string | null;
+						}>
+					).map((p) => ({
 						id: p.user_id,
 						nickname: p.nickname,
 						profileImage: p.profile_image,
@@ -235,7 +237,7 @@ export function useChatPresence(
 		return () => {
 			supabase.removeChannel(channel);
 		};
-	}, [roomId, userId, userInfo, supabase]);
+	}, [roomId, userId, userInfo]);
 
 	return { onlineUsers };
 }

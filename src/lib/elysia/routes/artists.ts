@@ -1,6 +1,36 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
-import { agencyService, artistGroupService, artistService } from "@/lib/services/artist";
+import {
+	agencyService,
+	artistGroupService,
+	artistService,
+} from "@/lib/services/artist";
+
+// 공통 스키마
+const AgencySchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+});
+
+const GroupWithAgencySchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+	agency: t.Nullable(AgencySchema),
+});
+
+const ArtistWithGroupSchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+	group: t.Nullable(GroupWithAgencySchema),
+});
+
+const ErrorSchema = t.Object({
+	error: t.String(),
+});
+
+const MessageSchema = t.Object({
+	message: t.String(),
+});
 
 /**
  * Public Artist Routes (인증 불필요 - 조회)
@@ -9,20 +39,45 @@ export const publicArtistRoutes = new Elysia()
 	// ============================================
 	// Agency Routes
 	// ============================================
-	.get("/agencies", async () => {
-		const agencies = await agencyService.findAll();
-		return {
-			items: agencies.map((agency) => ({
-				id: agency.id,
-				name: agency.name,
-				groups: agency.groups.map((group) => ({
-					id: group.id,
-					name: group.name,
-					artistCount: group.artists.length,
+	.get(
+		"/agencies",
+		async () => {
+			const agencies = await agencyService.findAll();
+			return {
+				items: agencies.map((agency) => ({
+					id: agency.id,
+					name: agency.name,
+					groups: agency.groups.map((group) => ({
+						id: group.id,
+						name: group.name,
+						artistCount: group.artists.length,
+					})),
 				})),
-			})),
-		};
-	})
+			};
+		},
+		{
+			response: t.Object({
+				items: t.Array(
+					t.Object({
+						id: t.String(),
+						name: t.String(),
+						groups: t.Array(
+							t.Object({
+								id: t.String(),
+								name: t.String(),
+								artistCount: t.Number(),
+							}),
+						),
+					}),
+				),
+			}),
+			detail: {
+				tags: ["Artists"],
+				summary: "소속사 목록 조회",
+				description: "모든 소속사와 소속 그룹 목록을 조회합니다.",
+			},
+		},
+	)
 	.get(
 		"/agencies/:id",
 		async ({ params, set }) => {
@@ -45,24 +100,51 @@ export const publicArtistRoutes = new Elysia()
 				})),
 			};
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			detail: {
+				tags: ["Artists"],
+				summary: "소속사 상세 조회",
+				description: "소속사의 상세 정보와 소속 그룹/아티스트를 조회합니다.",
+			},
+		},
 	)
 	// ============================================
 	// ArtistGroup Routes
 	// ============================================
-	.get("/groups", async () => {
-		const groups = await artistGroupService.findAll();
-		return {
-			items: groups.map((group) => ({
-				id: group.id,
-				name: group.name,
-				agency: group.agency
-					? { id: group.agency.id, name: group.agency.name }
-					: null,
-				artistCount: group.artists.length,
-			})),
-		};
-	})
+	.get(
+		"/groups",
+		async () => {
+			const groups = await artistGroupService.findAll();
+			return {
+				items: groups.map((group) => ({
+					id: group.id,
+					name: group.name,
+					agency: group.agency
+						? { id: group.agency.id, name: group.agency.name }
+						: null,
+					artistCount: group.artists.length,
+				})),
+			};
+		},
+		{
+			response: t.Object({
+				items: t.Array(
+					t.Object({
+						id: t.String(),
+						name: t.String(),
+						agency: t.Nullable(AgencySchema),
+						artistCount: t.Number(),
+					}),
+				),
+			}),
+			detail: {
+				tags: ["Artists"],
+				summary: "그룹 목록 조회",
+				description: "모든 아티스트 그룹 목록을 조회합니다.",
+			},
+		},
+	)
 	.get(
 		"/groups/:id",
 		async ({ params, set }) => {
@@ -84,7 +166,14 @@ export const publicArtistRoutes = new Elysia()
 				})),
 			};
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			detail: {
+				tags: ["Artists"],
+				summary: "그룹 상세 조회",
+				description: "그룹의 상세 정보와 소속 아티스트를 조회합니다.",
+			},
+		},
 	)
 	.get(
 		"/agencies/:id/groups",
@@ -98,29 +187,52 @@ export const publicArtistRoutes = new Elysia()
 				})),
 			};
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			detail: {
+				tags: ["Artists"],
+				summary: "소속사별 그룹 조회",
+				description: "특정 소속사의 그룹 목록을 조회합니다.",
+			},
+		},
 	)
 	// ============================================
 	// Artist Routes
 	// ============================================
-	.get("/artists", async () => {
-		const artists = await artistService.findAll();
-		return {
-			items: artists.map((artist) => ({
-				id: artist.id,
-				name: artist.name,
-				group: artist.group
-					? {
-							id: artist.group.id,
-							name: artist.group.name,
-							agency: artist.group.agency
-								? { id: artist.group.agency.id, name: artist.group.agency.name }
-								: null,
-						}
-					: null,
-			})),
-		};
-	})
+	.get(
+		"/artists",
+		async () => {
+			const artists = await artistService.findAll();
+			return {
+				items: artists.map((artist) => ({
+					id: artist.id,
+					name: artist.name,
+					group: artist.group
+						? {
+								id: artist.group.id,
+								name: artist.group.name,
+								agency: artist.group.agency
+									? {
+											id: artist.group.agency.id,
+											name: artist.group.agency.name,
+										}
+									: null,
+							}
+						: null,
+				})),
+			};
+		},
+		{
+			response: t.Object({
+				items: t.Array(ArtistWithGroupSchema),
+			}),
+			detail: {
+				tags: ["Artists"],
+				summary: "아티스트 목록 조회",
+				description: "모든 아티스트 목록을 조회합니다.",
+			},
+		},
+	)
 	.get(
 		"/artists/search",
 		async ({ query }) => {
@@ -137,14 +249,27 @@ export const publicArtistRoutes = new Elysia()
 								id: artist.group.id,
 								name: artist.group.name,
 								agency: artist.group.agency
-									? { id: artist.group.agency.id, name: artist.group.agency.name }
+									? {
+											id: artist.group.agency.id,
+											name: artist.group.agency.name,
+										}
 									: null,
 							}
 						: null,
 				})),
 			};
 		},
-		{ query: t.Object({ keyword: t.Optional(t.String()) }) },
+		{
+			query: t.Object({ keyword: t.Optional(t.String()) }),
+			response: t.Object({
+				items: t.Array(ArtistWithGroupSchema),
+			}),
+			detail: {
+				tags: ["Artists"],
+				summary: "아티스트 검색",
+				description: "키워드로 아티스트를 검색합니다.",
+			},
+		},
 	)
 	.get(
 		"/artists/:id",
@@ -163,14 +288,24 @@ export const publicArtistRoutes = new Elysia()
 							id: artist.group.id,
 							name: artist.group.name,
 							agency: artist.group.agency
-								? { id: artist.group.agency.id, name: artist.group.agency.name }
+								? {
+										id: artist.group.agency.id,
+										name: artist.group.agency.name,
+									}
 								: null,
 						}
 					: null,
 				photocardCount: artist.photocards.length,
 			};
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			detail: {
+				tags: ["Artists"],
+				summary: "아티스트 상세 조회",
+				description: "아티스트의 상세 정보를 조회합니다.",
+			},
+		},
 	)
 	.get(
 		"/groups/:id/artists",
@@ -183,7 +318,14 @@ export const publicArtistRoutes = new Elysia()
 				})),
 			};
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			detail: {
+				tags: ["Artists"],
+				summary: "그룹별 아티스트 조회",
+				description: "특정 그룹의 아티스트 목록을 조회합니다.",
+			},
+		},
 	);
 
 /**
@@ -205,7 +347,19 @@ export const artistRoutes = new Elysia()
 				createdAt: agency.createdAt.toISOString(),
 			};
 		},
-		{ body: t.Object({ name: t.String({ minLength: 1 }) }) },
+		{
+			body: t.Object({ name: t.String({ minLength: 1 }) }),
+			response: t.Object({
+				id: t.String(),
+				name: t.String(),
+				createdAt: t.String(),
+			}),
+			detail: {
+				tags: ["Artists"],
+				summary: "소속사 생성",
+				description: "새 소속사를 생성합니다.",
+			},
+		},
 	)
 	.put(
 		"/agencies/:id",
@@ -224,6 +378,12 @@ export const artistRoutes = new Elysia()
 		{
 			params: t.Object({ id: t.String() }),
 			body: t.Object({ name: t.String({ minLength: 1 }) }),
+			response: t.Union([AgencySchema, ErrorSchema]),
+			detail: {
+				tags: ["Artists"],
+				summary: "소속사 수정",
+				description: "소속사 정보를 수정합니다.",
+			},
 		},
 	)
 	.delete(
@@ -237,7 +397,15 @@ export const artistRoutes = new Elysia()
 			await agencyService.delete(params.id);
 			return { message: "Agency deleted successfully" };
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			response: t.Union([MessageSchema, ErrorSchema]),
+			detail: {
+				tags: ["Artists"],
+				summary: "소속사 삭제",
+				description: "소속사를 삭제합니다.",
+			},
+		},
 	)
 	// ============================================
 	// ArtistGroup Management
@@ -264,6 +432,11 @@ export const artistRoutes = new Elysia()
 				name: t.String({ minLength: 1 }),
 				agencyId: t.Optional(t.String()),
 			}),
+			detail: {
+				tags: ["Artists"],
+				summary: "그룹 생성",
+				description: "새 아티스트 그룹을 생성합니다.",
+			},
 		},
 	)
 	.put(
@@ -292,6 +465,11 @@ export const artistRoutes = new Elysia()
 				name: t.Optional(t.String({ minLength: 1 })),
 				agencyId: t.Optional(t.Nullable(t.String())),
 			}),
+			detail: {
+				tags: ["Artists"],
+				summary: "그룹 수정",
+				description: "그룹 정보를 수정합니다.",
+			},
 		},
 	)
 	.delete(
@@ -305,7 +483,15 @@ export const artistRoutes = new Elysia()
 			await artistGroupService.delete(params.id);
 			return { message: "Group deleted successfully" };
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			response: t.Union([MessageSchema, ErrorSchema]),
+			detail: {
+				tags: ["Artists"],
+				summary: "그룹 삭제",
+				description: "그룹을 삭제합니다.",
+			},
+		},
 	)
 	// ============================================
 	// Artist Management
@@ -332,6 +518,11 @@ export const artistRoutes = new Elysia()
 				name: t.String({ minLength: 1 }),
 				groupId: t.Optional(t.String()),
 			}),
+			detail: {
+				tags: ["Artists"],
+				summary: "아티스트 생성",
+				description: "새 아티스트를 생성합니다.",
+			},
 		},
 	)
 	.put(
@@ -360,6 +551,11 @@ export const artistRoutes = new Elysia()
 				name: t.Optional(t.String({ minLength: 1 })),
 				groupId: t.Optional(t.Nullable(t.String())),
 			}),
+			detail: {
+				tags: ["Artists"],
+				summary: "아티스트 수정",
+				description: "아티스트 정보를 수정합니다.",
+			},
 		},
 	)
 	.delete(
@@ -373,5 +569,13 @@ export const artistRoutes = new Elysia()
 			await artistService.delete(params.id);
 			return { message: "Artist deleted successfully" };
 		},
-		{ params: t.Object({ id: t.String() }) },
+		{
+			params: t.Object({ id: t.String() }),
+			response: t.Union([MessageSchema, ErrorSchema]),
+			detail: {
+				tags: ["Artists"],
+				summary: "아티스트 삭제",
+				description: "아티스트를 삭제합니다.",
+			},
+		},
 	);

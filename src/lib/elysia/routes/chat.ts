@@ -7,6 +7,69 @@ import {
 } from "@/lib/services/chat";
 import { userService } from "@/lib/services/user";
 
+// 공통 스키마
+const UserSchema = t.Object({
+	id: t.String(),
+	nickname: t.String(),
+	profileImage: t.Nullable(t.String()),
+});
+
+const MemberSchema = t.Object({
+	id: t.String(),
+	nickname: t.String(),
+	profileImage: t.Nullable(t.String()),
+	joinedAt: t.String(),
+});
+
+const MessageSchema = t.Object({
+	id: t.String(),
+	content: t.String(),
+	createdAt: t.String(),
+	user: UserSchema,
+});
+
+const SimpleUserSchema = t.Object({
+	id: t.String(),
+	nickname: t.String(),
+});
+
+const LastMessageSchema = t.Object({
+	content: t.String(),
+	createdAt: t.String(),
+	user: SimpleUserSchema,
+});
+
+const RoomItemSchema = t.Object({
+	id: t.String(),
+	name: t.Nullable(t.String()),
+	createdAt: t.String(),
+	members: t.Array(UserSchema),
+	lastMessage: t.Nullable(LastMessageSchema),
+	messageCount: t.Number(),
+});
+
+const RoomDetailSchema = t.Object({
+	id: t.String(),
+	name: t.Nullable(t.String()),
+	createdAt: t.String(),
+	members: t.Array(MemberSchema),
+	messageCount: t.Number(),
+});
+
+const PaginatedMessagesSchema = t.Object({
+	messages: t.Array(MessageSchema),
+	nextCursor: t.Nullable(t.String()),
+	hasMore: t.Boolean(),
+});
+
+const ErrorSchema = t.Object({
+	error: t.String(),
+});
+
+const SuccessMessageSchema = t.Object({
+	message: t.String(),
+});
+
 /**
  * Chat Routes (모두 인증 필수)
  */
@@ -18,31 +81,47 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 	// ==========================================
 
 	// GET /api/chat/rooms - 내 채팅방 목록
-	.get("/rooms", async ({ auth }) => {
-		const user = await userService.findBySupabaseId(auth.user.id);
-		if (!user) {
-			return { rooms: [] };
-		}
+	.get(
+		"/rooms",
+		async ({ auth }) => {
+			const user = await userService.findBySupabaseId(auth.user.id);
+			if (!user) {
+				return { rooms: [] };
+			}
 
-		const rooms = await chatRoomService.findByUserId(user.id);
+			const rooms = await chatRoomService.findByUserId(user.id);
 
-		return {
-			rooms: rooms.map((room) => ({
-				id: room.id,
-				name: room.name,
-				createdAt: room.createdAt.toISOString(),
-				members: room.members.map((m) => m.user),
-				lastMessage: room.messages[0]
-					? {
-							content: room.messages[0].content,
-							createdAt: room.messages[0].createdAt.toISOString(),
-							user: room.messages[0].user,
-						}
-					: null,
-				messageCount: room._count.messages,
-			})),
-		};
-	})
+			return {
+				rooms: rooms.map((room) => ({
+					id: room.id,
+					name: room.name,
+					createdAt: room.createdAt.toISOString(),
+					members: room.members.map((m) => m.user),
+					lastMessage: room.messages[0]
+						? {
+								content: room.messages[0].content,
+								createdAt: room.messages[0].createdAt.toISOString(),
+								user: {
+									id: room.messages[0].user.id,
+									nickname: room.messages[0].user.nickname,
+								},
+							}
+						: null,
+					messageCount: room._count.messages,
+				})),
+			};
+		},
+		{
+			response: t.Object({
+				rooms: t.Array(RoomItemSchema),
+			}),
+			detail: {
+				tags: ["Chat"],
+				summary: "내 채팅방 목록 조회",
+				description: "현재 사용자가 참여중인 채팅방 목록을 조회합니다.",
+			},
+		},
+	)
 
 	// POST /api/chat/rooms - 채팅방 생성
 	.post(
@@ -81,6 +160,20 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				name: t.Optional(t.String()),
 				memberIds: t.Array(t.String(), { minItems: 1 }),
 			}),
+			response: {
+				201: t.Object({
+					id: t.String(),
+					name: t.Nullable(t.String()),
+					createdAt: t.String(),
+					members: t.Array(UserSchema),
+				}),
+				400: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "채팅방 생성",
+				description: "새 채팅방을 생성합니다.",
+			},
 		},
 	)
 
@@ -116,6 +209,21 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			body: t.Object({
 				targetUserId: t.String(),
 			}),
+			response: {
+				200: t.Object({
+					id: t.String(),
+					name: t.Nullable(t.String()),
+					createdAt: t.String(),
+					members: t.Array(UserSchema),
+				}),
+				400: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "1:1 채팅방 조회/생성",
+				description:
+					"대상 사용자와의 1:1 채팅방을 조회하거나, 없으면 새로 생성합니다.",
+			},
 		},
 	)
 
@@ -157,6 +265,17 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			params: t.Object({
 				id: t.String(),
 			}),
+			response: {
+				200: RoomDetailSchema,
+				401: ErrorSchema,
+				403: ErrorSchema,
+				404: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "채팅방 상세 조회",
+				description: "채팅방의 상세 정보를 조회합니다.",
+			},
 		},
 	)
 
@@ -190,6 +309,19 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			body: t.Object({
 				name: t.String({ minLength: 1 }),
 			}),
+			response: {
+				200: t.Object({
+					id: t.String(),
+					name: t.Nullable(t.String()),
+				}),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "채팅방 이름 수정",
+				description: "채팅방 이름을 수정합니다.",
+			},
 		},
 	)
 
@@ -217,6 +349,16 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			params: t.Object({
 				id: t.String(),
 			}),
+			response: {
+				200: SuccessMessageSchema,
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "채팅방 나가기",
+				description: "채팅방에서 나갑니다.",
+			},
 		},
 	)
 
@@ -268,6 +410,20 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			body: t.Object({
 				userId: t.String(),
 			}),
+			response: {
+				201: t.Object({
+					user: UserSchema,
+					joinedAt: t.String(),
+				}),
+				400: ErrorSchema,
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "채팅방 멤버 추가",
+				description: "채팅방에 새 멤버를 추가합니다.",
+			},
 		},
 	)
 
@@ -300,6 +456,18 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			params: t.Object({
 				id: t.String(),
 			}),
+			response: {
+				200: t.Object({
+					members: t.Array(MemberSchema),
+				}),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "채팅방 멤버 목록 조회",
+				description: "채팅방의 멤버 목록을 조회합니다.",
+			},
 		},
 	)
 
@@ -347,6 +515,16 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: {
+				200: PaginatedMessagesSchema,
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "채팅 메시지 목록 조회",
+				description: "채팅방의 메시지 목록을 페이지네이션하여 조회합니다.",
+			},
 		},
 	)
 
@@ -388,6 +566,15 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
 			}),
+			response: {
+				201: MessageSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "메시지 전송",
+				description: "채팅방에 새 메시지를 전송합니다.",
+			},
 		},
 	)
 
@@ -415,5 +602,15 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			params: t.Object({
 				id: t.String(),
 			}),
+			response: {
+				200: SuccessMessageSchema,
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "메시지 삭제",
+				description: "메시지를 삭제합니다.",
+			},
 		},
 	);

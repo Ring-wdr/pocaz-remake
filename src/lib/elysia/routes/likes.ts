@@ -3,6 +3,23 @@ import { authGuard } from "@/lib/elysia/auth";
 import { likeService } from "@/lib/services/like";
 import { userService } from "@/lib/services/user";
 
+// 공통 스키마
+const LikeStatusSchema = t.Object({
+	liked: t.Boolean(),
+	count: t.Number(),
+});
+
+const UserSchema = t.Object({
+	id: t.String(),
+	nickname: t.String(),
+	profileImage: t.Nullable(t.String()),
+});
+
+const ImageSchema = t.Object({
+	id: t.String(),
+	imageUrl: t.String(),
+});
+
 /**
  * Like Routes (인증 필수)
  */
@@ -27,7 +44,15 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 				count,
 			};
 		},
-		{ params: t.Object({ postId: t.String() }) },
+		{
+			params: t.Object({ postId: t.String() }),
+			response: LikeStatusSchema,
+			detail: {
+				tags: ["Likes"],
+				summary: "좋아요 토글",
+				description: "게시글의 좋아요를 토글합니다.",
+			},
+		},
 	)
 	// GET /api/likes/posts/:postId - 좋아요 여부 확인
 	.get(
@@ -43,7 +68,15 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 
 			return { liked, count };
 		},
-		{ params: t.Object({ postId: t.String() }) },
+		{
+			params: t.Object({ postId: t.String() }),
+			response: LikeStatusSchema,
+			detail: {
+				tags: ["Likes"],
+				summary: "좋아요 여부 확인",
+				description: "게시글의 좋아요 여부와 개수를 확인합니다.",
+			},
+		},
 	)
 	// GET /api/likes/posts/:postId/users - 좋아요한 사용자 목록
 	.get(
@@ -52,29 +85,63 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			const users = await likeService.getLikedUsers(params.postId);
 			return { users };
 		},
-		{ params: t.Object({ postId: t.String() }) },
+		{
+			params: t.Object({ postId: t.String() }),
+			response: t.Object({
+				users: t.Array(UserSchema),
+			}),
+			detail: {
+				tags: ["Likes"],
+				summary: "좋아요한 사용자 목록",
+				description: "게시글을 좋아요한 사용자 목록을 조회합니다.",
+			},
+		},
 	)
 	// GET /api/likes/me - 내가 좋아요한 게시글 목록
-	.get("/me", async ({ auth }) => {
-		const user = await userService.findBySupabaseId(auth.user.id);
-		if (!user) {
-			return { items: [] };
-		}
+	.get(
+		"/me",
+		async ({ auth }) => {
+			const user = await userService.findBySupabaseId(auth.user.id);
+			if (!user) {
+				return { items: [] };
+			}
 
-		const posts = await likeService.getLikedPosts(user.id);
-		return {
-			items: posts.map((post) => ({
-				id: post.id,
-				content: post.content,
-				createdAt: post.createdAt.toISOString(),
-				user: post.user,
-				images: post.images,
-				replyCount: post.replyCount,
-				likeCount: post.likeCount,
-				likedAt: post.likedAt.toISOString(),
-			})),
-		};
-	})
+			const posts = await likeService.getLikedPosts(user.id);
+			return {
+				items: posts.map((post) => ({
+					id: post.id,
+					content: post.content,
+					createdAt: post.createdAt.toISOString(),
+					user: post.user,
+					images: post.images,
+					replyCount: post.replyCount,
+					likeCount: post.likeCount,
+					likedAt: post.likedAt.toISOString(),
+				})),
+			};
+		},
+		{
+			response: t.Object({
+				items: t.Array(
+					t.Object({
+						id: t.String(),
+						content: t.String(),
+						createdAt: t.String(),
+						user: UserSchema,
+						images: t.Array(ImageSchema),
+						replyCount: t.Number(),
+						likeCount: t.Number(),
+						likedAt: t.String(),
+					}),
+				),
+			}),
+			detail: {
+				tags: ["Likes"],
+				summary: "내가 좋아요한 게시글 목록",
+				description: "현재 사용자가 좋아요한 게시글 목록을 조회합니다.",
+			},
+		},
+	)
 	// POST /api/likes/check - 여러 게시글 좋아요 여부 확인 (batch)
 	.post(
 		"/check",
@@ -99,5 +166,13 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			body: t.Object({
 				postIds: t.Array(t.String(), { minItems: 1 }),
 			}),
+			response: t.Object({
+				likes: t.Record(t.String(), t.Boolean()),
+			}),
+			detail: {
+				tags: ["Likes"],
+				summary: "여러 게시글 좋아요 여부 확인",
+				description: "여러 게시글의 좋아요 여부를 일괄 확인합니다.",
+			},
 		},
 	);

@@ -1,7 +1,50 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
-import { postService, replyService, postImageService } from "@/lib/services/post";
+import {
+	postService,
+	replyService,
+	postImageService,
+} from "@/lib/services/post";
 import { userService } from "@/lib/services/user";
+
+// 공통 스키마
+const UserSchema = t.Object({
+	id: t.String(),
+	nickname: t.String(),
+	profileImage: t.Nullable(t.String()),
+});
+
+const ImageSchema = t.Object({
+	id: t.String(),
+	imageUrl: t.String(),
+});
+
+const PostItemSchema = t.Object({
+	id: t.String(),
+	content: t.String(),
+	createdAt: t.String(),
+	user: UserSchema,
+	images: t.Array(ImageSchema),
+	replyCount: t.Number(),
+	likeCount: t.Number(),
+});
+
+const PaginatedPostsSchema = t.Object({
+	items: t.Array(PostItemSchema),
+	nextCursor: t.Nullable(t.String()),
+	hasMore: t.Boolean(),
+});
+
+const ReplySchema = t.Object({
+	id: t.String(),
+	content: t.String(),
+	createdAt: t.String(),
+	user: UserSchema,
+});
+
+const ErrorSchema = t.Object({
+	error: t.String(),
+});
 
 /**
  * Public Post Routes (인증 불필요)
@@ -35,6 +78,12 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedPostsSchema,
+			detail: {
+				tags: ["Posts"],
+				summary: "게시글 목록 조회",
+				description: "게시글 목록을 페이지네이션하여 조회합니다.",
+			},
 		},
 	)
 	// GET /api/posts/search - 게시글 검색
@@ -70,6 +119,12 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedPostsSchema,
+			detail: {
+				tags: ["Posts"],
+				summary: "게시글 검색",
+				description: "키워드로 게시글을 검색합니다.",
+			},
 		},
 	)
 	// GET /api/posts/:id - 게시글 상세
@@ -103,6 +158,24 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			params: t.Object({
 				id: t.String(),
 			}),
+			response: t.Union([
+				t.Object({
+					id: t.String(),
+					content: t.String(),
+					createdAt: t.String(),
+					updatedAt: t.String(),
+					user: UserSchema,
+					images: t.Array(ImageSchema),
+					replies: t.Array(ReplySchema),
+					likeCount: t.Number(),
+				}),
+				ErrorSchema,
+			]),
+			detail: {
+				tags: ["Posts"],
+				summary: "게시글 상세 조회",
+				description: "게시글의 상세 정보와 댓글을 조회합니다.",
+			},
 		},
 	)
 	// GET /api/posts/user/:userId - 특정 사용자의 게시글
@@ -136,6 +209,12 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
+			response: PaginatedPostsSchema,
+			detail: {
+				tags: ["Posts"],
+				summary: "특정 사용자의 게시글 조회",
+				description: "특정 사용자가 작성한 게시글 목록을 조회합니다.",
+			},
 		},
 	);
 
@@ -176,6 +255,18 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				content: t.String({ minLength: 1 }),
 				imageUrls: t.Optional(t.Array(t.String())),
 			}),
+			response: t.Object({
+				id: t.String(),
+				content: t.String(),
+				createdAt: t.String(),
+				user: UserSchema,
+				images: t.Array(ImageSchema),
+			}),
+			detail: {
+				tags: ["Posts"],
+				summary: "게시글 작성",
+				description: "새 게시글을 작성합니다.",
+			},
 		},
 	)
 	// PUT /api/posts/:id - 게시글 수정
@@ -211,6 +302,19 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
 			}),
+			response: t.Union([
+				t.Object({
+					id: t.String(),
+					content: t.String(),
+					updatedAt: t.String(),
+				}),
+				ErrorSchema,
+			]),
+			detail: {
+				tags: ["Posts"],
+				summary: "게시글 수정",
+				description: "게시글 내용을 수정합니다.",
+			},
 		},
 	)
 	// DELETE /api/posts/:id - 게시글 삭제
@@ -237,6 +341,15 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			params: t.Object({
 				id: t.String(),
 			}),
+			response: t.Union([
+				t.Object({ message: t.String() }),
+				ErrorSchema,
+			]),
+			detail: {
+				tags: ["Posts"],
+				summary: "게시글 삭제",
+				description: "게시글을 삭제합니다.",
+			},
 		},
 	)
 	// POST /api/posts/:id/replies - 댓글 작성
@@ -278,6 +391,12 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
 			}),
+			response: t.Union([ReplySchema, ErrorSchema]),
+			detail: {
+				tags: ["Posts"],
+				summary: "댓글 작성",
+				description: "게시글에 댓글을 작성합니다.",
+			},
 		},
 	)
 	// PUT /api/posts/:id/replies/:replyId - 댓글 수정
@@ -312,6 +431,19 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
 			}),
+			response: t.Union([
+				t.Object({
+					id: t.String(),
+					content: t.String(),
+					updatedAt: t.String(),
+				}),
+				ErrorSchema,
+			]),
+			detail: {
+				tags: ["Posts"],
+				summary: "댓글 수정",
+				description: "댓글 내용을 수정합니다.",
+			},
 		},
 	)
 	// DELETE /api/posts/:id/replies/:replyId - 댓글 삭제
@@ -339,6 +471,15 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				id: t.String(),
 				replyId: t.String(),
 			}),
+			response: t.Union([
+				t.Object({ message: t.String() }),
+				ErrorSchema,
+			]),
+			detail: {
+				tags: ["Posts"],
+				summary: "댓글 삭제",
+				description: "댓글을 삭제합니다.",
+			},
 		},
 	)
 	// POST /api/posts/:id/images - 이미지 추가
@@ -357,7 +498,10 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				return { error: "Forbidden" };
 			}
 
-			const images = await postImageService.addImages(params.id, body.imageUrls);
+			const images = await postImageService.addImages(
+				params.id,
+				body.imageUrls,
+			);
 
 			return {
 				images: images.map((img) => ({
@@ -373,6 +517,15 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			body: t.Object({
 				imageUrls: t.Array(t.String(), { minItems: 1 }),
 			}),
+			response: t.Union([
+				t.Object({ images: t.Array(ImageSchema) }),
+				ErrorSchema,
+			]),
+			detail: {
+				tags: ["Posts"],
+				summary: "게시글 이미지 추가",
+				description: "게시글에 이미지를 추가합니다.",
+			},
 		},
 	)
 	// DELETE /api/posts/:id/images/:imageId - 이미지 삭제
@@ -400,5 +553,14 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				id: t.String(),
 				imageId: t.String(),
 			}),
+			response: t.Union([
+				t.Object({ message: t.String() }),
+				ErrorSchema,
+			]),
+			detail: {
+				tags: ["Posts"],
+				summary: "게시글 이미지 삭제",
+				description: "게시글에서 이미지를 삭제합니다.",
+			},
 		},
 	);

@@ -1,9 +1,10 @@
 import { Elysia, t } from "elysia";
+
 import { authGuard } from "@/lib/elysia/auth";
 import {
-	storageService,
-	STORAGE_BUCKETS,
 	type StorageBucket,
+	STORAGE_BUCKETS,
+	storageService,
 } from "@/lib/services/storage";
 
 /**
@@ -21,6 +22,48 @@ const ALLOWED_IMAGE_TYPES = [
  * 최대 파일 크기 (20MB)
  */
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
+// 공통 스키마
+const UploadResultSchema = t.Object({
+	path: t.String(),
+	publicUrl: t.String(),
+});
+
+const MultipleUploadResultSchema = t.Object({
+	uploaded: t.Array(
+		t.Object({
+			index: t.Number(),
+			path: t.String(),
+			publicUrl: t.String(),
+		}),
+	),
+	errors: t.Optional(
+		t.Array(
+			t.Object({
+				index: t.Number(),
+				fileName: t.String(),
+				error: t.String(),
+			}),
+		),
+	),
+});
+
+const FileItemSchema = t.Object({
+	name: t.String(),
+	id: t.Optional(t.String()),
+	updated_at: t.Optional(t.String()),
+	created_at: t.Optional(t.String()),
+	last_accessed_at: t.Optional(t.String()),
+	metadata: t.Optional(t.Unknown()),
+});
+
+const ErrorSchema = t.Object({
+	error: t.String(),
+});
+
+const MessageSchema = t.Object({
+	message: t.String(),
+});
 
 /**
  * Storage Routes (모두 인증 필수)
@@ -83,6 +126,16 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				fileName: t.String(),
 				contentType: t.String(),
 			}),
+			response: {
+				201: UploadResultSchema,
+				400: ErrorSchema,
+				500: ErrorSchema,
+			},
+			detail: {
+				tags: ["Storage"],
+				summary: "Base64 이미지 업로드",
+				description: "Base64로 인코딩된 이미지를 업로드합니다.",
+			},
 		},
 	)
 
@@ -162,6 +215,15 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 					{ minItems: 1, maxItems: 10 },
 				),
 			}),
+			response: {
+				201: MultipleUploadResultSchema,
+				400: ErrorSchema,
+			},
+			detail: {
+				tags: ["Storage"],
+				summary: "여러 파일 업로드",
+				description: "여러 파일을 한 번에 업로드합니다 (최대 10개).",
+			},
 		},
 	)
 
@@ -178,10 +240,7 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 			}
 
 			try {
-				await storageService.delete(
-					body.bucket as StorageBucket,
-					body.paths,
-				);
+				await storageService.delete(body.bucket as StorageBucket, body.paths);
 				return { message: "Files deleted successfully" };
 			} catch (error) {
 				set.status = 500;
@@ -195,6 +254,16 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				bucket: t.String(),
 				paths: t.Array(t.String(), { minItems: 1 }),
 			}),
+			response: {
+				200: MessageSchema,
+				400: ErrorSchema,
+				500: ErrorSchema,
+			},
+			detail: {
+				tags: ["Storage"],
+				summary: "파일 삭제",
+				description: "파일을 삭제합니다.",
+			},
 		},
 	)
 
@@ -222,6 +291,15 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				bucket: t.String(),
 				path: t.String(),
 			}),
+			response: {
+				200: t.Object({ publicUrl: t.String() }),
+				400: ErrorSchema,
+			},
+			detail: {
+				tags: ["Storage"],
+				summary: "Public URL 조회",
+				description: "파일의 공개 URL을 조회합니다.",
+			},
 		},
 	)
 
@@ -260,6 +338,16 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				path: t.String(),
 				expiresIn: t.Optional(t.Number()),
 			}),
+			response: {
+				200: t.Object({ signedUrl: t.String() }),
+				400: ErrorSchema,
+				500: ErrorSchema,
+			},
+			detail: {
+				tags: ["Storage"],
+				summary: "Signed URL 생성",
+				description: "파일에 대한 서명된 URL을 생성합니다 (기본 만료: 1시간).",
+			},
 		},
 	)
 
@@ -295,10 +383,33 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 			query: t.Object({
 				folder: t.Optional(t.String()),
 			}),
+			response: {
+				200: t.Object({ files: t.Array(FileItemSchema) }),
+				400: ErrorSchema,
+				500: ErrorSchema,
+			},
+			detail: {
+				tags: ["Storage"],
+				summary: "파일 목록 조회",
+				description: "버킷의 파일 목록을 조회합니다.",
+			},
 		},
 	)
 
 	// GET /api/storage/buckets - 사용 가능한 버킷 목록
-	.get("/buckets", () => ({
-		buckets: Object.values(STORAGE_BUCKETS),
-	}));
+	.get(
+		"/buckets",
+		() => ({
+			buckets: Object.values(STORAGE_BUCKETS),
+		}),
+		{
+			response: t.Object({
+				buckets: t.Array(t.String()),
+			}),
+			detail: {
+				tags: ["Storage"],
+				summary: "사용 가능한 버킷 목록 조회",
+				description: "사용 가능한 스토리지 버킷 목록을 조회합니다.",
+			},
+		},
+	);
