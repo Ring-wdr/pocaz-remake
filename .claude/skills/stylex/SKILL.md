@@ -1,6 +1,7 @@
 ---
 name: stylex
-description: StyleX CSS-in-JS 스타일링 스킬. React 컴포넌트 생성, 스타일 마이그레이션, 반응형 디자인, 애니메이션 구현 시 사용. shorthand 제약, keyframes 스코프 등 StyleX 규칙 준수. (project)
+description: 컴포넌트 생성, 스타일 작성, tsx 파일 수정 시 반드시 사용. StyleX 규칙(shorthand 금지, keyframes 스코프) 준수 필수.
+trigger: ["컴포넌트", "component", "스타일", "style", "tsx", "버튼", "button", "카드", "card", "레이아웃", "layout"]
 ---
 
 # StyleX Development Skill

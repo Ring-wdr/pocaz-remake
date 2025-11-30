@@ -1,6 +1,7 @@
 ---
 name: server
-description: Pocaz 백엔드 개발 스킬. Elysia.js API 라우트, Prisma 모델, 서비스 레이어 생성 시 사용. 새 도메인 추가, API 엔드포인트 구현, 인증 통합 작업에 활용. (project)
+description: API 라우트, 서비스, Prisma 모델 생성/수정 시 반드시 사용. Elysia.js 패턴과 인증 통합 규칙 준수 필수.
+trigger: ["api", "route", "서비스", "service", "prisma", "모델", "model", "엔드포인트", "endpoint", "백엔드", "backend", "elysia"]
 ---
 
 # Pocaz Server Development Skill

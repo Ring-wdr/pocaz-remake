@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { ChevronRight, Star } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import BottomMenu from "./bottom-menu";
 import Header from "./header";
@@ -20,14 +21,15 @@ const styles = stylex.create({
 		left: 0,
 		width: "100vw",
 		height: "100vh",
-		backgroundImage: {
-			default: "url(/pocaz_bg.png)",
-			[MOBILE]: "none",
-		},
-		backgroundSize: "cover",
-		backgroundPosition: "center",
 		zIndex: 0,
 		pointerEvents: "none",
+		display: {
+			default: "block",
+			[MOBILE]: "none",
+		},
+	},
+	bgContent: {
+		objectFit: "cover",
 	},
 	contentLayer: {
 		position: "relative",
@@ -143,12 +145,25 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
 	return (
 		<div {...stylex.props(styles.wrapper)}>
-			<div {...stylex.props(styles.bgFixed)} />
+			<div {...stylex.props(styles.bgFixed)}>
+				<Image
+					src="/pocaz_bg.png"
+					alt=""
+					fill
+					priority
+					sizes="100vw"
+					{...stylex.props(styles.bgContent)}
+				/>
+			</div>
 			<div {...stylex.props(styles.contentLayer)}>
 				<div {...stylex.props(styles.txtBox)}>
 					<div {...stylex.props(styles.txtBoxInner)}>
 						<p {...stylex.props(styles.starText)}>
-							<Star size={14} fill="currentColor" {...stylex.props(styles.starIcon)} />
+							<Star
+								size={14}
+								fill="currentColor"
+								{...stylex.props(styles.starIcon)}
+							/>
 							IDOL PHOTO CARD
 							<span {...stylex.props(styles.atozWrapper)}>
 								<span {...stylex.props(styles.atozBg)} />
