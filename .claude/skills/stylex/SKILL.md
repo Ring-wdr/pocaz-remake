@@ -138,9 +138,9 @@ scales.small, scales.medium, scales.large
 ## Commands
 
 ```bash
-pnpm dev      # 개발 서버 (Turbopack)
-pnpm build    # 프로덕션 빌드
-pnpm start    # 프로덕션 서버
+bun run dev      # 개발 서버 (Turbopack)
+bun run build    # 프로덕션 빌드
+bun run start    # 프로덕션 서버
 ```
 
 ## External Docs
