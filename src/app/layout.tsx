@@ -1,6 +1,8 @@
 import "./app.css";
 import * as stylex from "@stylexjs/stylex";
+import "remixicon/fonts/remixicon.css";
 
+import { Layout } from "@/components/home";
 import { globalTokens as $ } from "./global-tokens.stylex";
 
 export const metadata = {
@@ -14,13 +16,13 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<html {...stylex.props(styles.html, styles.reset)} lang="en">
-			<body {...stylex.props(styles.reset, styles.body)}>{children}</body>
+		<html {...stylex.props(styles.html, styles.reset)} lang="ko">
+			<body {...stylex.props(styles.reset, styles.body)}>
+				<Layout>{children}</Layout>
+			</body>
 		</html>
 	);
 }
-
-const DARK = "@media (prefers-color-scheme: dark)";
 
 const styles = stylex.create({
 	html: {
@@ -33,10 +35,5 @@ const styles = stylex.create({
 	},
 	body: {
 		color: `rgba(${$.foregroundR}, ${$.foregroundG}, ${$.foregroundB}, 1)`,
-		backgroundImage: {
-			default: "linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 50%, #f0f2f5 100%)",
-			[DARK]: "linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)",
-		},
-		backgroundAttachment: "fixed",
 	},
 });

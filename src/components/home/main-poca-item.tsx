@@ -8,50 +8,6 @@ import "swiper/css";
 const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
 
-// Placeholder data - 서버에서 가져와야 하는 이미지는 placeholder로 대체
-const placeholderData = [
-	{
-		id: 1,
-		groupName: "LE SSERAFIM",
-		stageName: "김채원",
-		pocaName: "FEARLESS 앨범 포카",
-		price: 15000,
-		pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-	},
-	{
-		id: 2,
-		groupName: "NewJeans",
-		stageName: "하니",
-		pocaName: "OMG 특전 포카",
-		price: 25000,
-		pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-	},
-	{
-		id: 3,
-		groupName: "IVE",
-		stageName: "장원영",
-		pocaName: "I AM 앨범 포카",
-		price: 18000,
-		pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-	},
-	{
-		id: 4,
-		groupName: "aespa",
-		stageName: "카리나",
-		pocaName: "MY WORLD 포카",
-		price: 22000,
-		pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-	},
-	{
-		id: 5,
-		groupName: "THE BOYZ",
-		stageName: "주연",
-		pocaName: "PHANTASY 포카",
-		price: 12000,
-		pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-	},
-];
-
 const styles = stylex.create({
 	slideButton: {
 		cursor: "pointer",
@@ -106,10 +62,23 @@ const styles = stylex.create({
 	won: {},
 });
 
-export default function MainPocaItem() {
+export interface PocaItemData {
+	id: number;
+	groupName: string;
+	stageName: string;
+	pocaName: string;
+	price: number;
+	pocaImg: string;
+}
+
+interface MainPocaItemProps {
+	items: PocaItemData[];
+}
+
+export default function MainPocaItem({ items }: MainPocaItemProps) {
 	return (
 		<Swiper slidesPerView={2.4} spaceBetween={14}>
-			{placeholderData.map((poca) => (
+			{items.map((poca) => (
 				<SwiperSlide key={poca.id}>
 					<Link
 						href={`/market/${poca.id}`}
