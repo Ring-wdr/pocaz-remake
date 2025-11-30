@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/community";
@@ -26,14 +27,27 @@ const styles = stylex.create({
 	},
 });
 
-export default async function CategoryPage() {
+const VALID_CATEGORIES = ["free", "boast", "info"] as const;
+type PostCategory = (typeof VALID_CATEGORIES)[number];
+
+export default async function CategoryPage({
+	params,
+}: {
+	params: Promise<{ category: string }>;
+}) {
+	const { category } = await params;
+
+	if (!VALID_CATEGORIES.includes(category as PostCategory)) {
+		notFound();
+	}
+
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.content)}>
 				<PageHeader />
 				<CategoryTabsSection />
 				<Suspense fallback={<PostListSkeleton />}>
-					<PostListSection />
+					<PostListSection category={category as PostCategory} />
 				</Suspense>
 			</div>
 			<Footer />

@@ -1,11 +1,17 @@
 import { prisma } from "@/lib/prisma";
 
 /**
+ * Post 카테고리 타입
+ */
+export type PostCategory = "free" | "boast" | "info";
+
+/**
  * Post 생성 DTO
  */
 export interface CreatePostDto {
 	content: string;
 	userId: string;
+	category?: PostCategory;
 	imageUrls?: string[];
 }
 
@@ -17,12 +23,13 @@ export interface UpdatePostDto {
 }
 
 /**
- * Reply 생성 DTO
+ * Comment 생성 DTO
  */
-export interface CreateReplyDto {
+export interface CreateCommentDto {
 	content: string;
 	postId: string;
 	userId: string;
+	parentId?: string; // 대댓글인 경우 부모 댓글 ID
 }
 
 /**
@@ -31,6 +38,7 @@ export interface CreateReplyDto {
 export interface PaginationOptions {
 	cursor?: string;
 	limit?: number;
+	category?: PostCategory;
 }
 
 /**
@@ -41,9 +49,10 @@ export const postService = {
 	 * Post 목록 조회 (커서 기반 페이지네이션)
 	 */
 	async findAll(options: PaginationOptions = {}) {
-		const { cursor, limit = 20 } = options;
+		const { cursor, limit = 20, category } = options;
 
 		const posts = await prisma.post.findMany({
+			where: category ? { category } : undefined,
 			take: limit + 1, // 다음 페이지 존재 여부 확인용
 			...(cursor && {
 				cursor: { id: cursor },
@@ -61,7 +70,7 @@ export const postService = {
 				images: true,
 				_count: {
 					select: {
-						replies: true,
+						comments: true,
 						likes: true,
 					},
 				},
@@ -104,7 +113,7 @@ export const postService = {
 				images: true,
 				_count: {
 					select: {
-						replies: true,
+						comments: true,
 						likes: true,
 					},
 				},
@@ -123,7 +132,7 @@ export const postService = {
 	},
 
 	/**
-	 * Post 상세 조회
+	 * Post 상세 조회 (댓글 제외 - 별도 API로 분리)
 	 */
 	async findById(id: string) {
 		return prisma.post.findUnique({
@@ -137,20 +146,9 @@ export const postService = {
 					},
 				},
 				images: true,
-				replies: {
-					include: {
-						user: {
-							select: {
-								id: true,
-								nickname: true,
-								profileImage: true,
-							},
-						},
-					},
-					orderBy: { createdAt: "asc" },
-				},
 				_count: {
 					select: {
+						comments: true,
 						likes: true,
 					},
 				},
@@ -166,6 +164,7 @@ export const postService = {
 			data: {
 				content: dto.content,
 				userId: dto.userId,
+				category: dto.category ?? "free",
 				...(dto.imageUrls &&
 					dto.imageUrls.length > 0 && {
 						images: {
@@ -258,7 +257,7 @@ export const postService = {
 				images: true,
 				_count: {
 					select: {
-						replies: true,
+						comments: true,
 						likes: true,
 					},
 				},
@@ -278,18 +277,105 @@ export const postService = {
 };
 
 /**
- * Reply Service
+ * Comment Service - 댓글/대댓글 관리
  */
-export const replyService = {
+export const commentService = {
 	/**
-	 * Reply 생성
+	 * 댓글 목록 조회 (최상위 댓글 + 대댓글 포함, 커서 기반 페이지네이션)
 	 */
-	async create(dto: CreateReplyDto) {
-		return prisma.reply.create({
+	async findByPostId(postId: string, options: PaginationOptions = {}) {
+		const { cursor, limit = 20 } = options;
+
+		// 최상위 댓글만 조회 (parentId가 null인 것)
+		const comments = await prisma.comment.findMany({
+			where: {
+				postId,
+				parentId: null, // 최상위 댓글만
+			},
+			take: limit + 1,
+			...(cursor && {
+				cursor: { id: cursor },
+				skip: 1,
+			}),
+			orderBy: { createdAt: "asc" },
+			include: {
+				user: {
+					select: {
+						id: true,
+						nickname: true,
+						profileImage: true,
+					},
+				},
+				// 대댓글 포함 (1 depth만)
+				replies: {
+					where: { deletedAt: null },
+					orderBy: { createdAt: "asc" },
+					include: {
+						user: {
+							select: {
+								id: true,
+								nickname: true,
+								profileImage: true,
+							},
+						},
+					},
+				},
+				_count: {
+					select: {
+						replies: true,
+					},
+				},
+			},
+		});
+
+		const hasMore = comments.length > limit;
+		const items = hasMore ? comments.slice(0, -1) : comments;
+		const nextCursor = hasMore ? items[items.length - 1]?.id : null;
+
+		return {
+			items,
+			nextCursor,
+			hasMore,
+		};
+	},
+
+	/**
+	 * 전체 댓글 수 조회 (대댓글 포함)
+	 */
+	async countByPostId(postId: string) {
+		return prisma.comment.count({
+			where: {
+				postId,
+				deletedAt: null,
+			},
+		});
+	},
+
+	/**
+	 * 댓글 생성 (대댓글인 경우 parentId 포함)
+	 */
+	async create(dto: CreateCommentDto) {
+		// 대댓글인 경우 부모 댓글이 같은 게시글에 속하는지 확인
+		if (dto.parentId) {
+			const parent = await prisma.comment.findUnique({
+				where: { id: dto.parentId },
+				select: { postId: true, parentId: true },
+			});
+			if (!parent || parent.postId !== dto.postId) {
+				throw new Error("Invalid parent comment");
+			}
+			// 대댓글에 또 대댓글을 달 수 없음 (1 depth 제한)
+			if (parent.parentId !== null) {
+				throw new Error("Cannot reply to a reply");
+			}
+		}
+
+		return prisma.comment.create({
 			data: {
 				content: dto.content,
 				postId: dto.postId,
 				userId: dto.userId,
+				parentId: dto.parentId,
 			},
 			include: {
 				user: {
@@ -304,10 +390,10 @@ export const replyService = {
 	},
 
 	/**
-	 * Reply 수정
+	 * 댓글 수정
 	 */
 	async update(id: string, content: string) {
-		return prisma.reply.update({
+		return prisma.comment.update({
 			where: { id },
 			data: { content },
 			include: {
@@ -323,30 +409,49 @@ export const replyService = {
 	},
 
 	/**
-	 * Reply 삭제
+	 * 댓글 삭제 (soft delete - 대댓글이 있으면 "삭제된 댓글입니다" 표시용)
 	 */
 	async delete(id: string) {
-		await prisma.reply.delete({
+		const comment = await prisma.comment.findUnique({
 			where: { id },
+			include: {
+				_count: { select: { replies: true } },
+			},
 		});
+
+		if (!comment) {
+			throw new Error("Comment not found");
+		}
+
+		// 대댓글이 있으면 soft delete, 없으면 hard delete
+		if (comment._count.replies > 0) {
+			await prisma.comment.update({
+				where: { id },
+				data: { deletedAt: new Date() },
+			});
+		} else {
+			await prisma.comment.delete({
+				where: { id },
+			});
+		}
 	},
 
 	/**
-	 * Reply 소유자 확인
+	 * 댓글 소유자 확인
 	 */
-	async isOwner(replyId: string, userId: string) {
-		const reply = await prisma.reply.findUnique({
-			where: { id: replyId },
+	async isOwner(commentId: string, userId: string) {
+		const comment = await prisma.comment.findUnique({
+			where: { id: commentId },
 			select: { userId: true },
 		});
-		return reply?.userId === userId;
+		return comment?.userId === userId;
 	},
 
 	/**
-	 * Reply 조회
+	 * 댓글 조회
 	 */
 	async findById(id: string) {
-		return prisma.reply.findUnique({
+		return prisma.comment.findUnique({
 			where: { id },
 			include: {
 				user: {

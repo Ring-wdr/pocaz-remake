@@ -26,7 +26,7 @@ model User {
   artist       Artist?   @relation(fields: [artistId], references: [id])
 
   posts        Post[]
-  replies      Reply[]
+  comments     Comment[]
   markets      Market[]
   likes        Like[]
   marketLikes  MarketLike[]
@@ -97,11 +97,12 @@ model GalmangPoca {
 }
 
 // ============================================
-// Post & Reply
+// Post & Comment
 // ============================================
 model Post {
   id        String   @id @default(uuid())
   content   String
+  category  String   @default("free") // free, boast, info
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -109,8 +110,10 @@ model Post {
   user      User     @relation(fields: [userId], references: [id])
 
   images    PostImage[]
-  replies   Reply[]
+  comments  Comment[]
   likes     Like[]
+
+  @@index([category, createdAt(sort: Desc)])
 }
 
 model PostImage {
@@ -122,17 +125,26 @@ model PostImage {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
-model Reply {
-  id        String   @id @default(uuid())
+model Comment {
+  id        String    @id @default(uuid())
   content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // soft delete for "삭제된 댓글입니다" display
 
   postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  // Self-referential for nested comments (대댓글)
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([postId, createdAt])
+  @@index([parentId])
 }
 
 // ============================================

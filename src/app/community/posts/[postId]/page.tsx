@@ -16,6 +16,7 @@ import {
 import { getCurrentUser } from "@/lib/auth/actions";
 import { api } from "@/utils/eden";
 
+import { CommentsSection } from "./comments-section";
 import { LikeButton, PostActions } from "./components";
 
 const styles = stylex.create({
@@ -120,7 +121,6 @@ const styles = stylex.create({
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
 		borderBottomColor: colors.borderPrimary,
-		marginBottom: spacing.md,
 	},
 	statItem: {
 		display: "flex",
@@ -128,59 +128,6 @@ const styles = stylex.create({
 		gap: "4px",
 		fontSize: fontSize.md,
 		color: colors.textMuted,
-	},
-	repliesSection: {
-		marginTop: spacing.md,
-	},
-	repliesTitle: {
-		fontSize: fontSize.base,
-		fontWeight: fontWeight.semibold,
-		color: colors.textPrimary,
-		margin: 0,
-		marginBottom: spacing.sm,
-	},
-	replyItem: {
-		paddingTop: spacing.sm,
-		paddingBottom: spacing.sm,
-		borderBottomWidth: 1,
-		borderBottomStyle: "solid",
-		borderBottomColor: colors.borderPrimary,
-	},
-	replyHeader: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxs,
-		marginBottom: spacing.xxxs,
-	},
-	replyAvatar: {
-		width: size.avatarSm,
-		height: size.avatarSm,
-		borderRadius: radius.full,
-		objectFit: "cover",
-		backgroundColor: colors.bgTertiary,
-	},
-	replyAuthor: {
-		fontSize: fontSize.sm,
-		fontWeight: fontWeight.medium,
-		color: colors.textPrimary,
-	},
-	replyDate: {
-		fontSize: fontSize.sm,
-		color: colors.textPlaceholder,
-	},
-	replyContent: {
-		fontSize: fontSize.md,
-		lineHeight: lineHeight.normal,
-		color: colors.textSecondary,
-		margin: 0,
-		paddingLeft: `calc(${size.avatarSm} + ${spacing.xxs})`,
-	},
-	emptyReplies: {
-		textAlign: "center",
-		paddingTop: spacing.lg,
-		paddingBottom: spacing.lg,
-		color: colors.textPlaceholder,
-		fontSize: fontSize.md,
 	},
 });
 
@@ -275,43 +222,16 @@ export default async function PostDetailPage({
 					/>
 					<span {...stylex.props(styles.statItem)}>
 						<MessageCircle size={18} />
-						<span>{post.replies.length}</span>
+						<span>{post.commentCount}</span>
 					</span>
 				</div>
 
-				<div {...stylex.props(styles.repliesSection)}>
-					<h2 {...stylex.props(styles.repliesTitle)}>
-						댓글 {post.replies.length}
-					</h2>
-					{post.replies.length === 0 ? (
-						<p {...stylex.props(styles.emptyReplies)}>
-							첫 번째 댓글을 남겨보세요
-						</p>
-					) : (
-						post.replies.map((reply) => (
-							<div key={reply.id} {...stylex.props(styles.replyItem)}>
-								<div {...stylex.props(styles.replyHeader)}>
-									{reply.user.profileImage ? (
-										<img
-											src={reply.user.profileImage}
-											alt={reply.user.nickname}
-											{...stylex.props(styles.replyAvatar)}
-										/>
-									) : (
-										<div {...stylex.props(styles.replyAvatar)} />
-									)}
-									<span {...stylex.props(styles.replyAuthor)}>
-										{reply.user.nickname}
-									</span>
-									<span {...stylex.props(styles.replyDate)}>
-										· {dayjs(reply.createdAt).format("MM.DD HH:mm")}
-									</span>
-								</div>
-								<p {...stylex.props(styles.replyContent)}>{reply.content}</p>
-							</div>
-						))
-					)}
-				</div>
+				{/* 댓글 섹션 - 서버 컴포넌트에서 초기 데이터 fetch */}
+				<CommentsSection
+					postId={postId}
+					isLoggedIn={!!currentUser}
+					currentUserId={currentUser?.id}
+				/>
 			</div>
 		</div>
 	);

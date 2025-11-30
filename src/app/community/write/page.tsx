@@ -343,11 +343,14 @@ export default function CommunityWritePage() {
 				return;
 			}
 
-			// Combine title and content for the API (API only has content field)
-			const fullContent = `[${categories.find((c) => c.id === selectedCategory)?.name}] ${title}\n\n${content}`;
+			const selectedCategoryData = categories.find(
+				(c) => c.id === selectedCategory,
+			);
+			const fullContent = `${title}\n\n${content}`;
 
 			const { data, error } = await api.posts.post({
 				content: fullContent,
+				category: selectedCategoryData?.slug as "free" | "boast" | "info",
 				imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
 			});
 

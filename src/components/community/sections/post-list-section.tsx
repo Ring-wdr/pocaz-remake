@@ -6,6 +6,12 @@ import Link from "next/link";
 import { colors, fontSize, fontWeight, iconSize, radius, size, spacing } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
 
+type PostCategory = "free" | "boast" | "info";
+
+interface PostListSectionProps {
+	category?: PostCategory;
+}
+
 const styles = stylex.create({
 	container: {
 		marginBottom: spacing.sm,
@@ -72,8 +78,10 @@ const styles = stylex.create({
 	},
 });
 
-export default async function PostListSection() {
-	const { data, error } = await api.posts.get({ query: { limit: "20" } });
+export default async function PostListSection({ category }: PostListSectionProps) {
+	const { data, error } = await api.posts.get({
+		query: { limit: "20", category },
+	});
 
 	if (error || !data) {
 		return (

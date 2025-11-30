@@ -98,7 +98,7 @@ export const likeService = {
 						images: true,
 						_count: {
 							select: {
-								replies: true,
+								comments: true,
 								likes: true,
 							},
 						},
@@ -114,7 +114,7 @@ export const likeService = {
 			createdAt: like.post.createdAt,
 			user: like.post.user,
 			images: like.post.images,
-			replyCount: like.post._count.replies,
+			replyCount: like.post._count.comments,
 			likeCount: like.post._count.likes,
 			likedAt: like.createdAt,
 		}));

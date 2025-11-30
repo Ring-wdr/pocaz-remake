@@ -220,7 +220,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 						id: img.id,
 						imageUrl: img.imageUrl,
 					})),
-					replyCount: post._count.replies,
+					replyCount: post._count.comments,
 					likeCount: post._count.likes,
 				})),
 				nextCursor: result.nextCursor,
