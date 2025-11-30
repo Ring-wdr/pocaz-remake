@@ -127,10 +127,12 @@ All static values must be defined in StyleX, not inline styles:
 <div style={{ marginTop: 8, color: '#333' }} />
 
 // CORRECT - static values in StyleX
+import { spacing, globalTokens } from '@/app/global-tokens.stylex';
+
 const styles = stylex.create({
   container: {
     marginTop: spacing.sm,
-    color: colors.foreground,
+    fontFamily: globalTokens.fontSans,
   },
 });
 <div {...stylex.props(styles.container)} />
@@ -171,7 +173,7 @@ const styles = stylex.create({
 | Value Source | Example | Use |
 |--------------|---------|-----|
 | Hardcoded number | `marginTop: 8` | StyleX |
-| Design token | `color: colors.muted` | StyleX |
+| Design token | `padding: spacing.md` | StyleX |
 | CSS variable | `color: "var(--muted)"` | StyleX with token |
 | State variable | `width: \`${width}px\`` | Inline |
 | Props | `transform: \`rotate(${angle}deg)\`` | Inline |
@@ -180,15 +182,21 @@ const styles = stylex.create({
 ## Using Design Tokens
 
 ```typescript
-import { colors, spacing } from '@/styles/tokens.stylex';
+import { spacing, text, globalTokens } from '@/app/global-tokens.stylex';
 
 const styles = stylex.create({
   card: {
-    backgroundColor: colors.cardBg,
-    borderColor: colors.cardBorder,
     padding: spacing.md,
+    fontSize: text.p,
+    fontFamily: globalTokens.fontSans,
   },
 });
+
+// Available tokens:
+// text: xxs, xs, sm, p, h5, h4, h3, h2, h1 (fluid typography)
+// spacing: xxxs, xxs, xs, sm, md, lg, xl, xxl, xxxl, xxxxl (fluid spacing)
+// globalTokens: fontSans, fontMono, maxWidth, bgStartRGB, primaryGlow, etc.
+// scales: small, medium, large
 ```
 
 ## Grid Layout with Cards

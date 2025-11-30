@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+
 import { globalTokens as $, spacing, text } from "./global-tokens.stylex";
 
 export default function Home() {

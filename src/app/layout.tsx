@@ -1,5 +1,6 @@
 import "./app.css";
 import * as stylex from "@stylexjs/stylex";
+
 import { globalTokens as $ } from "./global-tokens.stylex";
 
 export const metadata = {
