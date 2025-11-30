@@ -1,31 +1,33 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 
+import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+
 const styles = stylex.create({
 	footer: {
-		padding: "14px",
-		backgroundColor: "#000",
+		padding: spacing.sm,
+		backgroundColor: colors.bgInverse,
 	},
 	footerLogo: {},
 	logoText: {
-		color: "#fff",
+		color: colors.textInverse,
 		fontStyle: "italic",
-		fontSize: "18px",
-		fontWeight: 800,
+		fontSize: fontSize.lg,
+		fontWeight: fontWeight.extrabold,
 	},
 	logoLink: {
-		color: "#fff",
+		color: colors.textInverse,
 		textDecoration: "none",
 	},
 	infoText: {
-		color: "#71717a",
-		fontSize: "12px",
+		color: colors.footerText,
+		fontSize: fontSize.sm,
 		letterSpacing: "-0.05em",
 	},
 	linkText: {
-		paddingRight: "4px",
-		color: "#52525b",
-		fontSize: "12px",
+		paddingRight: spacing.xxxs,
+		color: colors.footerTextMuted,
+		fontSize: fontSize.sm,
 		textDecoration: "none",
 	},
 });

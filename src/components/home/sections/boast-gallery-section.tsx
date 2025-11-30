@@ -1,26 +1,28 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 
+import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+
 const styles = stylex.create({
 	boardBoast: {
-		marginBottom: "24px",
+		marginBottom: spacing.md,
 	},
 	subject: {
-		marginBottom: "14px",
+		marginBottom: spacing.sm,
 	},
 	subjectButton: {
-		fontSize: "24px",
-		fontWeight: 800,
+		fontSize: fontSize.xl,
+		fontWeight: fontWeight.extrabold,
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		padding: 0,
 		cursor: "pointer",
-		color: "#000",
+		color: colors.textPrimary,
 		textDecoration: "none",
 	},
 	subjectDesc: {
-		color: "#6b7280",
-		fontSize: "14px",
+		color: colors.textMuted,
+		fontSize: fontSize.md,
 		cursor: "default",
 		margin: 0,
 	},

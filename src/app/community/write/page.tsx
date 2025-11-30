@@ -4,6 +4,8 @@ import * as stylex from "@stylexjs/stylex";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { colors } from "@/app/global-tokens.stylex";
+
 const categories = [
 	{ id: 1, name: "자유게시판", slug: "free" },
 	{ id: 2, name: "포카 자랑", slug: "boast" },
@@ -15,7 +17,7 @@ const styles = stylex.create({
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 		minHeight: "100vh",
 	},
 	header: {
@@ -28,7 +30,7 @@ const styles = stylex.create({
 		paddingRight: "14px",
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 	},
 	backButton: {
 		display: "flex",
@@ -40,12 +42,12 @@ const styles = stylex.create({
 		borderWidth: 0,
 		cursor: "pointer",
 		fontSize: "24px",
-		color: "#000",
+		color: colors.textPrimary,
 	},
 	headerTitle: {
 		fontSize: "18px",
 		fontWeight: 700,
-		color: "#000",
+		color: colors.textPrimary,
 		margin: 0,
 	},
 	submitButton: {
@@ -55,8 +57,8 @@ const styles = stylex.create({
 		paddingRight: "20px",
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#fff",
-		backgroundColor: "#000",
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
 		borderWidth: 0,
 		borderRadius: "8px",
 		cursor: "pointer",
@@ -88,11 +90,11 @@ const styles = stylex.create({
 		display: "block",
 		fontSize: "14px",
 		fontWeight: 600,
-		color: "#374151",
+		color: colors.textTertiary,
 		marginBottom: "8px",
 	},
 	required: {
-		color: "#ef4444",
+		color: colors.statusErrorLight,
 		marginLeft: "2px",
 	},
 	categoryContainer: {
@@ -108,15 +110,15 @@ const styles = stylex.create({
 		borderRadius: "20px",
 		fontSize: "14px",
 		fontWeight: 500,
-		backgroundColor: "#f3f4f6",
-		color: "#6b7280",
+		backgroundColor: colors.bgTertiary,
+		color: colors.textMuted,
 		borderWidth: 0,
 		cursor: "pointer",
 		transition: "all 0.2s ease",
 	},
 	categoryButtonActive: {
-		backgroundColor: "#000",
-		color: "#fff",
+		backgroundColor: colors.bgInverse,
+		color: colors.textInverse,
 	},
 	input: {
 		width: "100%",
@@ -125,16 +127,16 @@ const styles = stylex.create({
 		paddingLeft: "16px",
 		paddingRight: "16px",
 		fontSize: "16px",
-		color: "#000",
-		backgroundColor: "#f9fafb",
+		color: colors.textPrimary,
+		backgroundColor: colors.bgSecondary,
 		borderWidth: 1,
 		borderStyle: "solid",
-		borderColor: "#e5e7eb",
+		borderColor: colors.borderPrimary,
 		borderRadius: "12px",
 		outline: "none",
 		transition: "border-color 0.2s ease",
 		"::placeholder": {
-			color: "#9ca3af",
+			color: colors.textPlaceholder,
 		},
 	},
 	textarea: {
@@ -146,18 +148,18 @@ const styles = stylex.create({
 		paddingRight: "16px",
 		fontSize: "16px",
 		lineHeight: "1.6",
-		color: "#000",
-		backgroundColor: "#f9fafb",
+		color: colors.textPrimary,
+		backgroundColor: colors.bgSecondary,
 		borderWidth: 1,
 		borderStyle: "solid",
-		borderColor: "#e5e7eb",
+		borderColor: colors.borderPrimary,
 		borderRadius: "12px",
 		outline: "none",
 		resize: "vertical",
 		fontFamily: "inherit",
 		transition: "border-color 0.2s ease",
 		"::placeholder": {
-			color: "#9ca3af",
+			color: colors.textPlaceholder,
 		},
 	},
 	imageUploadArea: {
@@ -174,10 +176,10 @@ const styles = stylex.create({
 		justifyContent: "center",
 		width: "100px",
 		height: "100px",
-		backgroundColor: "#f9fafb",
+		backgroundColor: colors.bgSecondary,
 		borderWidth: 2,
 		borderStyle: "dashed",
-		borderColor: "#e5e7eb",
+		borderColor: colors.borderPrimary,
 		borderRadius: "12px",
 		cursor: "pointer",
 		flexShrink: 0,
@@ -185,12 +187,12 @@ const styles = stylex.create({
 	},
 	uploadIcon: {
 		fontSize: "28px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 		marginBottom: "4px",
 	},
 	uploadText: {
 		fontSize: "12px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 	},
 	imagePreviewContainer: {
 		position: "relative",
@@ -213,8 +215,8 @@ const styles = stylex.create({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		backgroundColor: "#000",
-		color: "#fff",
+		backgroundColor: colors.bgInverse,
+		color: colors.textInverse,
 		borderWidth: 0,
 		borderRadius: "50%",
 		cursor: "pointer",
@@ -225,7 +227,7 @@ const styles = stylex.create({
 	},
 	charCount: {
 		fontSize: "12px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 		textAlign: "right",
 		marginTop: "8px",
 	},
@@ -244,7 +246,6 @@ export default function CommunityWritePage() {
 		const files = e.target.files;
 		if (!files) return;
 
-		const newImages: string[] = [];
 		Array.from(files).forEach((file) => {
 			const reader = new FileReader();
 			reader.onload = () => {

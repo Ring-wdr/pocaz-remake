@@ -1,5 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 
+import { colors, radius, spacing } from "@/app/global-tokens.stylex";
+
 const shimmer = stylex.keyframes({
 	"0%": { backgroundPosition: "-200% 0" },
 	"100%": { backgroundPosition: "200% 0" },
@@ -8,19 +10,19 @@ const shimmer = stylex.keyframes({
 const styles = stylex.create({
 	container: {
 		display: "flex",
-		gap: "8px",
-		marginBottom: "16px",
-		paddingBottom: "12px",
+		gap: spacing.xxs,
+		marginBottom: spacing.sm,
+		paddingBottom: spacing.xs,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 	},
 	tab: {
 		width: "80px",
 		height: "36px",
-		borderRadius: "18px",
-		backgroundImage:
-			"linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		borderRadius: radius.lg,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",

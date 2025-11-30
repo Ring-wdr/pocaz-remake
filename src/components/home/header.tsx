@@ -4,6 +4,8 @@ import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+
 const fixHeader = stylex.keyframes({
 	"0%": { top: "-5rem" },
 	"100%": { top: "0" },
@@ -18,23 +20,23 @@ const styles = stylex.create({
 		top: 0,
 		left: 0,
 		width: "100%",
-		color: "#000",
-		backgroundColor: "#fff",
+		color: colors.textPrimary,
+		backgroundColor: colors.bgPrimary,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#ebebeb",
-		boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+		borderBottomColor: colors.borderPrimary,
+		boxShadow: colors.shadowLight,
 		animationName: fixHeader,
 		animationDuration: "0.3s",
 		zIndex: 501,
 	},
 	logo: {
-		padding: "14px",
+		padding: spacing.sm,
 	},
 	logoText: {
 		fontStyle: "italic",
-		fontSize: "30px",
-		fontWeight: 900,
+		fontSize: fontSize.xxl,
+		fontWeight: fontWeight.black,
 		letterSpacing: "-2px",
 	},
 	logoLink: {
@@ -42,7 +44,7 @@ const styles = stylex.create({
 		textDecoration: "none",
 	},
 	logoDot: {
-		color: "#034ac5",
+		color: colors.brandPrimary,
 	},
 });
 

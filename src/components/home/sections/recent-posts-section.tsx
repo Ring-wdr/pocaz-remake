@@ -2,20 +2,22 @@ import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
 import Link from "next/link";
 
+import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+
 const styles = stylex.create({
 	boardWrap: {
-		marginBottom: "24px",
+		marginBottom: spacing.md,
 	},
 	sectionButton: {
 		display: "flex",
-		marginBottom: "14px",
-		fontSize: "24px",
-		fontWeight: 800,
+		marginBottom: spacing.sm,
+		fontSize: fontSize.xl,
+		fontWeight: fontWeight.extrabold,
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		padding: 0,
 		cursor: "pointer",
-		color: "#000",
+		color: colors.textPrimary,
 		textDecoration: "none",
 	},
 	boardList: {},
@@ -29,7 +31,7 @@ const styles = stylex.create({
 		display: "flex",
 		justifyContent: "space-between",
 		width: "100%",
-		marginBottom: "6px",
+		marginBottom: spacing.xxxs,
 		cursor: "pointer",
 		backgroundColor: "transparent",
 		borderWidth: 0,
@@ -37,19 +39,19 @@ const styles = stylex.create({
 		textDecoration: "none",
 	},
 	boardItemTitle: {
-		marginRight: "14px",
-		fontSize: "14px",
-		fontWeight: 400,
+		marginRight: spacing.sm,
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.normal,
 		whiteSpace: "nowrap",
 		textOverflow: "ellipsis",
 		overflow: "hidden",
-		color: "#000",
+		color: colors.textPrimary,
 		margin: 0,
 	},
 	boardItemTime: {
-		fontSize: "14px",
-		fontWeight: 400,
-		color: "#000",
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.normal,
+		color: colors.textPrimary,
 	},
 });
 

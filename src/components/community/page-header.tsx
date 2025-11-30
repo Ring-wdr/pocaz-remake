@@ -1,37 +1,39 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 
+import { colors, fontSize, fontWeight, iconSize, radius, spacing } from "@/app/global-tokens.stylex";
+
 const styles = stylex.create({
 	header: {
 		display: "flex",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: "20px",
+		marginBottom: spacing.sm,
 	},
 	title: {
-		fontSize: "24px",
-		fontWeight: 800,
-		color: "#000",
+		fontSize: fontSize.xl,
+		fontWeight: fontWeight.extrabold,
+		color: colors.textPrimary,
 		margin: 0,
 	},
 	writeButton: {
 		display: "flex",
 		alignItems: "center",
-		gap: "4px",
-		paddingTop: "8px",
-		paddingBottom: "8px",
-		paddingLeft: "14px",
-		paddingRight: "14px",
-		fontSize: "14px",
-		fontWeight: 600,
-		color: "#fff",
-		backgroundColor: "#000",
-		borderRadius: "8px",
+		gap: spacing.xxxs,
+		paddingTop: spacing.xxs,
+		paddingBottom: spacing.xxs,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.semibold,
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
+		borderRadius: radius.sm,
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",
 	},
 	writeIcon: {
-		fontSize: "16px",
+		fontSize: iconSize.sm,
 	},
 });
 

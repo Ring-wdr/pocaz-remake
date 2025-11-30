@@ -2,29 +2,31 @@ import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
 import Link from "next/link";
 
+import { colors, fontSize, fontWeight, iconSize, radius, size, spacing } from "@/app/global-tokens.stylex";
+
 const styles = stylex.create({
 	container: {
-		marginBottom: "16px",
+		marginBottom: spacing.sm,
 	},
 	item: {
 		display: "flex",
 		alignItems: "center",
-		gap: "12px",
-		paddingTop: "16px",
-		paddingBottom: "16px",
+		gap: spacing.xs,
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 		textDecoration: "none",
 		color: "inherit",
 	},
 	thumbnail: {
-		width: "64px",
-		height: "64px",
-		borderRadius: "8px",
+		width: size.avatarLg,
+		height: size.avatarLg,
+		borderRadius: radius.sm,
 		objectFit: "cover",
 		flexShrink: 0,
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 	},
 	content: {
 		flex: 1,
@@ -33,22 +35,22 @@ const styles = stylex.create({
 	categoryBadge: {
 		display: "inline-block",
 		fontSize: "11px",
-		fontWeight: 600,
-		color: "#6b7280",
-		backgroundColor: "#f3f4f6",
+		fontWeight: fontWeight.semibold,
+		color: colors.textMuted,
+		backgroundColor: colors.bgTertiary,
 		paddingTop: "2px",
 		paddingBottom: "2px",
-		paddingLeft: "6px",
-		paddingRight: "6px",
-		borderRadius: "4px",
-		marginBottom: "4px",
+		paddingLeft: spacing.xxxs,
+		paddingRight: spacing.xxxs,
+		borderRadius: radius.xs,
+		marginBottom: spacing.xxxs,
 	},
 	title: {
 		fontSize: "15px",
-		fontWeight: 500,
-		color: "#111827",
+		fontWeight: fontWeight.medium,
+		color: colors.textSecondary,
 		margin: 0,
-		marginBottom: "6px",
+		marginBottom: spacing.xxxs,
 		overflow: "hidden",
 		textOverflow: "ellipsis",
 		whiteSpace: "nowrap",
@@ -56,9 +58,9 @@ const styles = stylex.create({
 	meta: {
 		display: "flex",
 		alignItems: "center",
-		gap: "8px",
-		fontSize: "12px",
-		color: "#9ca3af",
+		gap: spacing.xxs,
+		fontSize: fontSize.sm,
+		color: colors.textPlaceholder,
 	},
 	metaItem: {
 		display: "flex",
@@ -66,20 +68,20 @@ const styles = stylex.create({
 		gap: "2px",
 	},
 	metaIcon: {
-		fontSize: "12px",
+		fontSize: fontSize.sm,
 	},
 	emptyState: {
 		textAlign: "center",
-		paddingTop: "48px",
-		paddingBottom: "48px",
-		color: "#9ca3af",
+		paddingTop: spacing.xl,
+		paddingBottom: spacing.xl,
+		color: colors.textPlaceholder,
 	},
 	emptyIcon: {
-		fontSize: "48px",
-		marginBottom: "12px",
+		fontSize: iconSize.xl,
+		marginBottom: spacing.xs,
 	},
 	emptyText: {
-		fontSize: "14px",
+		fontSize: fontSize.md,
 		margin: 0,
 	},
 });

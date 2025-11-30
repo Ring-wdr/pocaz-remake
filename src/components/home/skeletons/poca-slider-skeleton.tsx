@@ -1,5 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 
+import { colors, radius, spacing } from "@/app/global-tokens.stylex";
+
 const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
 
@@ -10,17 +12,18 @@ const shimmer = stylex.keyframes({
 
 const styles = stylex.create({
 	container: {
-		marginBottom: "24px",
+		marginBottom: spacing.md,
 	},
 	header: {
-		marginBottom: "14px",
+		marginBottom: spacing.sm,
 	},
 	titleSkeleton: {
 		width: "100px",
 		height: "28px",
-		marginBottom: "4px",
-		borderRadius: "4px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		marginBottom: spacing.xxxs,
+		borderRadius: radius.xs,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",
@@ -30,8 +33,9 @@ const styles = stylex.create({
 	descSkeleton: {
 		width: "200px",
 		height: "18px",
-		borderRadius: "4px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		borderRadius: radius.xs,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",
@@ -40,7 +44,7 @@ const styles = stylex.create({
 	},
 	sliderContainer: {
 		display: "flex",
-		gap: "14px",
+		gap: spacing.sm,
 		overflow: "hidden",
 	},
 	card: {
@@ -53,8 +57,9 @@ const styles = stylex.create({
 			[TABLET]: "384px",
 			[MOBILE]: "240px",
 		},
-		borderRadius: "12px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		borderRadius: radius.md,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",
@@ -62,14 +67,15 @@ const styles = stylex.create({
 		animationIterationCount: "infinite",
 	},
 	infoContainer: {
-		marginTop: "4px",
+		marginTop: spacing.xxxs,
 	},
 	groupSkeleton: {
 		width: "80px",
 		height: "14px",
-		marginBottom: "4px",
-		borderRadius: "4px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		marginBottom: spacing.xxxs,
+		borderRadius: radius.xs,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",
@@ -79,9 +85,10 @@ const styles = stylex.create({
 	nameSkeleton: {
 		width: "50px",
 		height: "16px",
-		marginBottom: "4px",
-		borderRadius: "4px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		marginBottom: spacing.xxxs,
+		borderRadius: radius.xs,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",
@@ -91,9 +98,10 @@ const styles = stylex.create({
 	descLineSkeleton: {
 		width: "100px",
 		height: "14px",
-		marginBottom: "4px",
-		borderRadius: "4px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		marginBottom: spacing.xxxs,
+		borderRadius: radius.xs,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",
@@ -103,8 +111,9 @@ const styles = stylex.create({
 	priceSkeleton: {
 		width: "120px",
 		height: "18px",
-		borderRadius: "4px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		borderRadius: radius.xs,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",

@@ -3,44 +3,46 @@
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
+import { colors, fontSize, iconSize, lineHeight, radius, spacing } from "@/app/global-tokens.stylex";
+
 const styles = stylex.create({
 	container: {
-		marginBottom: "16px",
+		marginBottom: spacing.sm,
 	},
 	inputWrap: {
 		display: "flex",
 		alignItems: "center",
-		gap: "8px",
-		paddingTop: "10px",
-		paddingBottom: "10px",
-		paddingLeft: "12px",
-		paddingRight: "12px",
-		backgroundColor: "#f3f4f6",
-		borderRadius: "8px",
+		gap: spacing.xxs,
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		backgroundColor: colors.bgTertiary,
+		borderRadius: radius.sm,
 	},
 	searchIcon: {
-		fontSize: "18px",
-		color: "#9ca3af",
+		fontSize: iconSize.md,
+		color: colors.textPlaceholder,
 	},
 	input: {
 		flex: 1,
-		fontSize: "14px",
+		fontSize: fontSize.md,
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		outline: "none",
-		color: "#111827",
+		color: colors.textSecondary,
 		"::placeholder": {
-			color: "#9ca3af",
+			color: colors.textPlaceholder,
 		},
 	},
 	clearButton: {
-		padding: "4px",
+		padding: spacing.xxxs,
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",
-		color: "#9ca3af",
-		fontSize: "16px",
-		lineHeight: 1,
+		color: colors.textPlaceholder,
+		fontSize: iconSize.sm,
+		lineHeight: lineHeight.tight,
 	},
 });
 

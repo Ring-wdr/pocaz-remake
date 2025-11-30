@@ -1,5 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 
+import { colors, radius, spacing } from "@/app/global-tokens.stylex";
+
 const shimmer = stylex.keyframes({
 	"0%": { backgroundPosition: "-200% 0" },
 	"100%": { backgroundPosition: "200% 0" },
@@ -7,17 +9,18 @@ const shimmer = stylex.keyframes({
 
 const styles = stylex.create({
 	container: {
-		marginBottom: "24px",
+		marginBottom: spacing.md,
 	},
 	header: {
-		marginBottom: "14px",
+		marginBottom: spacing.sm,
 	},
 	titleSkeleton: {
 		width: "80px",
 		height: "28px",
-		marginBottom: "4px",
-		borderRadius: "4px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		marginBottom: spacing.xxxs,
+		borderRadius: radius.xs,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",
@@ -27,8 +30,9 @@ const styles = stylex.create({
 	descSkeleton: {
 		width: "180px",
 		height: "18px",
-		borderRadius: "4px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		borderRadius: radius.xs,
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",
@@ -44,7 +48,8 @@ const styles = stylex.create({
 	},
 	gridItem: {
 		height: "144px",
-		backgroundImage: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+		backgroundColor: colors.skeletonBase,
+		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
 		animationDuration: "1.5s",

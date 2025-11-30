@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+
 const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
 
@@ -24,7 +26,7 @@ const styles = stylex.create({
 			[TABLET]: "384px",
 			[MOBILE]: "240px",
 		},
-		borderRadius: "12px",
+		borderRadius: radius.md,
 		overflow: "hidden",
 	},
 	pocaImage: {
@@ -33,31 +35,31 @@ const styles = stylex.create({
 		objectFit: "cover",
 	},
 	pocaListWrap: {
-		marginTop: "4px",
-		fontSize: "12px",
+		marginTop: spacing.xxxs,
+		fontSize: fontSize.sm,
 		textAlign: "left",
 	},
 	groupName: {
-		fontWeight: 800,
+		fontWeight: fontWeight.extrabold,
 		margin: 0,
 	},
 	memberName: {
-		fontSize: "14px",
+		fontSize: fontSize.md,
 		margin: 0,
 	},
 	pocaDesc: {
-		marginBottom: "4px",
-		color: "#6b7280",
+		marginBottom: spacing.xxxs,
+		color: colors.textMuted,
 		margin: 0,
 	},
 	pocaPrice: {
-		fontWeight: 500,
-		fontSize: "16px",
+		fontWeight: fontWeight.medium,
+		fontSize: fontSize.base,
 		margin: 0,
 	},
 	priceLabel: {
-		marginRight: "6px",
-		color: "#6b7280",
+		marginRight: spacing.xxxs,
+		color: colors.textMuted,
 	},
 	won: {},
 });

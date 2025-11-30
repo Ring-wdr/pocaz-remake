@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "remixicon/fonts/remixicon.css";
 
+import { colors, fontSize, iconSize, lineHeight, size } from "@/app/global-tokens.stylex";
+
 const btnList = [
 	{ id: 0, title: "HOME", icon: "ri-home-3-line", to: "/" },
 	{ id: 1, title: "MARKET", icon: "ri-store-line", to: "/market" },
@@ -20,11 +22,11 @@ const styles = stylex.create({
 		left: 0,
 		zIndex: 50,
 		boxSizing: "border-box",
-		height: "56px",
-		backgroundColor: "#fff",
+		height: size.bottomMenuHeight,
+		backgroundColor: colors.bgPrimary,
 		borderTopWidth: 1,
 		borderTopStyle: "solid",
-		borderTopColor: "#9ca3af",
+		borderTopColor: colors.textPlaceholder,
 	},
 	menuList: {
 		display: "flex",
@@ -40,18 +42,18 @@ const styles = stylex.create({
 		display: "block",
 		textAlign: "center",
 		textDecoration: "none",
-		color: "#000",
+		color: colors.textPrimary,
 	},
 	menuLinkActive: {
-		color: "#034ac5",
+		color: colors.brandPrimary,
 	},
 	menuIcon: {
 		display: "block",
-		fontSize: "24px",
-		lineHeight: 1,
+		fontSize: iconSize.lg,
+		lineHeight: lineHeight.tight,
 	},
 	menuTitle: {
-		fontSize: "12px",
+		fontSize: fontSize.sm,
 	},
 });
 

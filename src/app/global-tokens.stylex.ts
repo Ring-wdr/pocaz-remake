@@ -191,26 +191,75 @@ export const spacing = stylex.defineVars({
 
 /**
  * Color Tokens
+ * Dark mode ready design tokens
  */
 const DARK_MODE = '@media (prefers-color-scheme: dark)';
 
+/**
+ * Semantic Color Tokens
+ * These tokens are designed to support both light and dark themes.
+ */
+export const colors = stylex.defineVars({
+  // Background colors
+  bgPrimary: { default: '#ffffff', [DARK_MODE]: '#0a0a0a' },
+  bgSecondary: { default: '#f9fafb', [DARK_MODE]: '#171717' },
+  bgTertiary: { default: '#f3f4f6', [DARK_MODE]: '#262626' },
+  bgInverse: { default: '#000000', [DARK_MODE]: '#ffffff' },
+
+  // Text colors
+  textPrimary: { default: '#000000', [DARK_MODE]: '#ffffff' },
+  textSecondary: { default: '#111827', [DARK_MODE]: '#f3f4f6' },
+  textTertiary: { default: '#374151', [DARK_MODE]: '#d1d5db' },
+  textMuted: { default: '#6b7280', [DARK_MODE]: '#9ca3af' },
+  textPlaceholder: { default: '#9ca3af', [DARK_MODE]: '#6b7280' },
+  textInverse: { default: '#ffffff', [DARK_MODE]: '#000000' },
+
+  // Border colors
+  borderPrimary: { default: '#e5e7eb', [DARK_MODE]: '#374151' },
+  borderSecondary: { default: '#f3f4f6', [DARK_MODE]: '#262626' },
+
+  // Interactive colors
+  accentPrimary: { default: '#2563eb', [DARK_MODE]: '#3b82f6' },
+  accentPrimaryBg: { default: '#dbeafe', [DARK_MODE]: '#1e3a5f' },
+
+  // Status colors - Error/Danger
+  statusError: { default: '#dc2626', [DARK_MODE]: '#ef4444' },
+  statusErrorLight: { default: '#ef4444', [DARK_MODE]: '#f87171' },
+  statusErrorBg: { default: '#fee2e2', [DARK_MODE]: '#450a0a' },
+  statusErrorBgLight: { default: '#fef2f2', [DARK_MODE]: '#7f1d1d' },
+
+  // Status colors - Success
+  statusSuccess: { default: '#059669', [DARK_MODE]: '#10b981' },
+  statusSuccessLight: { default: '#22c55e', [DARK_MODE]: '#34d399' },
+  statusSuccessBg: { default: '#d1fae5', [DARK_MODE]: '#064e3b' },
+
+  // Status colors - Warning
+  statusWarning: { default: '#d97706', [DARK_MODE]: '#f59e0b' },
+  statusWarningBg: { default: '#fef3c7', [DARK_MODE]: '#78350f' },
+
+  // Status colors - Info
+  statusInfo: { default: '#2563eb', [DARK_MODE]: '#3b82f6' },
+  statusInfoBg: { default: '#dbeafe', [DARK_MODE]: '#1e3a5f' },
+
+  // Special colors
+  purple: { default: '#7c3aed', [DARK_MODE]: '#8b5cf6' },
+
+  // Skeleton loading
+  skeletonBase: { default: '#f0f0f0', [DARK_MODE]: '#262626' },
+  skeletonHighlight: { default: '#e0e0e0', [DARK_MODE]: '#404040' },
+
+  // Footer colors
+  footerText: { default: '#71717a', [DARK_MODE]: '#a1a1aa' },
+  footerTextMuted: { default: '#52525b', [DARK_MODE]: '#71717a' },
+
+  // Brand colors
+  brandPrimary: { default: '#034ac5', [DARK_MODE]: '#3b82f6' },
+
+  // Shadow colors (for rgba values)
+  shadowLight: { default: 'rgba(0, 0, 0, 0.1)', [DARK_MODE]: 'rgba(255, 255, 255, 0.05)' },
+});
+
 export const globalTokens = stylex.defineVars({
-  maxWidth: `${MAX_WIDTH}px`,
-  fontMono: [
-    'ui-monospace',
-    'Menlo',
-    'Monaco',
-    '"Cascadia Mono"',
-    '"Segoe UI Mono"',
-    '"Roboto Mono"',
-    '"Oxygen Mono"',
-    '"Ubuntu Monospace"',
-    '"Source Code Pro"',
-    '"Fira Mono"',
-    '"Droid Sans Mono"',
-    '"Courier New"',
-    'monospace',
-  ].join(', '),
   fontSans: [
     '-apple-system',
     'BlinkMacSystemFont',
@@ -225,59 +274,82 @@ export const globalTokens = stylex.defineVars({
     '"Segoe UI Symbol"',
     '"Noto Color Emoji"',
   ].join(', '),
-
-  foregroundR: { default: '0', [DARK_MODE]: '255' },
-  foregroundG: { default: '0', [DARK_MODE]: '255' },
-  foregroundB: { default: '0', [DARK_MODE]: '255' },
-
-  bgStartRGB: { default: 'rgb(214, 219, 220)', [DARK_MODE]: 'rgb(0, 0, 0)' },
-
-  bgEndR: { default: '255', [DARK_MODE]: '0' },
-  bgEndG: { default: '255', [DARK_MODE]: '0' },
-  bgEndB: { default: '255', [DARK_MODE]: '0' },
-
-  calloutRGB: { default: 'rgb(238, 240, 241)', [DARK_MODE]: 'rgb(20, 20, 20)' },
-  calloutRGB50: {
-    default: 'rgba(238, 240, 241, 0.5)',
-    [DARK_MODE]: 'rgba(20, 20, 20, 0.5)',
-  },
-
-  calloutBorderR: { default: '172', [DARK_MODE]: '108' },
-  calloutBorderG: { default: '175', [DARK_MODE]: '108' },
-  calloutBorderB: { default: '176', [DARK_MODE]: '108' },
-
-  cardR: { default: '180', [DARK_MODE]: '100' },
-  cardG: { default: '185', [DARK_MODE]: '100' },
-  cardB: { default: '188', [DARK_MODE]: '100' },
-
-  cardBorderR: { default: '131', [DARK_MODE]: '200' },
-  cardBorderG: { default: '134', [DARK_MODE]: '200' },
-  cardBorderB: { default: '135', [DARK_MODE]: '200' },
-
-  primaryGlow: {
-    default: `conic-gradient(${[
-      'from 180deg at 50% 50%',
-      '#16abff33 0deg',
-      '#0885ff33 55deg',
-      '#54d6ff33 120deg',
-      '#0071ff33 160deg',
-      'transparent 360deg',
-    ].join(', ')})`,
-    [DARK_MODE]: 'radial-gradient(rgba(1, 65, 255, 0.4), rgba(1, 65, 255, 0))',
-  },
-  secondaryGlow: {
-    default: 'radial-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0))',
-    [DARK_MODE]: `linear-gradient(${[
-      'to bottom right',
-      'rgba(1, 65, 255, 0)',
-      'rgba(1, 65, 255, 0)',
-      'rgba(1, 65, 255, 0.3)',
-    ].join(', ')})`,
-  },
 });
 
-export const scales = stylex.defineVars({
-  small: 'scale(0.95)',
-  medium: 'scale(1)',
-  large: 'scale(1.2)',
+
+/**
+ * Fixed Size Tokens
+ * These tokens provide consistent sizing across the application.
+ * Use these for precise pixel-based designs.
+ */
+export const fontSize = stylex.defineVars({
+  // Extra small text (badges, labels)
+  xs: '10px',
+  // Small text (captions, hints)
+  sm: '12px',
+  // Medium small text (secondary content)
+  md: '14px',
+  // Base text (body, inputs)
+  base: '16px',
+  // Large text (emphasized content)
+  lg: '18px',
+  // Section titles
+  xl: '24px',
+  // Logo, hero text
+  xxl: '30px',
+});
+
+export const fontWeight = stylex.defineVars({
+  normal: '400',
+  medium: '500',
+  semibold: '600',
+  bold: '700',
+  extrabold: '800',
+  black: '900',
+});
+
+export const lineHeight = stylex.defineVars({
+  tight: '1',
+  snug: '1.25',
+  normal: '1.5',
+  relaxed: '1.6',
+  loose: '2',
+});
+
+export const radius = stylex.defineVars({
+  // Small radius (badges, chips)
+  xs: '4px',
+  // Medium radius (buttons, inputs)
+  sm: '8px',
+  // Large radius (cards, modals)
+  md: '12px',
+  // Extra large radius (pills)
+  lg: '20px',
+  // Full circle
+  full: '50%',
+});
+
+export const iconSize = stylex.defineVars({
+  xs: '14px',
+  sm: '16px',
+  md: '18px',
+  lg: '24px',
+  xl: '28px',
+});
+
+export const size = stylex.defineVars({
+  // Touch targets, buttons
+  touchTarget: '40px',
+  // Icon buttons
+  iconButton: '24px',
+  // Avatar small
+  avatarSm: '32px',
+  // Avatar medium
+  avatarMd: '48px',
+  // Avatar large
+  avatarLg: '64px',
+  // Thumbnail
+  thumbnail: '100px',
+  // Bottom menu height
+  bottomMenuHeight: '56px',
 });

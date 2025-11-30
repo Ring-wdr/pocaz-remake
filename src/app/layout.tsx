@@ -3,7 +3,7 @@ import * as stylex from "@stylexjs/stylex";
 import "remixicon/fonts/remixicon.css";
 
 import { Layout } from "@/components/home";
-import { globalTokens as $ } from "./global-tokens.stylex";
+import { colors } from "./global-tokens.stylex";
 
 export const metadata = {
 	title: "Pocaz",
@@ -30,6 +30,6 @@ const styles = stylex.create({
 		padding: 0,
 	},
 	body: {
-		color: `rgba(${$.foregroundR}, ${$.foregroundG}, ${$.foregroundB}, 1)`,
+		color: colors.textPrimary,
 	},
 });

@@ -4,6 +4,8 @@ import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+
 const categories = [
 	{ id: 0, name: "전체", slug: "" },
 	{ id: 1, name: "자유게시판", slug: "free" },
@@ -14,31 +16,31 @@ const categories = [
 const styles = stylex.create({
 	container: {
 		display: "flex",
-		gap: "8px",
-		marginBottom: "16px",
-		paddingBottom: "12px",
+		gap: spacing.xxs,
+		marginBottom: spacing.sm,
+		paddingBottom: spacing.xs,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 		overflowX: "auto",
 	},
 	tab: {
-		paddingTop: "8px",
-		paddingBottom: "8px",
-		paddingLeft: "16px",
-		paddingRight: "16px",
-		borderRadius: "18px",
-		fontSize: "14px",
-		fontWeight: 500,
+		paddingTop: spacing.xxs,
+		paddingBottom: spacing.xxs,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
+		borderRadius: radius.lg,
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.medium,
 		textDecoration: "none",
 		whiteSpace: "nowrap",
-		backgroundColor: "#f3f4f6",
-		color: "#6b7280",
+		backgroundColor: colors.bgTertiary,
+		color: colors.textMuted,
 		transition: "all 0.2s ease",
 	},
 	tabActive: {
-		backgroundColor: "#000",
-		color: "#fff",
+		backgroundColor: colors.bgInverse,
+		color: colors.textInverse,
 	},
 });
 
