@@ -3,6 +3,8 @@ import { ArrowLeft, FileText, Heart, MessageCircle, Store } from "lucide-react";
 import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { formatRelativeTime } from "@/utils/date";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -125,74 +127,27 @@ const styles = stylex.create({
 	},
 });
 
-interface Activity {
-	id: number;
-	type: "post" | "like" | "comment" | "trade";
-	text: string;
-	target: string;
-	targetHref: string;
-	time: string;
-}
+type ActivityType = "post" | "like" | "comment" | "trade" | "market";
 
-// TODO: Replace with actual API data
-const activities: Activity[] = [
-	{
-		id: 1,
-		type: "post",
-		text: "새 게시글을 작성했습니다",
-		target: "르세라핌 포카 양도합니다",
-		targetHref: "/community/1",
-		time: "10분 전",
-	},
-	{
-		id: 2,
-		type: "like",
-		text: "게시글에 좋아요를 눌렀습니다",
-		target: "뉴진스 버니 포카 구해요",
-		targetHref: "/community/2",
-		time: "1시간 전",
-	},
-	{
-		id: 3,
-		type: "comment",
-		text: "댓글을 작성했습니다",
-		target: "에스파 윈터 포카 판매",
-		targetHref: "/community/3",
-		time: "2시간 전",
-	},
-	{
-		id: 4,
-		type: "trade",
-		text: "거래를 완료했습니다",
-		target: "아이브 원영 포카",
-		targetHref: "/market/1",
-		time: "1일 전",
-	},
-	{
-		id: 5,
-		type: "post",
-		text: "장터에 상품을 등록했습니다",
-		target: "BTS 지민 시즌그리팅 포카",
-		targetHref: "/market/2",
-		time: "2일 전",
-	},
-];
-
-const iconStyles: Record<Activity["type"], keyof typeof styles> = {
+const iconStyles: Record<ActivityType, keyof typeof styles> = {
 	post: "iconPost",
 	like: "iconLike",
 	comment: "iconComment",
 	trade: "iconTrade",
+	market: "iconTrade",
 };
 
-const IconComponents: Record<Activity["type"], typeof FileText> = {
+const IconComponents: Record<ActivityType, typeof FileText> = {
 	post: FileText,
 	like: Heart,
 	comment: MessageCircle,
 	trade: Store,
+	market: Store,
 };
 
-export default function ActivityPage() {
+export default async function ActivityPage() {
+	const { data, error } = await api.users.me.activity.get();
+	const activities = !error && data ? data.items : [];
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
@@ -206,33 +161,56 @@ export default function ActivityPage() {
 				{activities.length > 0 ? (
 					<div {...stylex.props(styles.activityList)}>
 						{activities.map((activity) => {
-							const IconComponent = IconComponents[activity.type];
-							return (
-								<Link
-									key={activity.id}
-									href={activity.targetHref}
-									{...stylex.props(styles.activityItem)}
-								>
+							const activityType = activity.type as ActivityType;
+							const IconComponent = IconComponents[activityType] || FileText;
+							const content = (
+								<>
 									<div
 										{...stylex.props(
 											styles.iconWrap,
-											styles[iconStyles[activity.type]],
+											styles[iconStyles[activityType]] || styles.iconPost,
 										)}
 									>
 										<IconComponent size={18} />
 									</div>
 									<div {...stylex.props(styles.activityContent)}>
 										<p {...stylex.props(styles.activityText)}>
-											{activity.text}:{" "}
-											<span {...stylex.props(styles.activityTarget)}>
-												{activity.target}
-											</span>
+											{activity.text}
+											{activity.target && (
+												<>
+													:{" "}
+													<span {...stylex.props(styles.activityTarget)}>
+														{activity.target}
+													</span>
+												</>
+											)}
 										</p>
 										<p {...stylex.props(styles.activityTime)}>
-											{activity.time}
+											{formatRelativeTime(activity.time)}
 										</p>
 									</div>
-								</Link>
+								</>
+							);
+
+							if (activity.targetHref) {
+								return (
+									<Link
+										key={activity.id}
+										href={activity.targetHref}
+										{...stylex.props(styles.activityItem)}
+									>
+										{content}
+									</Link>
+								);
+							}
+
+							return (
+								<div
+									key={activity.id}
+									{...stylex.props(styles.activityItem)}
+								>
+									{content}
+								</div>
 							);
 						})}
 					</div>

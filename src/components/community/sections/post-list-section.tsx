@@ -98,7 +98,7 @@ export default async function PostListSection() {
 			{data.items.map((post) => (
 				<Link
 					key={post.id}
-					href={`/community/${post.id}`}
+					href={`/community/posts/${post.id}`}
 					{...stylex.props(styles.item)}
 				>
 					{post.images[0] && (

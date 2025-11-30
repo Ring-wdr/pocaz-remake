@@ -1,5 +1,6 @@
 import "./app.css";
 import * as stylex from "@stylexjs/stylex";
+import { Toaster } from "sonner";
 
 import { Layout } from "@/components/home";
 import { colors } from "./global-tokens.stylex";
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 	return (
 		<html {...stylex.props(styles.html, styles.reset)} lang="ko">
 			<body {...stylex.props(styles.reset, styles.body)}>
+				<Toaster richColors position="top-center" />
 				<Layout>{children}</Layout>
 			</body>
 		</html>

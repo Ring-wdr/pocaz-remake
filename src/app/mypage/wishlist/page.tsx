@@ -3,6 +3,7 @@ import { ArrowLeft, Heart, Store } from "lucide-react";
 import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -162,16 +163,6 @@ const styles = stylex.create({
 
 type WishlistStatus = "available" | "reserved" | "sold";
 
-interface WishlistProduct {
-	id: number;
-	title: string;
-	price: number;
-	seller: string;
-	status: WishlistStatus;
-	image?: string;
-	href: string;
-}
-
 const statusLabels: Record<WishlistStatus, string> = {
 	available: "판매중",
 	reserved: "예약중",
@@ -184,43 +175,9 @@ const statusStyles: Record<WishlistStatus, keyof typeof styles> = {
 	sold: "statusSold",
 };
 
-// TODO: Replace with actual API data
-const wishlistProducts: WishlistProduct[] = [
-	{
-		id: 1,
-		title: "르세라핌 채원 시그니처 포카",
-		price: 25000,
-		seller: "포카판매자",
-		status: "available",
-		href: "/market/1",
-	},
-	{
-		id: 2,
-		title: "뉴진스 민지 팬미팅 포카",
-		price: 35000,
-		seller: "아이돌팬",
-		status: "reserved",
-		href: "/market/2",
-	},
-	{
-		id: 3,
-		title: "에스파 카리나 콘서트 포카",
-		price: 20000,
-		seller: "덕질러",
-		status: "available",
-		href: "/market/3",
-	},
-	{
-		id: 4,
-		title: "아이브 안유진 앨범 포카",
-		price: 18000,
-		seller: "마이팬",
-		status: "sold",
-		href: "/market/4",
-	},
-];
-
-export default function WishlistPage() {
+export default async function WishlistPage() {
+	const { data, error } = await api.users.me.wishlist.get();
+	const wishlistProducts = !error && data ? data.items : [];
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
@@ -233,52 +190,55 @@ export default function WishlistPage() {
 			<div {...stylex.props(styles.content)}>
 				{wishlistProducts.length > 0 ? (
 					<div {...stylex.props(styles.productGrid)}>
-						{wishlistProducts.map((product) => (
-							<Link
-								key={product.id}
-								href={product.href}
-								{...stylex.props(styles.productItem)}
-							>
-								<div {...stylex.props(styles.productImageWrap)}>
-									{product.image ? (
-										<img
-											src={product.image}
-											alt={product.title}
-											{...stylex.props(styles.productImage)}
-										/>
-									) : (
-										<div {...stylex.props(styles.productImagePlaceholder)}>
-											<Store size={32} />
-										</div>
-									)}
-									<span
-										{...stylex.props(
-											styles.statusBadge,
-											styles[statusStyles[product.status]],
+						{wishlistProducts.map((product) => {
+							const status = product.status as WishlistStatus;
+							return (
+								<Link
+									key={product.id}
+									href={product.href}
+									{...stylex.props(styles.productItem)}
+								>
+									<div {...stylex.props(styles.productImageWrap)}>
+										{product.image ? (
+											<img
+												src={product.image}
+												alt={product.title}
+												{...stylex.props(styles.productImage)}
+											/>
+										) : (
+											<div {...stylex.props(styles.productImagePlaceholder)}>
+												<Store size={32} />
+											</div>
 										)}
-									>
-										{statusLabels[product.status]}
-									</span>
-									<button
-										type="button"
-										{...stylex.props(styles.wishlistButton)}
-									>
-										<Heart size={18} fill="currentColor" />
-									</button>
-								</div>
-								<div {...stylex.props(styles.productInfo)}>
-									<p {...stylex.props(styles.productSeller)}>
-										{product.seller}
-									</p>
-									<h3 {...stylex.props(styles.productTitle)}>
-										{product.title}
-									</h3>
-									<p {...stylex.props(styles.productPrice)}>
-										{product.price.toLocaleString()}원
-									</p>
-								</div>
-							</Link>
-						))}
+										<span
+											{...stylex.props(
+												styles.statusBadge,
+												styles[statusStyles[status]],
+											)}
+										>
+											{statusLabels[status]}
+										</span>
+										<button
+											type="button"
+											{...stylex.props(styles.wishlistButton)}
+										>
+											<Heart size={18} fill="currentColor" />
+										</button>
+									</div>
+									<div {...stylex.props(styles.productInfo)}>
+										<p {...stylex.props(styles.productSeller)}>
+											{product.seller}
+										</p>
+										<h3 {...stylex.props(styles.productTitle)}>
+											{product.title}
+										</h3>
+										<p {...stylex.props(styles.productPrice)}>
+											{product.price ? `${product.price.toLocaleString()}원` : "가격협의"}
+										</p>
+									</div>
+								</Link>
+							);
+						})}
 					</div>
 				) : (
 					<div {...stylex.props(styles.emptyState)}>

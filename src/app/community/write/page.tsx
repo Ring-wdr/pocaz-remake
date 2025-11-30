@@ -3,10 +3,11 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArrowLeft, ImagePlus, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
-import { colors } from "@/app/global-tokens.stylex";
+import { colors, size } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
+import { toast } from "sonner";
 
 const categories = [
 	{ id: 1, name: "자유게시판", slug: "free" },
@@ -14,13 +15,17 @@ const categories = [
 	{ id: 3, name: "정보 공유", slug: "info" },
 ];
 
+interface ImageFile {
+	file: File;
+	preview: string;
+}
+
 const styles = stylex.create({
 	container: {
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
 		backgroundColor: colors.bgPrimary,
-		minHeight: "100vh",
 	},
 	header: {
 		display: "flex",
@@ -233,6 +238,38 @@ const styles = stylex.create({
 		textAlign: "right",
 		marginTop: "8px",
 	},
+	bottomButtonContainer: {
+		position: "sticky",
+		bottom: size.bottomMenuHeight,
+		left: 0,
+		right: 0,
+		paddingTop: "12px",
+		paddingBottom: "12px",
+		paddingLeft: "14px",
+		paddingRight: "14px",
+		backgroundColor: colors.bgPrimary,
+		borderTopWidth: 1,
+		borderTopStyle: "solid",
+		borderTopColor: colors.borderPrimary,
+		zIndex: 10,
+	},
+	bottomButton: {
+		width: "100%",
+		paddingTop: "16px",
+		paddingBottom: "16px",
+		fontSize: "16px",
+		fontWeight: 600,
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
+		borderWidth: 0,
+		borderRadius: "12px",
+		cursor: "pointer",
+		transition: "opacity 0.2s ease",
+	},
+	bottomButtonDisabled: {
+		opacity: 0.5,
+		cursor: "not-allowed",
+	},
 });
 
 export default function CommunityWritePage() {
@@ -241,48 +278,87 @@ export default function CommunityWritePage() {
 	const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 	const [title, setTitle] = useState("");
 	const [content, setContent] = useState("");
-	const [images, setImages] = useState<string[]>([]);
+	const [images, setImages] = useState<ImageFile[]>([]);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const isFormValid = selectedCategory !== null && title.trim() && content.trim();
+	const isFormValid =
+		selectedCategory !== null && title.trim() && content.trim();
 	const isDisabled = !isFormValid || isPending;
 
 	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
 		if (!files) return;
 
+		const newImages: ImageFile[] = [];
 		Array.from(files).forEach((file) => {
-			const reader = new FileReader();
-			reader.onload = () => {
-				if (typeof reader.result === "string") {
-					setImages((prev) => [...prev, reader.result as string]);
-				}
-			};
-			reader.readAsDataURL(file);
+			if (images.length + newImages.length >= 10) return;
+			const preview = URL.createObjectURL(file);
+			newImages.push({ file, preview });
 		});
+
+		setImages((prev) => [...prev, ...newImages]);
+
+		// Reset file input
+		if (fileInputRef.current) {
+			fileInputRef.current.value = "";
+		}
 	};
 
 	const handleRemoveImage = (index: number) => {
-		setImages((prev) => prev.filter((_, i) => i !== index));
+		setImages((prev) => {
+			const removed = prev[index];
+			if (removed) {
+				URL.revokeObjectURL(removed.preview);
+			}
+			return prev.filter((_, i) => i !== index);
+		});
+	};
+
+	const uploadImages = async (
+		imageFiles: ImageFile[],
+	): Promise<string[] | null> => {
+		if (imageFiles.length === 0) return [];
+
+		const { data, error } = await api.storage.upload.files.post({
+			bucket: "posts",
+			files: imageFiles.map((img) => img.file),
+		});
+
+		if (error || !data || !("uploaded" in data) || !data.uploaded) {
+			console.error("Failed to upload images:", error);
+			return null;
+		}
+
+		return data.uploaded.map((item) => item.publicUrl);
 	};
 
 	const handleSubmit = () => {
 		if (isDisabled) return;
 
 		startTransition(async () => {
-			// Combine title and content for the API (API only has content field)
-			const fullContent = `[${categories.find((c) => c.id === selectedCategory)?.name}] ${title}\n\n${content}`;
-
-			const { error } = await api.posts.post({
-				content: fullContent,
-				imageUrls: images.length > 0 ? images : undefined,
-			});
-
-			if (error) {
-				console.error("Failed to create post:", error);
+			// Upload images first
+			const imageUrls = await uploadImages(images);
+			if (imageUrls === null) {
+				toast.error("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
 				return;
 			}
 
-			router.push("/community");
+			// Combine title and content for the API (API only has content field)
+			const fullContent = `[${categories.find((c) => c.id === selectedCategory)?.name}] ${title}\n\n${content}`;
+
+			const { data, error } = await api.posts.post({
+				content: fullContent,
+				imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+			});
+
+			if (error || !data) {
+				console.error("Failed to create post:", error);
+				toast.error("게시글 작성에 실패했습니다. 다시 시도해주세요.");
+				return;
+			}
+
+			toast.success("게시글이 작성되었습니다");
+			router.push(`/community/posts/${data.id}`);
 		});
 	};
 
@@ -297,17 +373,7 @@ export default function CommunityWritePage() {
 					<ArrowLeft size={24} />
 				</button>
 				<h1 {...stylex.props(styles.headerTitle)}>글쓰기</h1>
-				<button
-					type="button"
-					onClick={handleSubmit}
-					disabled={isDisabled}
-					{...stylex.props(
-						styles.submitButton,
-						isDisabled && styles.submitButtonDisabled
-					)}
-				>
-					{isPending ? <Loader2 size={18} className="animate-spin" /> : "등록"}
-				</button>
+				<div {...stylex.props(styles.backButton)} aria-hidden="true" />
 			</header>
 
 			<div {...stylex.props(styles.content)}>
@@ -373,6 +439,7 @@ export default function CommunityWritePage() {
 							<ImagePlus size={28} {...stylex.props(styles.uploadIcon)} />
 							<span {...stylex.props(styles.uploadText)}>{images.length}/10</span>
 							<input
+								ref={fileInputRef}
 								type="file"
 								accept="image/*"
 								multiple
@@ -384,7 +451,7 @@ export default function CommunityWritePage() {
 						{images.map((image, index) => (
 							<div key={index} {...stylex.props(styles.imagePreviewContainer)}>
 								<img
-									src={image}
+									src={image.preview}
 									alt={`첨부 이미지 ${index + 1}`}
 									{...stylex.props(styles.imagePreview)}
 								/>
@@ -399,6 +466,20 @@ export default function CommunityWritePage() {
 						))}
 					</div>
 				</fieldset>
+			</div>
+
+			<div {...stylex.props(styles.bottomButtonContainer)}>
+				<button
+					type="button"
+					onClick={handleSubmit}
+					disabled={isDisabled}
+					{...stylex.props(
+						styles.bottomButton,
+						isDisabled && styles.bottomButtonDisabled,
+					)}
+				>
+					{isPending ? <Loader2 size={20} className="animate-spin" /> : "등록하기"}
+				</button>
 			</div>
 		</div>
 	);

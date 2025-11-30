@@ -3,6 +3,8 @@ import { ArrowLeft, Store } from "lucide-react";
 import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { formatDate } from "@/utils/date";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -171,16 +173,6 @@ const styles = stylex.create({
 
 type SaleStatus = "available" | "reserved" | "sold";
 
-interface SaleProduct {
-	id: number;
-	title: string;
-	price: number;
-	status: SaleStatus;
-	date: string;
-	image?: string;
-	href: string;
-}
-
 const statusLabels: Record<SaleStatus, string> = {
 	available: "판매중",
 	reserved: "예약중",
@@ -193,43 +185,9 @@ const statusStyles: Record<SaleStatus, keyof typeof styles> = {
 	sold: "statusSold",
 };
 
-// TODO: Replace with actual API data
-const saleProducts: SaleProduct[] = [
-	{
-		id: 1,
-		title: "르세라핌 채원 시그니처 포카",
-		price: 25000,
-		status: "available",
-		date: "2024.01.20",
-		href: "/market/1",
-	},
-	{
-		id: 2,
-		title: "아이브 원영 앨범 포카",
-		price: 15000,
-		status: "reserved",
-		date: "2024.01.18",
-		href: "/market/2",
-	},
-	{
-		id: 3,
-		title: "뉴진스 민지 팬미팅 포카",
-		price: 35000,
-		status: "sold",
-		date: "2024.01.15",
-		href: "/market/3",
-	},
-	{
-		id: 4,
-		title: "에스파 카리나 콘서트 포카",
-		price: 20000,
-		status: "sold",
-		date: "2024.01.10",
-		href: "/market/4",
-	},
-];
-
-export default function SalesPage() {
+export default async function SalesPage() {
+	const { data, error } = await api.users.me.sales.get();
+	const saleProducts = !error && data ? data.items : [];
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
@@ -254,42 +212,45 @@ export default function SalesPage() {
 
 				{saleProducts.length > 0 ? (
 					<div {...stylex.props(styles.productList)}>
-						{saleProducts.map((product) => (
-							<Link
-								key={product.id}
-								href={product.href}
-								{...stylex.props(styles.productItem)}
-							>
-								{product.image ? (
-									<img
-										src={product.image}
-										alt={product.title}
-										{...stylex.props(styles.productImage)}
-									/>
-								) : (
-									<div {...stylex.props(styles.productImagePlaceholder)}>
-										<Store size={24} />
+						{saleProducts.map((product) => {
+							const status = product.status as SaleStatus;
+							return (
+								<Link
+									key={product.id}
+									href={product.href}
+									{...stylex.props(styles.productItem)}
+								>
+									{product.image ? (
+										<img
+											src={product.image}
+											alt={product.title}
+											{...stylex.props(styles.productImage)}
+										/>
+									) : (
+										<div {...stylex.props(styles.productImagePlaceholder)}>
+											<Store size={24} />
+										</div>
+									)}
+									<div {...stylex.props(styles.productInfo)}>
+										<span
+											{...stylex.props(
+												styles.statusBadge,
+												styles[statusStyles[status]],
+											)}
+										>
+											{statusLabels[status]}
+										</span>
+										<h3 {...stylex.props(styles.productTitle)}>
+											{product.title}
+										</h3>
+										<p {...stylex.props(styles.productPrice)}>
+											{product.price ? `${product.price.toLocaleString()}원` : "가격협의"}
+										</p>
+										<p {...stylex.props(styles.productDate)}>{formatDate(product.date)}</p>
 									</div>
-								)}
-								<div {...stylex.props(styles.productInfo)}>
-									<span
-										{...stylex.props(
-											styles.statusBadge,
-											styles[statusStyles[product.status]],
-										)}
-									>
-										{statusLabels[product.status]}
-									</span>
-									<h3 {...stylex.props(styles.productTitle)}>
-										{product.title}
-									</h3>
-									<p {...stylex.props(styles.productPrice)}>
-										{product.price.toLocaleString()}원
-									</p>
-									<p {...stylex.props(styles.productDate)}>{product.date}</p>
-								</div>
-							</Link>
-						))}
+								</Link>
+							);
+						})}
 					</div>
 				) : (
 					<div {...stylex.props(styles.emptyState)}>

@@ -44,7 +44,7 @@ const styles = stylex.create({
 		top: "60%",
 		left: 0,
 		marginLeft: spacing.xs,
-		color: colors.textInverse,
+		color: "#fff",
 		fontWeight: fontWeight.bold,
 		fontSize: fontSize.xl,
 		letterSpacing: "-0.05em",

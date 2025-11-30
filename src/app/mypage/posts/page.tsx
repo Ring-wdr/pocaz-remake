@@ -9,6 +9,8 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { formatRelativeTime } from "@/utils/date";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -134,52 +136,9 @@ const styles = stylex.create({
 	},
 });
 
-interface Post {
-	id: number;
-	category: string;
-	title: string;
-	content: string;
-	time: string;
-	likes: number;
-	comments: number;
-	href: string;
-}
-
-// TODO: Replace with actual API data
-const posts: Post[] = [
-	{
-		id: 1,
-		category: "자유게시판",
-		title: "르세라핌 포카 양도합니다",
-		content: "채원, 카즈하 포카 양도해요. 상태 좋습니다.",
-		time: "10분 전",
-		likes: 5,
-		comments: 3,
-		href: "/community/1",
-	},
-	{
-		id: 2,
-		category: "자랑게시판",
-		title: "오늘 럭키드로우 당첨됐어요!",
-		content: "진짜 처음 당첨됐는데 너무 좋아요 ㅠㅠ",
-		time: "1시간 전",
-		likes: 24,
-		comments: 8,
-		href: "/community/2",
-	},
-	{
-		id: 3,
-		category: "정보게시판",
-		title: "팬사인회 당첨 꿀팁 공유",
-		content: "여러 번 당첨되면서 알게 된 팁들을 공유할게요.",
-		time: "1일 전",
-		likes: 156,
-		comments: 42,
-		href: "/community/3",
-	},
-];
-
-export default function PostsPage() {
+export default async function PostsPage() {
+	const { data, error } = await api.users.me.posts.get();
+	const posts = !error && data ? data.items : [];
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
@@ -195,22 +154,26 @@ export default function PostsPage() {
 						{posts.map((post) => (
 							<Link
 								key={post.id}
-								href={post.href}
+								href={`/community/${post.id}`}
 								{...stylex.props(styles.postItem)}
 							>
-								<p {...stylex.props(styles.postCategory)}>{post.category}</p>
-								<h3 {...stylex.props(styles.postTitle)}>{post.title}</h3>
+								<h3 {...stylex.props(styles.postTitle)}>
+									{post.content.slice(0, 30)}
+									{post.content.length > 30 ? "..." : ""}
+								</h3>
 								<p {...stylex.props(styles.postContent)}>{post.content}</p>
 								<div {...stylex.props(styles.postMeta)}>
-									<span {...stylex.props(styles.postTime)}>{post.time}</span>
+									<span {...stylex.props(styles.postTime)}>
+										{formatRelativeTime(post.createdAt)}
+									</span>
 									<div {...stylex.props(styles.postStats)}>
 										<span {...stylex.props(styles.stat)}>
 											<Heart size={14} />
-											{post.likes}
+											{post.likeCount}
 										</span>
 										<span {...stylex.props(styles.stat)}>
 											<MessageCircle size={14} />
-											{post.comments}
+											{post.replyCount}
 										</span>
 									</div>
 								</div>

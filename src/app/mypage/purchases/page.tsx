@@ -3,6 +3,8 @@ import { ArrowLeft, ShoppingCart, Store } from "lucide-react";
 import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { formatDate } from "@/utils/date";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -135,45 +137,9 @@ const styles = stylex.create({
 	},
 });
 
-interface PurchasedProduct {
-	id: number;
-	title: string;
-	price: number;
-	seller: string;
-	date: string;
-	image?: string;
-	href: string;
-}
-
-// TODO: Replace with actual API data
-const purchasedProducts: PurchasedProduct[] = [
-	{
-		id: 1,
-		title: "뉴진스 해린 버니 포카",
-		price: 30000,
-		seller: "아이돌팬",
-		date: "2024.01.18",
-		href: "/market/1",
-	},
-	{
-		id: 2,
-		title: "에스파 윈터 미공개 포카",
-		price: 20000,
-		seller: "마이팬",
-		date: "2024.01.12",
-		href: "/market/2",
-	},
-	{
-		id: 3,
-		title: "아이브 원영 앨범 포카",
-		price: 15000,
-		seller: "포카판매자",
-		date: "2024.01.05",
-		href: "/market/3",
-	},
-];
-
-export default function PurchasesPage() {
+export default async function PurchasesPage() {
+	const { data, error } = await api.users.me.purchases.get();
+	const purchasedProducts = !error && data ? data.items : [];
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
@@ -212,7 +178,7 @@ export default function PurchasesPage() {
 									</p>
 									<div {...stylex.props(styles.productMeta)}>
 										<span {...stylex.props(styles.productDate)}>
-											{product.date}
+											{formatDate(product.date)}
 										</span>
 										<span {...stylex.props(styles.productSeller)}>
 											판매자: {product.seller}

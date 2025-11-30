@@ -3,6 +3,8 @@ import { ArrowLeft, Store } from "lucide-react";
 import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { formatDate } from "@/utils/date";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -153,58 +155,9 @@ const styles = stylex.create({
 	},
 });
 
-interface Trade {
-	id: number;
-	title: string;
-	price: number;
-	type: "buy" | "sell";
-	partner: string;
-	date: string;
-	image?: string;
-	href: string;
-}
-
-// TODO: Replace with actual API data
-const trades: Trade[] = [
-	{
-		id: 1,
-		title: "아이브 원영 앨범 포카",
-		price: 15000,
-		type: "buy",
-		partner: "포카판매자",
-		date: "2024.01.15",
-		href: "/market/1",
-	},
-	{
-		id: 2,
-		title: "르세라핌 채원 시그니처 포카",
-		price: 25000,
-		type: "sell",
-		partner: "덕질러",
-		date: "2024.01.10",
-		href: "/market/2",
-	},
-	{
-		id: 3,
-		title: "뉴진스 해린 버니 포카",
-		price: 30000,
-		type: "buy",
-		partner: "아이돌팬",
-		date: "2024.01.05",
-		href: "/market/3",
-	},
-	{
-		id: 4,
-		title: "에스파 윈터 미공개 포카",
-		price: 20000,
-		type: "sell",
-		partner: "마이팬",
-		date: "2023.12.28",
-		href: "/market/4",
-	},
-];
-
-export default function TradesPage() {
+export default async function TradesPage() {
+	const { data, error } = await api.users.me.trades.get();
+	const trades = !error && data ? data.items : [];
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
@@ -249,7 +202,7 @@ export default function TradesPage() {
 											{trade.type === "buy" ? "구매" : "판매"}
 										</span>
 										<span {...stylex.props(styles.tradeDate)}>
-											{trade.date}
+											{formatDate(trade.date)}
 										</span>
 										<span {...stylex.props(styles.tradePartner)}>
 											{trade.partner}

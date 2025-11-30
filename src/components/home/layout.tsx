@@ -1,13 +1,12 @@
 import * as stylex from "@stylexjs/stylex";
 import { ChevronRight, Star } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+import BackgroundImage from "./background-image";
 import BottomMenu from "./bottom-menu";
 import Header from "./header";
 import ScrollTopButton from "./scroll-top-button";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 
-const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
 
 const styles = stylex.create({
@@ -15,22 +14,6 @@ const styles = stylex.create({
 		position: "relative",
 		minHeight: "100vh",
 		backgroundColor: "#000",
-	},
-	bgFixed: {
-		position: "fixed",
-		top: 0,
-		left: 0,
-		width: "100vw",
-		height: "100vh",
-		zIndex: 0,
-		pointerEvents: "none",
-		display: {
-			default: "block",
-			[MOBILE]: "none",
-		},
-	},
-	bgContent: {
-		objectFit: "cover",
 	},
 	contentLayer: {
 		position: "relative",
@@ -57,7 +40,7 @@ const styles = stylex.create({
 		justifyContent: "center",
 		fontSize: fontSize.md,
 		fontWeight: fontWeight.bold,
-		color: colors.textInverse,
+		color: "#ffffff",
 	},
 	starIcon: {
 		color: "#fef08a",
@@ -77,12 +60,12 @@ const styles = stylex.create({
 		position: "relative",
 		padding: spacing.xxs,
 		fontStyle: "italic",
-		color: colors.textInverse,
+		color: "#ffffff",
 	},
 	pocazTitle: {
 		marginTop: spacing.md,
 		marginBottom: spacing.md,
-		color: colors.textInverse,
+		color: "#ffffff",
 		fontStyle: "italic",
 		fontSize: "72px",
 		fontWeight: fontWeight.black,
@@ -92,7 +75,7 @@ const styles = stylex.create({
 		marginTop: spacing.sm,
 		marginBottom: spacing.sm,
 		backgroundColor: "#27272a",
-		color: colors.textInverse,
+		color: "#ffffff",
 		borderRadius: radius.sm,
 		borderWidth: 0,
 		cursor: "pointer",
@@ -109,7 +92,7 @@ const styles = stylex.create({
 		paddingBottom: spacing.sm,
 		paddingLeft: spacing.md,
 		paddingRight: spacing.md,
-		color: colors.textInverse,
+		color: "#ffffff",
 		textDecoration: "none",
 	},
 	mobileWrap: {
@@ -146,16 +129,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
 	return (
 		<div {...stylex.props(styles.wrapper)}>
-			<div {...stylex.props(styles.bgFixed)}>
-				<Image
-					src="/pocaz_bg.png"
-					alt=""
-					fill
-					priority
-					sizes="100vw"
-					{...stylex.props(styles.bgContent)}
-				/>
-			</div>
+			<BackgroundImage />
 			<div {...stylex.props(styles.contentLayer)}>
 				<div {...stylex.props(styles.txtBox)}>
 					<div {...stylex.props(styles.txtBoxInner)}>
