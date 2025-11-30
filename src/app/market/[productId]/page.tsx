@@ -1,33 +1,32 @@
 import * as stylex from "@stylexjs/stylex";
 import { ChevronLeft, ChevronRight, Store, User } from "lucide-react";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { Footer } from "@/components/home";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { formatKoreanDate } from "@/utils/date";
 import { api } from "@/utils/eden";
-import {
-	ActionBar,
-	Header,
-	type MarketStatus,
-	StatusBadgeSkeleton,
-	styles,
-} from "./components";
+import { ActionBar } from "./action-bar";
+import { Header, type MarketStatus, styles } from "./components";
 import StatusBadge from "./status-badge";
 
 export default async function MarketDetailPage({
 	params,
 }: PageProps<"/market/[productId]">) {
 	const { productId } = await params;
-	const { data, error } = await api.markets({ id: productId }).get();
+	const [marketResult, currentUser] = await Promise.all([
+		api.markets({ id: productId }).get(),
+		getCurrentUser(),
+	]);
+
+	const { data, error } = marketResult;
 
 	if (error || !data) {
 		notFound();
 	}
 
-	const currentUserPromise = getCurrentUser();
 	const status = data.status as MarketStatus;
 	const formattedDate = formatKoreanDate(data.createdAt);
+	const isOwner = currentUser?.id === data.user.id;
 
 	return (
 		<div {...stylex.props(styles.container)}>
@@ -47,14 +46,11 @@ export default async function MarketDetailPage({
 							<span {...stylex.props(styles.emptyText)}>이미지 없음</span>
 						</div>
 					)}
-					<Suspense fallback={<StatusBadgeSkeleton />}>
-						<StatusBadge
-							marketId={productId}
-							status={status}
-							ownerUserId={data.user.id}
-							currentUserPromise={currentUserPromise}
-						/>
-					</Suspense>
+					<StatusBadge
+						marketId={productId}
+						status={status}
+						isOwner={isOwner}
+					/>
 					{data.images.length > 1 && (
 						<>
 							<button
@@ -114,7 +110,12 @@ export default async function MarketDetailPage({
 				</div>
 			</div>
 
-			<ActionBar />
+			<ActionBar
+				marketId={productId}
+				sellerId={data.user.id}
+				currentUserId={currentUser?.id ?? null}
+				isOwner={isOwner}
+			/>
 			<Footer />
 		</div>
 	);

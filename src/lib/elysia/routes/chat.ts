@@ -39,6 +39,15 @@ const LastMessageSchema = t.Object({
 	user: SimpleUserSchema,
 });
 
+const MarketInfoSchema = t.Object({
+	id: t.String(),
+	title: t.String(),
+	price: t.Nullable(t.Number()),
+	status: t.String(),
+	userId: t.String(),
+	thumbnail: t.Nullable(t.String()),
+});
+
 const RoomItemSchema = t.Object({
 	id: t.String(),
 	name: t.Nullable(t.String()),
@@ -46,6 +55,7 @@ const RoomItemSchema = t.Object({
 	members: t.Array(UserSchema),
 	lastMessage: t.Nullable(LastMessageSchema),
 	messageCount: t.Number(),
+	market: t.Nullable(MarketInfoSchema),
 });
 
 const RoomDetailSchema = t.Object({
@@ -54,6 +64,7 @@ const RoomDetailSchema = t.Object({
 	createdAt: t.String(),
 	members: t.Array(MemberSchema),
 	messageCount: t.Number(),
+	market: t.Nullable(MarketInfoSchema),
 });
 
 const PaginatedMessagesSchema = t.Object({
@@ -108,6 +119,16 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 							}
 						: null,
 					messageCount: room._count.messages,
+					market: room.market
+						? {
+								id: room.market.id,
+								title: room.market.title,
+								price: room.market.price,
+								status: room.market.status,
+								userId: room.market.userId,
+								thumbnail: room.market.images[0]?.imageUrl ?? null,
+							}
+						: null,
 				})),
 			};
 		},
@@ -259,6 +280,16 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 					joinedAt: m.joinedAt.toISOString(),
 				})),
 				messageCount: room._count.messages,
+				market: room.market
+					? {
+							id: room.market.id,
+							title: room.market.title,
+							price: room.market.price,
+							status: room.market.status,
+							userId: room.market.userId,
+							thumbnail: room.market.images[0]?.imageUrl ?? null,
+						}
+					: null,
 			};
 		},
 		{
@@ -611,6 +642,134 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				tags: ["Chat"],
 				summary: "메시지 삭제",
 				description: "메시지를 삭제합니다.",
+			},
+		},
+	)
+
+	// ==========================================
+	// Market Chat Routes
+	// ==========================================
+
+	// POST /api/chat/rooms/market - 마켓용 채팅방 조회/생성 (구매자용)
+	.post(
+		"/rooms/market",
+		async ({ auth, body, set }) => {
+			const user = await userService.findOrCreate(
+				auth.user.id,
+				auth.user.email,
+				auth.user.user_metadata?.full_name,
+				auth.user.user_metadata?.avatar_url,
+			);
+
+			// 자기 자신과의 채팅방 생성 방지
+			if (user.id === body.sellerId) {
+				set.status = 400;
+				return { error: "Cannot create chat room with yourself" };
+			}
+
+			const room = await chatRoomService.findOrCreateForMarket(
+				user.id,
+				body.sellerId,
+				body.marketId,
+			);
+
+			return {
+				id: room.id,
+				name: room.name,
+				createdAt: room.createdAt.toISOString(),
+				members: room.members.map((m) => m.user),
+				market: room.market
+					? {
+							id: room.market.id,
+							title: room.market.title,
+							price: room.market.price,
+							status: room.market.status,
+							userId: room.market.userId,
+							thumbnail: room.market.images[0]?.imageUrl ?? null,
+						}
+					: null,
+			};
+		},
+		{
+			body: t.Object({
+				marketId: t.String(),
+				sellerId: t.String(),
+			}),
+			response: {
+				200: t.Object({
+					id: t.String(),
+					name: t.Nullable(t.String()),
+					createdAt: t.String(),
+					members: t.Array(UserSchema),
+					market: t.Nullable(MarketInfoSchema),
+				}),
+				400: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "마켓 채팅방 조회/생성",
+				description:
+					"특정 마켓에 대한 판매자와의 채팅방을 조회하거나, 없으면 새로 생성합니다.",
+			},
+		},
+	)
+
+	// GET /api/chat/rooms/market/:marketId - 특정 마켓의 채팅방 목록 (판매자용)
+	.get(
+		"/rooms/market/:marketId",
+		async ({ auth, params, set }) => {
+			const user = await userService.findBySupabaseId(auth.user.id);
+			if (!user) {
+				set.status = 401;
+				return { error: "User not found" };
+			}
+
+			const rooms = await chatRoomService.findByMarketId(params.marketId);
+
+			return {
+				rooms: rooms.map((room) => ({
+					id: room.id,
+					name: room.name,
+					createdAt: room.createdAt.toISOString(),
+					members: room.members.map((m) => m.user),
+					lastMessage: room.messages[0]
+						? {
+								content: room.messages[0].content,
+								createdAt: room.messages[0].createdAt.toISOString(),
+								user: {
+									id: room.messages[0].user.id,
+									nickname: room.messages[0].user.nickname,
+								},
+							}
+						: null,
+					messageCount: room._count.messages,
+					market: room.market
+						? {
+								id: room.market.id,
+								title: room.market.title,
+								price: room.market.price,
+								status: room.market.status,
+								userId: room.market.userId,
+								thumbnail: room.market.images[0]?.imageUrl ?? null,
+							}
+						: null,
+				})),
+			};
+		},
+		{
+			params: t.Object({
+				marketId: t.String(),
+			}),
+			response: {
+				200: t.Object({
+					rooms: t.Array(RoomItemSchema),
+				}),
+				401: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "마켓 채팅방 목록 조회",
+				description: "특정 마켓에 대한 채팅방 목록을 조회합니다.",
 			},
 		},
 	);

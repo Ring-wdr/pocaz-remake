@@ -165,6 +165,7 @@ model Market {
   images       MarketImage[]
   likes        MarketLike[]
   transactions Transaction[]
+  chatRooms    ChatRoom[]
 }
 
 model MarketImage {
@@ -252,8 +253,14 @@ model ChatRoom {
   name      String?
   createdAt DateTime @default(now())
 
+  // Market 연결 (마켓 거래 관련 채팅방인 경우)
+  marketId  String?
+  market    Market?  @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
   members   ChatRoomMember[]
   messages  ChatMessage[]
+
+  @@index([marketId])
 }
 
 model ChatRoomMember {

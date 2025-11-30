@@ -128,8 +128,17 @@ function formatTime(dateStr: string): string {
 	return date.format("YY.MM.DD");
 }
 
-export default async function ChatListSection() {
-	const { data, error } = await api.chat.rooms.get();
+interface ChatListSectionProps {
+	marketId?: string;
+}
+
+export default async function ChatListSection({
+	marketId,
+}: ChatListSectionProps) {
+	// marketId가 있으면 해당 마켓의 채팅방만, 없으면 전체 채팅방 조회
+	const { data, error } = marketId
+		? await api.chat.rooms.market({ marketId }).get()
+		: await api.chat.rooms.get();
 
 	if (error || !data) {
 		return (
@@ -147,9 +156,13 @@ export default async function ChatListSection() {
 		return (
 			<div {...stylex.props(styles.emptyState)}>
 				<MessageCircleHeart size={56} {...stylex.props(styles.emptyIcon)} />
-				<h3 {...stylex.props(styles.emptyTitle)}>채팅방이 없습니다</h3>
+				<h3 {...stylex.props(styles.emptyTitle)}>
+					{marketId ? "거래 채팅이 없습니다" : "채팅방이 없습니다"}
+				</h3>
 				<p {...stylex.props(styles.emptyText)}>
-					마켓에서 상품을 둘러보고 대화를 시작해보세요
+					{marketId
+						? "아직 이 상품에 대한 문의가 없습니다"
+						: "마켓에서 상품을 둘러보고 대화를 시작해보세요"}
 				</p>
 			</div>
 		);
