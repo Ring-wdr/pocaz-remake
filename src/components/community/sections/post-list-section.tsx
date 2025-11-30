@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
+import { Eye, FileText, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 import { colors, fontSize, fontWeight, iconSize, radius, size, spacing } from "@/app/global-tokens.stylex";
@@ -204,7 +205,7 @@ export default async function PostListSection({
 	if (posts.length === 0) {
 		return (
 			<div {...stylex.props(styles.emptyState)}>
-				<i className="ri-article-line" {...stylex.props(styles.emptyIcon)} />
+				<FileText size={28} {...stylex.props(styles.emptyIcon)} />
 				<p {...stylex.props(styles.emptyText)}>게시글이 없습니다</p>
 			</div>
 		);
@@ -235,17 +236,11 @@ export default async function PostListSection({
 							<span>·</span>
 							<span>{dayjs(post.createdAt).format("MM.DD")}</span>
 							<span {...stylex.props(styles.metaItem)}>
-								<i
-									className="ri-eye-line"
-									{...stylex.props(styles.metaIcon)}
-								/>
+								<Eye size={12} />
 								{post.viewCount}
 							</span>
 							<span {...stylex.props(styles.metaItem)}>
-								<i
-									className="ri-chat-1-line"
-									{...stylex.props(styles.metaIcon)}
-								/>
+								<MessageCircle size={12} />
 								{post.commentCount}
 							</span>
 						</div>

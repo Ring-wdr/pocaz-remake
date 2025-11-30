@@ -1,6 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { ArrowLeft, ImagePlus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -283,7 +284,7 @@ export default function CommunityWritePage() {
 					onClick={() => router.back()}
 					{...stylex.props(styles.backButton)}
 				>
-					<i className="ri-arrow-left-line" />
+					<ArrowLeft size={24} />
 				</button>
 				<h1 {...stylex.props(styles.headerTitle)}>글쓰기</h1>
 				<button
@@ -359,7 +360,7 @@ export default function CommunityWritePage() {
 					<legend {...stylex.props(styles.label)}>이미지 첨부</legend>
 					<div {...stylex.props(styles.imageUploadArea)}>
 						<label {...stylex.props(styles.imageUploadButton)}>
-							<i className="ri-image-add-line" {...stylex.props(styles.uploadIcon)} />
+							<ImagePlus size={28} {...stylex.props(styles.uploadIcon)} />
 							<span {...stylex.props(styles.uploadText)}>{images.length}/10</span>
 							<input
 								type="file"
@@ -382,7 +383,7 @@ export default function CommunityWritePage() {
 									onClick={() => handleRemoveImage(index)}
 									{...stylex.props(styles.removeImageButton)}
 								>
-									<i className="ri-close-line" />
+									<X size={14} />
 								</button>
 							</div>
 						))}

@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { ChevronRight, Star } from "lucide-react";
 import Link from "next/link";
 import BottomMenu from "./bottom-menu";
 import Header from "./header";
@@ -147,7 +148,7 @@ export default function Layout({ children }: LayoutProps) {
 				<div {...stylex.props(styles.txtBox)}>
 					<div {...stylex.props(styles.txtBoxInner)}>
 						<p {...stylex.props(styles.starText)}>
-							<i className="ri-star-fill" {...stylex.props(styles.starIcon)} />
+							<Star size={14} fill="currentColor" {...stylex.props(styles.starIcon)} />
 							IDOL PHOTO CARD
 							<span {...stylex.props(styles.atozWrapper)}>
 								<span {...stylex.props(styles.atozBg)} />
@@ -160,7 +161,7 @@ export default function Layout({ children }: LayoutProps) {
 						<p {...stylex.props(styles.ctaButtonInner)}>
 							<Link href="/market" {...stylex.props(styles.ctaLink)}>
 								내 최애 포카 찾으러 가기
-								<i className="ri-arrow-right-s-line" />
+								<ChevronRight size={18} />
 							</Link>
 						</p>
 					</button>

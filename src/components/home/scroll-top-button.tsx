@@ -1,8 +1,8 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import "remixicon/fonts/remixicon.css";
 
 const styles = stylex.create({
 	wrapper: {
@@ -75,7 +75,7 @@ export default function ScrollTopButton() {
 					{...stylex.props(styles.button)}
 					onClick={handleTop}
 				>
-					<i className="ri-arrow-up-s-line" />
+					<ChevronUp size={24} />
 				</button>
 			</h3>
 		</div>

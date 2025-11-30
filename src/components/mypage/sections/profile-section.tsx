@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { User } from "lucide-react";
 import Link from "next/link";
 
 const styles = stylex.create({
@@ -27,7 +28,6 @@ const styles = stylex.create({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		fontSize: "32px",
 		color: "#9ca3af",
 	},
 	info: {
@@ -133,7 +133,7 @@ export default async function ProfileSection() {
 				/>
 			) : (
 				<div {...stylex.props(styles.avatarPlaceholder)}>
-					<i className="ri-user-line" />
+					<User size={32} />
 				</div>
 			)}
 			<div {...stylex.props(styles.info)}>

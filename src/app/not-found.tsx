@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { Home } from "lucide-react";
 import Link from "next/link";
 
 const styles = stylex.create({
@@ -92,7 +93,7 @@ export default function NotFound() {
 			</p>
 			<div {...stylex.props(styles.buttonGroup)}>
 				<Link href="/" {...stylex.props(styles.homeButton)}>
-					<i className="ri-home-line" />
+					<Home size={18} />
 					홈으로
 				</Link>
 			</div>

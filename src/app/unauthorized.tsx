@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { Lock, LogIn } from "lucide-react";
 import Link from "next/link";
 
 const styles = stylex.create({
@@ -75,7 +76,7 @@ export default function Unauthorized() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.iconWrap)}>
-				<i className="ri-lock-line" {...stylex.props(styles.icon)} />
+				<Lock size={40} {...stylex.props(styles.icon)} />
 			</div>
 			<h1 {...stylex.props(styles.title)}>로그인이 필요합니다</h1>
 			<p {...stylex.props(styles.description)}>
@@ -84,7 +85,7 @@ export default function Unauthorized() {
 				로그인하고 포카즈의 모든 기능을 이용해보세요!
 			</p>
 			<Link href="/login" {...stylex.props(styles.loginButton)}>
-				<i className="ri-login-box-line" />
+				<LogIn size={18} />
 				로그인하기
 			</Link>
 			<Link href="/" {...stylex.props(styles.homeLink)}>

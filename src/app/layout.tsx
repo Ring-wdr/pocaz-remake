@@ -1,6 +1,5 @@
 import "./app.css";
 import * as stylex from "@stylexjs/stylex";
-import "remixicon/fonts/remixicon.css";
 
 import { Layout } from "@/components/home";
 import { colors } from "./global-tokens.stylex";

@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ko";
+import { MessageCircleHeart, User } from "lucide-react";
 import Link from "next/link";
 
 dayjs.extend(relativeTime);
@@ -230,10 +231,7 @@ export default async function ChatListSection() {
 	if (chatRooms.length === 0) {
 		return (
 			<div {...stylex.props(styles.emptyState)}>
-				<i
-					className="ri-chat-heart-line"
-					{...stylex.props(styles.emptyIcon)}
-				/>
+				<MessageCircleHeart size={56} {...stylex.props(styles.emptyIcon)} />
 				<h3 {...stylex.props(styles.emptyTitle)}>채팅방이 없습니다</h3>
 				<p {...stylex.props(styles.emptyText)}>
 					마켓에서 상품을 둘러보고 대화를 시작해보세요
@@ -259,7 +257,7 @@ export default async function ChatListSection() {
 							/>
 						) : (
 							<div {...stylex.props(styles.avatarImage)}>
-								<i className="ri-user-line" />
+								<User size={24} />
 							</div>
 						)}
 						{room.isOnline && <div {...stylex.props(styles.onlineIndicator)} />}

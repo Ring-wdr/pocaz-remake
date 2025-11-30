@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { Ban, Home } from "lucide-react";
 import Link from "next/link";
 
 const styles = stylex.create({
@@ -75,7 +76,7 @@ export default function Forbidden() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.iconWrap)}>
-				<i className="ri-forbid-line" {...stylex.props(styles.icon)} />
+				<Ban size={40} {...stylex.props(styles.icon)} />
 			</div>
 			<h1 {...stylex.props(styles.title)}>접근 권한이 없습니다</h1>
 			<p {...stylex.props(styles.description)}>
@@ -84,7 +85,7 @@ export default function Forbidden() {
 				필요한 권한이 있는지 확인해주세요.
 			</p>
 			<Link href="/" {...stylex.props(styles.homeButton)}>
-				<i className="ri-home-line" />
+				<Home size={18} />
 				홈으로 돌아가기
 			</Link>
 			<Link href="/mypage" {...stylex.props(styles.backLink)}>

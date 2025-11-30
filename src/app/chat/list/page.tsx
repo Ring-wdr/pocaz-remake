@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { Filter } from "lucide-react";
 import { Suspense } from "react";
 
 import { ChatListSection } from "@/components/chat/sections";
@@ -56,7 +57,7 @@ export default function ChatListPage() {
 				<div {...stylex.props(styles.header)}>
 					<h1 {...stylex.props(styles.title)}>채팅</h1>
 					<button type="button" {...stylex.props(styles.filterButton)}>
-						<i className="ri-filter-line" />
+						<Filter size={14} />
 						필터
 					</button>
 				</div>

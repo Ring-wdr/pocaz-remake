@@ -1,7 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 
-import { colors, fontSize, fontWeight, iconSize, radius, spacing } from "@/app/global-tokens.stylex";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	header: {
@@ -33,7 +34,7 @@ const styles = stylex.create({
 		transition: "background-color 0.2s ease",
 	},
 	registerIcon: {
-		fontSize: iconSize.sm,
+		flexShrink: 0,
 	},
 });
 
@@ -42,7 +43,7 @@ export default function PageHeader() {
 		<div {...stylex.props(styles.header)}>
 			<h1 {...stylex.props(styles.title)}>마켓</h1>
 			<Link href="/market/register" {...stylex.props(styles.registerButton)}>
-				<i className="ri-add-line" {...stylex.props(styles.registerIcon)} />
+				<Plus size={16} {...stylex.props(styles.registerIcon)} />
 				등록하기
 			</Link>
 		</div>

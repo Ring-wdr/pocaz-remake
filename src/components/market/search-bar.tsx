@@ -1,6 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { Search, XCircle } from "lucide-react";
 import { useState } from "react";
 
 import { colors, fontSize, iconSize, lineHeight, radius, spacing } from "@/app/global-tokens.stylex";
@@ -67,7 +68,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.inputWrap)}>
-				<i className="ri-search-line" {...stylex.props(styles.searchIcon)} />
+				<Search size={18} {...stylex.props(styles.searchIcon)} />
 				<input
 					type="text"
 					placeholder="아티스트, 앨범, 포카 이름 검색"
@@ -81,7 +82,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
 						onClick={handleClear}
 						{...stylex.props(styles.clearButton)}
 					>
-						<i className="ri-close-circle-fill" />
+						<XCircle size={16} />
 					</button>
 				)}
 			</div>

@@ -1,18 +1,26 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { Home, MessageCircleHeart, Smile, Store, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import "remixicon/fonts/remixicon.css";
+import type { ComponentType } from "react";
 
-import { colors, fontSize, iconSize, lineHeight, size } from "@/app/global-tokens.stylex";
+import { colors, fontSize, size } from "@/app/global-tokens.stylex";
 
-const btnList = [
-	{ id: 0, title: "HOME", icon: "ri-home-3-line", to: "/" },
-	{ id: 1, title: "MARKET", icon: "ri-store-line", to: "/market" },
-	{ id: 2, title: "CHAT", icon: "ri-chat-heart-line", to: "/chat/list" },
-	{ id: 3, title: "FREEZONE", icon: "ri-emotion-happy-line", to: "/community" },
-	{ id: 4, title: "MY PAGE", icon: "ri-user-line", to: "/mypage" },
+interface MenuItem {
+	id: number;
+	title: string;
+	icon: ComponentType<{ size?: number }>;
+	to: string;
+}
+
+const btnList: MenuItem[] = [
+	{ id: 0, title: "HOME", icon: Home, to: "/" },
+	{ id: 1, title: "MARKET", icon: Store, to: "/market" },
+	{ id: 2, title: "CHAT", icon: MessageCircleHeart, to: "/chat/list" },
+	{ id: 3, title: "FREEZONE", icon: Smile, to: "/community" },
+	{ id: 4, title: "MY PAGE", icon: User, to: "/mypage" },
 ];
 
 const styles = stylex.create({
@@ -49,8 +57,9 @@ const styles = stylex.create({
 	},
 	menuIcon: {
 		display: "block",
-		fontSize: iconSize.lg,
-		lineHeight: lineHeight.tight,
+		marginLeft: "auto",
+		marginRight: "auto",
+		marginBottom: "2px",
 	},
 	menuTitle: {
 		fontSize: fontSize.sm,
@@ -65,6 +74,7 @@ export default function BottomMenu() {
 			<ul {...stylex.props(styles.menuList)}>
 				{btnList.map((btn) => {
 					const isActive = pathname === btn.to;
+					const IconComponent = btn.icon;
 					return (
 						<li key={btn.id} {...stylex.props(styles.menuItem)}>
 							<Link
@@ -74,10 +84,7 @@ export default function BottomMenu() {
 									isActive && styles.menuLinkActive,
 								)}
 							>
-								<i
-									className={`${btn.icon}`}
-									{...stylex.props(styles.menuIcon)}
-								/>
+								<IconComponent size={24} {...stylex.props(styles.menuIcon)} />
 								<p {...stylex.props(styles.menuTitle)}>{btn.title}</p>
 							</Link>
 						</li>

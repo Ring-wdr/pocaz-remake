@@ -2,6 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
+import { ArrowLeft, MoreVertical, Plus, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -317,7 +318,7 @@ export default function ChatRoom({
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.header)}>
 				<Link href="/chat/list" {...stylex.props(styles.backButton)}>
-					<i className="ri-arrow-left-line" />
+					<ArrowLeft size={24} />
 				</Link>
 				<div {...stylex.props(styles.partnerInfo)}>
 					{partner.avatar ? (
@@ -337,7 +338,7 @@ export default function ChatRoom({
 					</div>
 				</div>
 				<button type="button" {...stylex.props(styles.menuButton)}>
-					<i className="ri-more-2-fill" />
+					<MoreVertical size={20} />
 				</button>
 			</div>
 
@@ -399,7 +400,7 @@ export default function ChatRoom({
 
 			<div {...stylex.props(styles.inputArea)}>
 				<button type="button" {...stylex.props(styles.attachButton)}>
-					<i className="ri-add-line" />
+					<Plus size={20} />
 				</button>
 				<div {...stylex.props(styles.inputWrap)}>
 					<input
@@ -419,7 +420,7 @@ export default function ChatRoom({
 						!inputValue.trim() && styles.sendButtonDisabled,
 					)}
 				>
-					<i className="ri-send-plane-fill" />
+					<Send size={18} />
 				</button>
 			</div>
 		</div>

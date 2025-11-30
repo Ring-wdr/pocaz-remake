@@ -1,7 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 
-import { colors, fontSize, fontWeight, iconSize, radius, spacing } from "@/app/global-tokens.stylex";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	header: {
@@ -33,7 +34,7 @@ const styles = stylex.create({
 		transition: "background-color 0.2s ease",
 	},
 	writeIcon: {
-		fontSize: iconSize.sm,
+		flexShrink: 0,
 	},
 });
 
@@ -42,7 +43,7 @@ export default function PageHeader() {
 		<div {...stylex.props(styles.header)}>
 			<h1 {...stylex.props(styles.title)}>커뮤니티</h1>
 			<Link href="/community/write" {...stylex.props(styles.writeButton)}>
-				<i className="ri-edit-line" {...stylex.props(styles.writeIcon)} />
+				<Pencil size={16} {...stylex.props(styles.writeIcon)} />
 				글쓰기
 			</Link>
 		</div>

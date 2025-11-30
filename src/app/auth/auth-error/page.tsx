@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/home";
 
@@ -82,7 +83,7 @@ export default function AuthErrorPage() {
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.content)}>
 				<div {...stylex.props(styles.iconWrap)}>
-					<i className="ri-error-warning-line" {...stylex.props(styles.icon)} />
+					<AlertTriangle size={40} {...stylex.props(styles.icon)} />
 				</div>
 				<h1 {...stylex.props(styles.title)}>로그인 오류</h1>
 				<p {...stylex.props(styles.description)}>
@@ -91,7 +92,7 @@ export default function AuthErrorPage() {
 					잠시 후 다시 시도해주세요.
 				</p>
 				<Link href="/login" {...stylex.props(styles.retryButton)}>
-					<i className="ri-refresh-line" />
+					<RefreshCw size={18} />
 					다시 시도하기
 				</Link>
 				<Link href="/" {...stylex.props(styles.homeLink)}>

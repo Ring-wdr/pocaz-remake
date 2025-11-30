@@ -1,6 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { Bug, Home, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 
 const styles = stylex.create({
@@ -100,7 +101,7 @@ export default function Error({ error, reset }: ErrorProps) {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.iconWrap)}>
-				<i className="ri-bug-line" {...stylex.props(styles.icon)} />
+				<Bug size={40} {...stylex.props(styles.icon)} />
 			</div>
 			<h1 {...stylex.props(styles.title)}>문제가 발생했습니다</h1>
 			<p {...stylex.props(styles.description)}>
@@ -114,11 +115,11 @@ export default function Error({ error, reset }: ErrorProps) {
 					onClick={reset}
 					{...stylex.props(styles.retryButton)}
 				>
-					<i className="ri-refresh-line" />
+					<RefreshCw size={18} />
 					다시 시도
 				</button>
 				<a href="/" {...stylex.props(styles.homeButton)}>
-					<i className="ri-home-line" />
+					<Home size={18} />
 					홈으로
 				</a>
 			</div>

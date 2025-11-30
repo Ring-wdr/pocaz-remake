@@ -1,6 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { ArrowLeft, Camera, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -365,7 +366,7 @@ export default function MarketRegisterPage() {
 					onClick={() => router.back()}
 					{...stylex.props(styles.backButton)}
 				>
-					<i className="ri-arrow-left-line" />
+					<ArrowLeft size={24} />
 				</button>
 				<h1 {...stylex.props(styles.headerTitle)}>상품 등록</h1>
 				<button
@@ -389,7 +390,7 @@ export default function MarketRegisterPage() {
 					</legend>
 					<div {...stylex.props(styles.imageUploadArea)}>
 						<label {...stylex.props(styles.imageUploadButton)}>
-							<i className="ri-camera-line" {...stylex.props(styles.uploadIcon)} />
+							<Camera size={28} {...stylex.props(styles.uploadIcon)} />
 							<span {...stylex.props(styles.uploadText)}>{images.length}/10</span>
 							<input
 								type="file"
@@ -415,7 +416,7 @@ export default function MarketRegisterPage() {
 									onClick={() => handleRemoveImage(index)}
 									{...stylex.props(styles.removeImageButton)}
 								>
-									<i className="ri-close-line" />
+									<X size={14} />
 								</button>
 							</div>
 						))}

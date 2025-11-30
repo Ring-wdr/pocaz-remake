@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
@@ -84,7 +85,7 @@ export default async function RecentPostsSection() {
 		<div {...stylex.props(styles.boardWrap)}>
 			<Link href="/community" {...stylex.props(styles.sectionButton)}>
 				최근 게시물
-				<i className="ri-arrow-drop-right-line" />
+				<ChevronRight size={24} />
 			</Link>
 			<div {...stylex.props(styles.boardList)}>
 				<ul {...stylex.props(styles.boardListUl)}>

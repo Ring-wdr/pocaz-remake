@@ -1,23 +1,49 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import {
+	Bell,
+	ChevronRight,
+	FileText,
+	Headphones,
+	Heart,
+	HelpCircle,
+	Settings,
+	ShieldCheck,
+	ShoppingBag,
+	ShoppingCart,
+} from "lucide-react";
 import Link from "next/link";
+import type { ComponentType } from "react";
 
-const menuItems = [
+interface MenuItem {
+	id: number;
+	icon: ComponentType<{ size?: number }>;
+	label: string;
+	href: string;
+}
+
+interface MenuSection {
+	id: string;
+	title: string;
+	items: MenuItem[];
+}
+
+const menuItems: MenuSection[] = [
 	{
 		id: "account",
 		title: "계정 관리",
 		items: [
-			{ id: 1, icon: "ri-settings-line", label: "설정", href: "/mypage/settings" },
+			{ id: 1, icon: Settings, label: "설정", href: "/mypage/settings" },
 			{
 				id: 2,
-				icon: "ri-notification-line",
+				icon: Bell,
 				label: "알림 설정",
 				href: "/mypage/notifications",
 			},
 			{
 				id: 3,
-				icon: "ri-shield-check-line",
+				icon: ShieldCheck,
 				label: "보안",
 				href: "/mypage/security",
 			},
@@ -29,17 +55,17 @@ const menuItems = [
 		items: [
 			{
 				id: 4,
-				icon: "ri-shopping-bag-line",
+				icon: ShoppingBag,
 				label: "판매 내역",
 				href: "/mypage/sales",
 			},
 			{
 				id: 5,
-				icon: "ri-shopping-cart-line",
+				icon: ShoppingCart,
 				label: "구매 내역",
 				href: "/mypage/purchases",
 			},
-			{ id: 6, icon: "ri-heart-line", label: "찜 목록", href: "/mypage/wishlist" },
+			{ id: 6, icon: Heart, label: "찜 목록", href: "/mypage/wishlist" },
 		],
 	},
 	{
@@ -48,19 +74,19 @@ const menuItems = [
 		items: [
 			{
 				id: 7,
-				icon: "ri-question-line",
+				icon: HelpCircle,
 				label: "자주 묻는 질문",
 				href: "/support/faq",
 			},
 			{
 				id: 8,
-				icon: "ri-customer-service-line",
+				icon: Headphones,
 				label: "1:1 문의",
 				href: "/support/inquiry",
 			},
 			{
 				id: 9,
-				icon: "ri-file-text-line",
+				icon: FileText,
 				label: "이용약관",
 				href: "/support/terms",
 			},
@@ -104,7 +130,6 @@ const styles = stylex.create({
 		borderBottomWidth: 0,
 	},
 	icon: {
-		fontSize: "20px",
 		color: "#6b7280",
 	},
 	label: {
@@ -113,7 +138,6 @@ const styles = stylex.create({
 		fontWeight: 500,
 	},
 	arrow: {
-		fontSize: "18px",
 		color: "#9ca3af",
 	},
 	logoutButton: {
@@ -143,23 +167,23 @@ export default function MenuList() {
 				<div key={section.id} {...stylex.props(styles.section)}>
 					<h4 {...stylex.props(styles.sectionTitle)}>{section.title}</h4>
 					<div {...stylex.props(styles.list)}>
-						{section.items.map((item, index) => (
-							<Link
-								key={item.id}
-								href={item.href}
-								{...stylex.props(
-									styles.item,
-									index === section.items.length - 1 && styles.itemLast,
-								)}
-							>
-								<i className={item.icon} {...stylex.props(styles.icon)} />
-								<span {...stylex.props(styles.label)}>{item.label}</span>
-								<i
-									className="ri-arrow-right-s-line"
-									{...stylex.props(styles.arrow)}
-								/>
-							</Link>
-						))}
+						{section.items.map((item, index) => {
+							const IconComponent = item.icon;
+							return (
+								<Link
+									key={item.id}
+									href={item.href}
+									{...stylex.props(
+										styles.item,
+										index === section.items.length - 1 && styles.itemLast,
+									)}
+								>
+									<IconComponent size={20} {...stylex.props(styles.icon)} />
+									<span {...stylex.props(styles.label)}>{item.label}</span>
+									<ChevronRight size={18} {...stylex.props(styles.arrow)} />
+								</Link>
+							);
+						})}
 					</div>
 				</div>
 			))}

@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { Heart, Store } from "lucide-react";
 import Link from "next/link";
 
 const styles = stylex.create({
@@ -218,7 +219,7 @@ export default async function ProductGridSection() {
 	if (products.length === 0) {
 		return (
 			<div {...stylex.props(styles.emptyState)}>
-				<i className="ri-store-line" {...stylex.props(styles.emptyIcon)} />
+				<Store size={48} {...stylex.props(styles.emptyIcon)} />
 				<p {...stylex.props(styles.emptyText)}>등록된 상품이 없습니다</p>
 			</div>
 		);
@@ -247,7 +248,7 @@ export default async function ProductGridSection() {
 							{statusLabels[product.status]}
 						</span>
 						<span {...stylex.props(styles.likeBadge)}>
-							<i className="ri-heart-fill" />
+							<Heart size={12} fill="currentColor" />
 							{product.likeCount}
 						</span>
 					</div>
