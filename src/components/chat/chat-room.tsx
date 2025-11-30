@@ -6,25 +6,40 @@ import { ArrowLeft, MoreVertical, Plus, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	lineHeight,
+	radius,
+	size,
+	spacing,
+} from "@/app/global-tokens.stylex";
+import type {
+	ChatMarketInfo,
+	ChatMember,
+	ChatMessage,
+} from "@/types/entities";
+
 const styles = stylex.create({
 	container: {
 		display: "flex",
 		flexDirection: "column",
 		height: "100vh",
-		backgroundColor: "#f9fafb",
+		backgroundColor: colors.bgSecondary,
 	},
 	header: {
 		display: "flex",
 		alignItems: "center",
-		gap: "12px",
-		paddingTop: "12px",
-		paddingBottom: "12px",
-		paddingLeft: "14px",
-		paddingRight: "14px",
-		backgroundColor: "#fff",
+		gap: spacing.xs,
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		backgroundColor: colors.bgPrimary,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 	},
 	backButton: {
 		display: "flex",
@@ -35,32 +50,32 @@ const styles = stylex.create({
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",
-		color: "#374151",
-		fontSize: "24px",
+		color: colors.textTertiary,
+		fontSize: fontSize.xl,
 		textDecoration: "none",
 	},
 	partnerInfo: {
 		flex: 1,
 		display: "flex",
 		alignItems: "center",
-		gap: "10px",
+		gap: spacing.xxs,
 	},
 	avatar: {
-		width: "40px",
-		height: "40px",
-		borderRadius: "20px",
+		width: size.touchTarget,
+		height: size.touchTarget,
+		borderRadius: radius.lg,
 		objectFit: "cover",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 	},
 	partnerName: {
-		fontSize: "16px",
-		fontWeight: 600,
-		color: "#111827",
+		fontSize: fontSize.base,
+		fontWeight: fontWeight.semibold,
+		color: colors.textSecondary,
 		margin: 0,
 	},
-	onlineStatus: {
-		fontSize: "12px",
-		color: "#22c55e",
+	memberCount: {
+		fontSize: fontSize.sm,
+		color: colors.textMuted,
 		margin: 0,
 	},
 	menuButton: {
@@ -72,84 +87,84 @@ const styles = stylex.create({
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",
-		color: "#374151",
+		color: colors.textTertiary,
 		fontSize: "20px",
 	},
 	productBanner: {
 		display: "flex",
 		alignItems: "center",
-		gap: "10px",
-		paddingTop: "10px",
-		paddingBottom: "10px",
-		paddingLeft: "14px",
-		paddingRight: "14px",
-		backgroundColor: "#fff",
+		gap: spacing.xxs,
+		paddingTop: spacing.xxs,
+		paddingBottom: spacing.xxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		backgroundColor: colors.bgPrimary,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 		textDecoration: "none",
 		color: "inherit",
 	},
 	productImage: {
 		width: "44px",
 		height: "44px",
-		borderRadius: "8px",
+		borderRadius: radius.sm,
 		objectFit: "cover",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 	},
 	productInfo: {
 		flex: 1,
 	},
 	productTitle: {
 		fontSize: "13px",
-		fontWeight: 500,
-		color: "#111827",
+		fontWeight: fontWeight.medium,
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "2px",
 	},
 	productPrice: {
-		fontSize: "14px",
-		fontWeight: 700,
-		color: "#000",
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.bold,
+		color: colors.textPrimary,
 		margin: 0,
 	},
 	productStatus: {
 		fontSize: "11px",
-		fontWeight: 600,
-		color: "#2563eb",
-		backgroundColor: "#dbeafe",
-		paddingTop: "4px",
-		paddingBottom: "4px",
-		paddingLeft: "8px",
-		paddingRight: "8px",
-		borderRadius: "4px",
+		fontWeight: fontWeight.semibold,
+		color: colors.accentPrimary,
+		backgroundColor: colors.accentPrimaryBg,
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xxs,
+		paddingRight: spacing.xxs,
+		borderRadius: radius.xs,
 	},
 	messages: {
 		flex: 1,
 		overflowY: "auto",
-		paddingTop: "16px",
-		paddingBottom: "16px",
-		paddingLeft: "14px",
-		paddingRight: "14px",
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
 	},
 	dateGroup: {
 		textAlign: "center",
-		marginBottom: "16px",
+		marginBottom: spacing.sm,
 	},
 	dateBadge: {
 		display: "inline-block",
-		fontSize: "12px",
-		color: "#6b7280",
-		backgroundColor: "#e5e7eb",
-		paddingTop: "4px",
-		paddingBottom: "4px",
-		paddingLeft: "12px",
-		paddingRight: "12px",
-		borderRadius: "12px",
+		fontSize: fontSize.sm,
+		color: colors.textMuted,
+		backgroundColor: colors.borderPrimary,
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		borderRadius: radius.md,
 	},
 	messageRow: {
 		display: "flex",
-		marginBottom: "8px",
+		marginBottom: spacing.xxs,
 	},
 	messageRowMine: {
 		justifyContent: "flex-end",
@@ -159,30 +174,30 @@ const styles = stylex.create({
 	},
 	messageBubble: {
 		maxWidth: "70%",
-		paddingTop: "10px",
-		paddingBottom: "10px",
-		paddingLeft: "14px",
-		paddingRight: "14px",
+		paddingTop: spacing.xxs,
+		paddingBottom: spacing.xxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
 		borderRadius: "16px",
-		fontSize: "14px",
-		lineHeight: 1.5,
+		fontSize: fontSize.md,
+		lineHeight: lineHeight.normal,
 	},
 	bubbleMine: {
-		backgroundColor: "#000",
-		color: "#fff",
-		borderBottomRightRadius: "4px",
+		backgroundColor: colors.bgInverse,
+		color: colors.textInverse,
+		borderBottomRightRadius: radius.xs,
 	},
 	bubbleTheirs: {
-		backgroundColor: "#fff",
-		color: "#111827",
-		borderBottomLeftRadius: "4px",
+		backgroundColor: colors.bgPrimary,
+		color: colors.textSecondary,
+		borderBottomLeftRadius: radius.xs,
 	},
 	messageTime: {
 		fontSize: "11px",
-		color: "#9ca3af",
-		marginTop: "4px",
-		marginLeft: "8px",
-		marginRight: "8px",
+		color: colors.textPlaceholder,
+		marginTop: spacing.xxxs,
+		marginLeft: spacing.xxs,
+		marginRight: spacing.xxs,
 	},
 	messageTimeMine: {
 		textAlign: "right",
@@ -193,118 +208,112 @@ const styles = stylex.create({
 	inputArea: {
 		display: "flex",
 		alignItems: "center",
-		gap: "8px",
-		paddingTop: "12px",
-		paddingBottom: "12px",
-		paddingLeft: "14px",
-		paddingRight: "14px",
-		backgroundColor: "#fff",
+		gap: spacing.xxs,
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		backgroundColor: colors.bgPrimary,
 		borderTopWidth: 1,
 		borderTopStyle: "solid",
-		borderTopColor: "#e5e7eb",
+		borderTopColor: colors.borderPrimary,
 	},
 	attachButton: {
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		width: "40px",
-		height: "40px",
-		backgroundColor: "#f3f4f6",
-		borderRadius: "20px",
+		width: size.touchTarget,
+		height: size.touchTarget,
+		backgroundColor: colors.bgTertiary,
+		borderRadius: radius.lg,
 		borderWidth: 0,
 		cursor: "pointer",
-		color: "#6b7280",
+		color: colors.textMuted,
 		fontSize: "20px",
 	},
 	inputWrap: {
 		flex: 1,
 		display: "flex",
 		alignItems: "center",
-		paddingTop: "10px",
-		paddingBottom: "10px",
-		paddingLeft: "14px",
-		paddingRight: "14px",
-		backgroundColor: "#f3f4f6",
-		borderRadius: "20px",
+		paddingTop: spacing.xxs,
+		paddingBottom: spacing.xxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		backgroundColor: colors.bgTertiary,
+		borderRadius: radius.lg,
 	},
 	input: {
 		flex: 1,
-		fontSize: "14px",
+		fontSize: fontSize.md,
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		outline: "none",
-		color: "#111827",
+		color: colors.textSecondary,
 		"::placeholder": {
-			color: "#9ca3af",
+			color: colors.textPlaceholder,
 		},
 	},
 	sendButton: {
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		width: "40px",
-		height: "40px",
-		backgroundColor: "#000",
-		borderRadius: "20px",
+		width: size.touchTarget,
+		height: size.touchTarget,
+		backgroundColor: colors.bgInverse,
+		borderRadius: radius.lg,
 		borderWidth: 0,
 		cursor: "pointer",
-		color: "#fff",
-		fontSize: "18px",
+		color: colors.textInverse,
+		fontSize: fontSize.lg,
 	},
 	sendButtonDisabled: {
-		backgroundColor: "#d1d5db",
+		backgroundColor: colors.borderPrimary,
 		cursor: "default",
 	},
 });
 
-interface Message {
-	id: string;
-	senderId: string;
-	content: string;
-	createdAt: string;
-}
-
 interface ChatRoomProps {
 	roomId: string;
-	partner: {
-		id: string;
-		name: string;
-		avatar?: string;
-		isOnline: boolean;
-	};
-	product?: {
-		id: number;
-		title: string;
-		price: number;
-		image: string;
-		status: string;
-	};
-	messages: Message[];
+	roomName: string | null;
+	members: ChatMember[];
+	market: ChatMarketInfo | null;
+	initialMessages: ChatMessage[];
 	currentUserId: string;
 }
 
 export default function ChatRoom({
 	roomId,
-	partner,
-	product,
-	messages: initialMessages,
+	roomName,
+	members,
+	market,
+	initialMessages,
 	currentUserId,
 }: ChatRoomProps) {
 	const [messages, setMessages] = useState(initialMessages);
 	const [inputValue, setInputValue] = useState("");
 
+	// 상대방 찾기 (1:1 채팅 기준)
+	const partner = members.find((m) => m.id !== currentUserId) ?? members[0];
+	const displayName = roomName || partner?.nickname || "채팅방";
+
 	const handleSend = () => {
 		if (!inputValue.trim()) return;
 
-		const newMessage: Message = {
+		const newMessage: ChatMessage = {
 			id: String(Date.now()),
-			senderId: currentUserId,
 			content: inputValue.trim(),
 			createdAt: new Date().toISOString(),
+			user: {
+				id: currentUserId,
+				nickname: "나",
+				profileImage: null,
+			},
 		};
 
 		setMessages([...messages, newMessage]);
 		setInputValue("");
+
+		// TODO: API 호출로 실제 메시지 전송
 	};
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -321,19 +330,21 @@ export default function ChatRoom({
 					<ArrowLeft size={24} />
 				</Link>
 				<div {...stylex.props(styles.partnerInfo)}>
-					{partner.avatar ? (
+					{partner?.profileImage ? (
 						<img
-							src={partner.avatar}
-							alt={partner.name}
+							src={partner.profileImage}
+							alt={displayName}
 							{...stylex.props(styles.avatar)}
 						/>
 					) : (
 						<div {...stylex.props(styles.avatar)} />
 					)}
 					<div>
-						<h2 {...stylex.props(styles.partnerName)}>{partner.name}</h2>
-						{partner.isOnline && (
-							<p {...stylex.props(styles.onlineStatus)}>온라인</p>
+						<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
+						{members.length > 2 && (
+							<p {...stylex.props(styles.memberCount)}>
+								{members.length}명 참여
+							</p>
 						)}
 					</div>
 				</div>
@@ -342,23 +353,25 @@ export default function ChatRoom({
 				</button>
 			</div>
 
-			{product && (
+			{market && (
 				<Link
-					href={`/market/${product.id}`}
+					href={`/market/${market.id}`}
 					{...stylex.props(styles.productBanner)}
 				>
-					<img
-						src={product.image}
-						alt={product.title}
-						{...stylex.props(styles.productImage)}
-					/>
+					{market.thumbnail && (
+						<img
+							src={market.thumbnail}
+							alt={market.title}
+							{...stylex.props(styles.productImage)}
+						/>
+					)}
 					<div {...stylex.props(styles.productInfo)}>
-						<p {...stylex.props(styles.productTitle)}>{product.title}</p>
+						<p {...stylex.props(styles.productTitle)}>{market.title}</p>
 						<p {...stylex.props(styles.productPrice)}>
-							{product.price.toLocaleString()}원
+							{market.price ? `${market.price.toLocaleString()}원` : "가격협의"}
 						</p>
 					</div>
-					<span {...stylex.props(styles.productStatus)}>{product.status}</span>
+					<span {...stylex.props(styles.productStatus)}>{market.status}</span>
 				</Link>
 			)}
 
@@ -367,7 +380,7 @@ export default function ChatRoom({
 					<span {...stylex.props(styles.dateBadge)}>오늘</span>
 				</div>
 				{messages.map((message) => {
-					const isMine = message.senderId === currentUserId;
+					const isMine = message.user.id === currentUserId;
 					return (
 						<div key={message.id}>
 							<div

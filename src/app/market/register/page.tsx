@@ -1,11 +1,12 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { ArrowLeft, Camera, X } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
-import { colors } from "@/app/global-tokens.stylex";
+import { colors, size } from "@/app/global-tokens.stylex";
+import { api } from "@/utils/eden";
 
 const conditions = [
 	{ id: "new", name: "새 상품" },
@@ -13,6 +14,26 @@ const conditions = [
 	{ id: "good", name: "사용감 적음" },
 	{ id: "used", name: "사용감 있음" },
 ];
+
+interface ImageFile {
+	file: File;
+	preview: string;
+}
+
+function fileToBase64(file: File): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => {
+			if (typeof reader.result === "string") {
+				resolve(reader.result);
+			} else {
+				reject(new Error("Failed to read file"));
+			}
+		};
+		reader.onerror = reject;
+		reader.readAsDataURL(file);
+	});
+}
 
 const styles = stylex.create({
 	container: {
@@ -295,10 +316,43 @@ const styles = stylex.create({
 		color: colors.textTertiary,
 		cursor: "pointer",
 	},
+	bottomButtonContainer: {
+		position: "sticky",
+		bottom: size.bottomMenuHeight,
+		left: 0,
+		right: 0,
+		paddingTop: "12px",
+		paddingBottom: "12px",
+		paddingLeft: "14px",
+		paddingRight: "14px",
+		backgroundColor: colors.bgPrimary,
+		borderTopWidth: 1,
+		borderTopStyle: "solid",
+		borderTopColor: colors.borderPrimary,
+		zIndex: 10,
+	},
+	bottomButton: {
+		width: "100%",
+		paddingTop: "16px",
+		paddingBottom: "16px",
+		fontSize: "16px",
+		fontWeight: 600,
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
+		borderWidth: 0,
+		borderRadius: "12px",
+		cursor: "pointer",
+		transition: "opacity 0.2s ease",
+	},
+	bottomButtonDisabled: {
+		opacity: 0.5,
+		cursor: "not-allowed",
+	},
 });
 
 export default function MarketRegisterPage() {
 	const router = useRouter();
+	const [isPending, startTransition] = useTransition();
 	const [images, setImages] = useState<string[]>([]);
 	const [title, setTitle] = useState("");
 	const [price, setPrice] = useState("");
@@ -312,6 +366,7 @@ export default function MarketRegisterPage() {
 		price.trim() &&
 		condition !== null &&
 		description.trim();
+	const isDisabled = !isFormValid || isPending;
 
 	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
@@ -342,20 +397,27 @@ export default function MarketRegisterPage() {
 		setPrice(numValue.toLocaleString());
 	};
 
-	const handleSubmit = async () => {
-		if (!isFormValid) return;
+	const handleSubmit = () => {
+		if (isDisabled) return;
 
-		// TODO: API 연동
-		console.log({
-			images,
-			title,
-			price: price.replace(/,/g, ""),
-			condition,
-			description,
-			isNegotiable,
+		startTransition(async () => {
+			const priceNumber = parseInt(price.replace(/,/g, ""), 10);
+			const fullDescription = `[${conditions.find((c) => c.id === condition)?.name}] ${description}${isNegotiable ? "\n\n(가격 협상 가능)" : ""}`;
+
+			const { error } = await api.markets.post({
+				title,
+				description: fullDescription,
+				price: priceNumber,
+				imageUrls: images.length > 0 ? images : undefined,
+			});
+
+			if (error) {
+				console.error("Failed to create market item:", error);
+				return;
+			}
+
+			router.push("/market");
 		});
-
-		router.push("/market");
 	};
 
 	return (
@@ -369,17 +431,7 @@ export default function MarketRegisterPage() {
 					<ArrowLeft size={24} />
 				</button>
 				<h1 {...stylex.props(styles.headerTitle)}>상품 등록</h1>
-				<button
-					type="button"
-					onClick={handleSubmit}
-					disabled={!isFormValid}
-					{...stylex.props(
-						styles.submitButton,
-						!isFormValid && styles.submitButtonDisabled
-					)}
-				>
-					등록
-				</button>
+				<div {...stylex.props(styles.backButton)} aria-hidden="true" />
 			</header>
 
 			<div {...stylex.props(styles.content)}>
@@ -391,7 +443,9 @@ export default function MarketRegisterPage() {
 					<div {...stylex.props(styles.imageUploadArea)}>
 						<label {...stylex.props(styles.imageUploadButton)}>
 							<Camera size={28} {...stylex.props(styles.uploadIcon)} />
-							<span {...stylex.props(styles.uploadText)}>{images.length}/10</span>
+							<span {...stylex.props(styles.uploadText)}>
+								{images.length}/10
+							</span>
 							<input
 								type="file"
 								accept="image/*"
@@ -484,7 +538,7 @@ export default function MarketRegisterPage() {
 								onClick={() => setCondition(item.id)}
 								{...stylex.props(
 									styles.conditionButton,
-									condition === item.id && styles.conditionButtonActive
+									condition === item.id && styles.conditionButtonActive,
 								)}
 							>
 								{item.name}
@@ -500,14 +554,30 @@ export default function MarketRegisterPage() {
 					</label>
 					<textarea
 						id="description"
-						placeholder="상품에 대한 상세 설명을 입력해주세요&#10;(포카 그룹, 멤버, 앨범명, 상태 등)"
+						placeholder={"상품에 대한 상세 설명을 입력해주세요\n(포카 그룹, 멤버, 앨범명, 상태 등)"}
 						value={description}
 						onChange={(e) => setDescription(e.target.value)}
 						maxLength={2000}
 						{...stylex.props(styles.textarea)}
 					/>
-					<div {...stylex.props(styles.charCount)}>{description.length}/2000</div>
+					<div {...stylex.props(styles.charCount)}>
+						{description.length}/2000
+					</div>
 				</div>
+			</div>
+
+			<div {...stylex.props(styles.bottomButtonContainer)}>
+				<button
+					type="button"
+					onClick={handleSubmit}
+					disabled={isDisabled}
+					{...stylex.props(
+						styles.bottomButton,
+						isDisabled && styles.bottomButtonDisabled,
+					)}
+				>
+					{isPending ? <Loader2 size={20} className="animate-spin" /> : "등록하기"}
+				</button>
 			</div>
 		</div>
 	);

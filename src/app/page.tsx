@@ -13,13 +13,14 @@ import {
 	PocaSliderSkeleton,
 	RecentPostsSkeleton,
 } from "@/components/home/skeletons";
+import { colors } from "./global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 	mainContentsWrap: {
 		flex: 1,
@@ -28,7 +29,7 @@ const styles = stylex.create({
 		paddingLeft: "14px",
 		paddingRight: "14px",
 		marginTop: "28px",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 });
 

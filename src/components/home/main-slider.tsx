@@ -7,6 +7,13 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	spacing,
+} from "@/app/global-tokens.stylex";
+
 const VisualMotion = stylex.keyframes({
 	"0%": {
 		opacity: 0,
@@ -20,6 +27,9 @@ const VisualMotion = stylex.keyframes({
 
 const styles = stylex.create({
 	mainSlide: {},
+	swiper: {
+		height: "288px",
+	},
 	slide: {
 		position: "relative",
 		height: "100%",
@@ -33,10 +43,10 @@ const styles = stylex.create({
 		position: "absolute",
 		top: "60%",
 		left: 0,
-		marginLeft: "14px",
+		marginLeft: spacing.xs,
 		color: "#fff",
-		fontWeight: 700,
-		fontSize: "24px",
+		fontWeight: fontWeight.bold,
+		fontSize: fontSize.xl,
 		letterSpacing: "-0.05em",
 		cursor: "default",
 		opacity: 0,
@@ -51,13 +61,13 @@ const styles = stylex.create({
 	},
 	slideTxtH3: {
 		margin: 0,
-		fontSize: "24px",
-		fontWeight: 700,
+		fontSize: fontSize.xl,
+		fontWeight: fontWeight.bold,
 	},
 	slideTxtH4: {
 		margin: 0,
-		fontSize: "24px",
-		fontWeight: 700,
+		fontSize: fontSize.xl,
+		fontWeight: fontWeight.bold,
 	},
 });
 
@@ -97,7 +107,6 @@ export default function MainSlider() {
 					disableOnInteraction: false,
 				}}
 				className="mainSlideSwiper"
-				style={{ height: "288px" }}
 			>
 				{slides.map((slide) => (
 					<SwiperSlide key={slide.id} className="mainSlideItem">

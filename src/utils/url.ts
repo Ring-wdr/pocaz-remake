@@ -32,11 +32,8 @@ export function getBaseUrl(): string {
 }
 
 /**
- * Eden API용 base URL (브라우저에서는 상대 경로)
+ * Eden API용 base URL
  */
 export function getApiBaseUrl(): string {
-	if (typeof window !== "undefined") {
-		return "";
-	}
 	return getBaseUrl();
 }

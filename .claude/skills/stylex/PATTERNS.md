@@ -12,6 +12,7 @@ Common styling patterns for this project.
 - [Static vs Dynamic Styles](#static-vs-dynamic-styles)
 - [Using Design Tokens](#using-design-tokens)
 - [Grid Layout with Cards](#grid-layout-with-cards)
+- [Sticky Bottom Button](#sticky-bottom-button)
 
 ## Basic Styles
 
@@ -182,21 +183,48 @@ const styles = stylex.create({
 ## Using Design Tokens
 
 ```typescript
-import { spacing, text, globalTokens } from '@/app/global-tokens.stylex';
+import {
+  spacing, text, colors, globalTokens,
+  fontSize, fontWeight, lineHeight, radius, iconSize, size
+} from '@/app/global-tokens.stylex';
 
 const styles = stylex.create({
   card: {
     padding: spacing.md,
-    fontSize: text.p,
-    fontFamily: globalTokens.fontSans,
+    fontSize: fontSize.md,        // 고정 14px
+    fontWeight: fontWeight.medium,
+    lineHeight: lineHeight.normal,
+    borderRadius: radius.sm,
+    backgroundColor: colors.bgPrimary,
+    color: colors.textPrimary,
+  },
+  avatar: {
+    width: size.avatarMd,         // 48px
+    height: size.avatarMd,
+    borderRadius: radius.full,
+  },
+  icon: {
+    width: iconSize.md,           // 18px
+    height: iconSize.md,
+  },
+  button: {
+    height: size.touchTarget,     // 40px
+    paddingInline: spacing.md,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
   },
 });
 
 // Available tokens:
-// text: xxs, xs, sm, p, h5, h4, h3, h2, h1 (fluid typography)
-// spacing: xxxs, xxs, xs, sm, md, lg, xl, xxl, xxxl, xxxxl (fluid spacing)
-// globalTokens: fontSans, fontMono, maxWidth, bgStartRGB, primaryGlow, etc.
-// scales: small, medium, large
+// text: xxs~h1 (fluid 반응형)
+// spacing: xxxs~xxxxl (fluid 반응형)
+// colors: bgPrimary, textPrimary, borderPrimary, accentPrimary 등 (다크모드 지원)
+// fontSize: xs (10px) ~ xxl (30px) (고정)
+// fontWeight: normal (400) ~ black (900)
+// lineHeight: tight (1) ~ loose (2)
+// radius: xs (4px) ~ full (50%)
+// iconSize: xs (14px) ~ xl (28px)
+// size: touchTarget, avatarSm/Md/Lg, thumbnail, bottomMenuHeight 등
 ```
 
 ## Grid Layout with Cards
@@ -258,3 +286,134 @@ const styles = stylex.create({
 1. **maxHeight와 flex: 1 충돌**: Content에 `maxHeight`가 있으면 `flex: 1`이 무시됨
 2. **height: 100% 필수**: Solution B에서 Card가 grid cell을 채우려면 필요
 3. **콘텐츠 양이 다르면 여백은 필연적**: 동일 높이 + 여백 없음은 불가능
+
+## Sticky Bottom Button
+
+폼 페이지에서 제출 버튼을 화면 하단에 고정하는 패턴.
+
+### 레이아웃 구조 이해 (필수)
+
+```
+mobileWrap (Layout 컴포넌트)
+├── Header (공통 앱 헤더)
+├── mainContent (flex: 1) ← 페이지가 여기에 렌더링
+│   └── YourPage
+│       ├── page header
+│       ├── content (스크롤 영역)
+│       └── bottomButtonContainer ← sticky 버튼
+└── BottomMenu (sticky, bottom: 0, height: 56px)
+```
+
+### 핵심 규칙
+
+**`bottom` 값은 반드시 `size.bottomMenuHeight`를 사용해야 함.**
+
+BottomMenu가 `position: sticky`, `bottom: 0`으로 항상 하단에 고정되어 있으므로,
+하단 버튼의 `bottom` 값을 `0`으로 하면 BottomMenu에 가려짐.
+
+### 구현
+
+```typescript
+import { colors, size } from "@/app/global-tokens.stylex";
+
+const styles = stylex.create({
+  // 페이지 컨테이너
+  container: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: colors.bgPrimary,
+  },
+  // 스크롤 가능한 콘텐츠 영역
+  content: {
+    flex: 1,
+    paddingTop: "20px",
+    paddingBottom: "24px",
+    paddingLeft: "14px",
+    paddingRight: "14px",
+  },
+  // 하단 고정 버튼 컨테이너
+  bottomButtonContainer: {
+    position: "sticky",
+    bottom: size.bottomMenuHeight,  // 56px - BottomMenu 위에 위치
+    left: 0,
+    right: 0,
+    paddingTop: "12px",
+    paddingBottom: "12px",
+    paddingLeft: "14px",
+    paddingRight: "14px",
+    backgroundColor: colors.bgPrimary,
+    borderTopWidth: 1,
+    borderTopStyle: "solid",
+    borderTopColor: colors.borderPrimary,
+    zIndex: 10,
+  },
+  // 버튼 스타일
+  bottomButton: {
+    width: "100%",
+    paddingTop: "16px",
+    paddingBottom: "16px",
+    fontSize: "16px",
+    fontWeight: 600,
+    color: colors.textInverse,
+    backgroundColor: colors.bgInverse,
+    borderWidth: 0,
+    borderRadius: "12px",
+    cursor: "pointer",
+    transition: "opacity 0.2s ease",
+  },
+  bottomButtonDisabled: {
+    opacity: 0.5,
+    cursor: "not-allowed",
+  },
+});
+```
+
+### JSX 구조
+
+```tsx
+export default function FormPage() {
+  return (
+    <div {...stylex.props(styles.container)}>
+      {/* 페이지 헤더 (선택) */}
+      <header {...stylex.props(styles.header)}>
+        <h1>페이지 제목</h1>
+      </header>
+
+      {/* 스크롤 가능한 폼 콘텐츠 */}
+      <div {...stylex.props(styles.content)}>
+        {/* 폼 필드들 */}
+      </div>
+
+      {/* 하단 고정 버튼 - content와 같은 레벨에 배치 */}
+      <div {...stylex.props(styles.bottomButtonContainer)}>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isDisabled}
+          {...stylex.props(
+            styles.bottomButton,
+            isDisabled && styles.bottomButtonDisabled,
+          )}
+        >
+          {isPending ? <Loader2 size={20} /> : "등록하기"}
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 주의사항
+
+1. **`bottom: size.bottomMenuHeight` 필수**: `0`이나 다른 값 사용 시 BottomMenu에 가려짐
+2. **`zIndex: 10`**: 스크롤 콘텐츠 위에 표시되도록 설정
+3. **`backgroundColor` 필수**: 투명하면 스크롤 시 콘텐츠가 비침
+4. **`container`에 `minHeight: 100vh` 사용 금지**: 레이아웃 구조에서 이미 처리됨
+
+### 적용 예시
+
+- `/market/register` - 상품 등록
+- `/community/write` - 글 작성
+- `/mypage/edit` - 프로필 수정
+- 기타 폼 제출이 필요한 페이지

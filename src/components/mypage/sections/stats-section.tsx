@@ -1,33 +1,34 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
 		display: "grid",
 		gridTemplateColumns: "repeat(3, 1fr)",
-		gap: "12px",
-		marginBottom: "24px",
+		gap: spacing.xs,
+		marginBottom: spacing.md,
 	},
 	item: {
-		paddingTop: "16px",
-		paddingBottom: "16px",
-		backgroundColor: "#f9fafb",
-		borderRadius: "12px",
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
+		backgroundColor: colors.bgSecondary,
+		borderRadius: radius.md,
 		textAlign: "center",
 		textDecoration: "none",
 		color: "inherit",
 		transition: "background-color 0.2s ease",
 	},
 	number: {
-		fontSize: "24px",
-		fontWeight: 700,
-		color: "#111827",
+		fontSize: fontSize.xl,
+		fontWeight: fontWeight.bold,
+		color: colors.textSecondary,
 		margin: 0,
-		marginBottom: "4px",
+		marginBottom: spacing.xxxs,
 	},
 	label: {
-		fontSize: "12px",
-		color: "#6b7280",
+		fontSize: fontSize.sm,
+		color: colors.textMuted,
 		margin: 0,
 	},
 });

@@ -286,6 +286,145 @@ export const marketService = {
 };
 
 /**
+ * Wishlist 아이템 타입
+ */
+export interface WishlistItem {
+	id: string;
+	title: string;
+	description: string | null;
+	price: number | null;
+	status: string;
+	createdAt: Date;
+	user: {
+		id: string;
+		nickname: string;
+		profileImage: string | null;
+	};
+	images: {
+		id: string;
+		imageUrl: string;
+	}[];
+	likedAt: Date;
+}
+
+/**
+ * MarketLike Service (찜)
+ */
+export const marketLikeService = {
+	/**
+	 * 찜 토글 (있으면 삭제, 없으면 생성)
+	 */
+	async toggle(userId: string, marketId: string): Promise<{ liked: boolean }> {
+		const existing = await prisma.marketLike.findUnique({
+			where: {
+				userId_marketId: {
+					userId,
+					marketId,
+				},
+			},
+		});
+
+		if (existing) {
+			await prisma.marketLike.delete({
+				where: { id: existing.id },
+			});
+			return { liked: false };
+		}
+
+		await prisma.marketLike.create({
+			data: {
+				userId,
+				marketId,
+			},
+		});
+		return { liked: true };
+	},
+
+	/**
+	 * 찜 여부 확인
+	 */
+	async isLiked(userId: string, marketId: string): Promise<boolean> {
+		const like = await prisma.marketLike.findUnique({
+			where: {
+				userId_marketId: {
+					userId,
+					marketId,
+				},
+			},
+		});
+		return !!like;
+	},
+
+	/**
+	 * Market의 찜 수 조회
+	 */
+	async getCount(marketId: string): Promise<number> {
+		return prisma.marketLike.count({
+			where: { marketId },
+		});
+	},
+
+	/**
+	 * 사용자가 찜한 Market 목록 (위시리스트)
+	 */
+	async getWishlist(userId: string): Promise<WishlistItem[]> {
+		const likes = await prisma.marketLike.findMany({
+			where: { userId },
+			include: {
+				market: {
+					include: {
+						user: {
+							select: {
+								id: true,
+								nickname: true,
+								profileImage: true,
+							},
+						},
+						images: true,
+					},
+				},
+			},
+			orderBy: { createdAt: "desc" },
+		});
+
+		return likes.map((like) => ({
+			id: like.market.id,
+			title: like.market.title,
+			description: like.market.description,
+			price: like.market.price,
+			status: like.market.status,
+			createdAt: like.market.createdAt,
+			user: like.market.user,
+			images: like.market.images,
+			likedAt: like.createdAt,
+		}));
+	},
+
+	/**
+	 * 여러 Market의 찜 여부 확인 (batch)
+	 */
+	async checkLikedMarkets(userId: string, marketIds: string[]): Promise<Record<string, boolean>> {
+		const likes = await prisma.marketLike.findMany({
+			where: {
+				userId,
+				marketId: { in: marketIds },
+			},
+			select: { marketId: true },
+		});
+
+		const likedMarketIds = new Set(likes.map((like) => like.marketId));
+
+		return marketIds.reduce(
+			(acc, marketId) => {
+				acc[marketId] = likedMarketIds.has(marketId);
+				return acc;
+			},
+			{} as Record<string, boolean>,
+		);
+	},
+};
+
+/**
  * MarketImage Service
  */
 export const marketImageService = {

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ComponentType } from "react";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 
 interface MenuItem {
 	id: number;
@@ -97,59 +98,59 @@ const menuItems: MenuSection[] = [
 const styles = stylex.create({
 	container: {},
 	section: {
-		marginBottom: "24px",
+		marginBottom: spacing.md,
 	},
 	sectionTitle: {
 		fontSize: "13px",
-		fontWeight: 600,
-		color: "#6b7280",
+		fontWeight: fontWeight.semibold,
+		color: colors.textMuted,
 		margin: 0,
-		marginBottom: "12px",
-		paddingLeft: "4px",
+		marginBottom: spacing.xs,
+		paddingLeft: spacing.xxxs,
 	},
 	list: {
-		backgroundColor: "#f9fafb",
-		borderRadius: "12px",
+		backgroundColor: colors.bgSecondary,
+		borderRadius: radius.md,
 		overflow: "hidden",
 	},
 	item: {
 		display: "flex",
 		alignItems: "center",
-		gap: "12px",
-		paddingTop: "14px",
-		paddingBottom: "14px",
-		paddingLeft: "16px",
-		paddingRight: "16px",
+		gap: spacing.xs,
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
 		textDecoration: "none",
-		color: "#111827",
+		color: colors.textSecondary,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 	},
 	itemLast: {
 		borderBottomWidth: 0,
 	},
 	icon: {
-		color: "#6b7280",
+		color: colors.textMuted,
 	},
 	label: {
 		flex: 1,
-		fontSize: "14px",
-		fontWeight: 500,
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.medium,
 	},
 	arrow: {
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 	},
 	logoutButton: {
 		width: "100%",
-		paddingTop: "14px",
-		paddingBottom: "14px",
-		fontSize: "14px",
-		fontWeight: 500,
-		color: "#dc2626",
-		backgroundColor: "#fef2f2",
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.medium,
+		color: colors.statusError,
+		backgroundColor: colors.statusErrorBgLight,
 		borderWidth: 0,
-		borderRadius: "12px",
+		borderRadius: radius.md,
 		cursor: "pointer",
 		transition: "background-color 0.2s ease",
 	},

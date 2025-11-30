@@ -2,13 +2,14 @@ import * as stylex from "@stylexjs/stylex";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/home";
+import { colors } from "../../global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 	content: {
 		flex: 1,
@@ -25,7 +26,7 @@ const styles = stylex.create({
 		width: "80px",
 		height: "80px",
 		borderRadius: "40px",
-		backgroundColor: "#fee2e2",
+		backgroundColor: colors.statusErrorBg,
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
@@ -33,19 +34,19 @@ const styles = stylex.create({
 	},
 	icon: {
 		fontSize: "40px",
-		color: "#dc2626",
+		color: colors.statusError,
 	},
 	title: {
 		fontSize: "24px",
 		fontWeight: 700,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "12px",
 		textAlign: "center",
 	},
 	description: {
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 		marginBottom: "32px",
 		textAlign: "center",
@@ -64,8 +65,8 @@ const styles = stylex.create({
 		paddingRight: "24px",
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#fff",
-		backgroundColor: "#000",
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
 		borderRadius: "12px",
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",
@@ -73,7 +74,7 @@ const styles = stylex.create({
 	homeLink: {
 		marginTop: "16px",
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		textDecoration: "none",
 	},
 });

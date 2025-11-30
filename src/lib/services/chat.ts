@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 export interface CreateChatRoomDto {
 	name?: string;
 	memberIds: string[]; // User IDs
+	marketId?: string; // Market ID (마켓 거래 관련 채팅방)
 }
 
 /**
@@ -36,6 +37,7 @@ export const chatRoomService = {
 		return prisma.chatRoom.create({
 			data: {
 				name: dto.name,
+				marketId: dto.marketId,
 				members: {
 					create: dto.memberIds.map((userId) => ({ userId })),
 				},
@@ -49,6 +51,19 @@ export const chatRoomService = {
 								nickname: true,
 								profileImage: true,
 							},
+						},
+					},
+				},
+				market: {
+					select: {
+						id: true,
+						title: true,
+						price: true,
+						status: true,
+						userId: true,
+						images: {
+							take: 1,
+							select: { imageUrl: true },
 						},
 					},
 				},
@@ -79,6 +94,19 @@ export const chatRoomService = {
 						},
 					},
 				},
+				market: {
+					select: {
+						id: true,
+						title: true,
+						price: true,
+						status: true,
+						userId: true,
+						images: {
+							take: 1,
+							select: { imageUrl: true },
+						},
+					},
+				},
 				_count: {
 					select: {
 						messages: true,
@@ -91,12 +119,13 @@ export const chatRoomService = {
 	/**
 	 * 사용자의 ChatRoom 목록 조회
 	 */
-	async findByUserId(userId: string) {
+	async findByUserId(userId: string, marketId?: string) {
 		return prisma.chatRoom.findMany({
 			where: {
 				members: {
 					some: { userId },
 				},
+				...(marketId && { marketId }),
 			},
 			include: {
 				members: {
@@ -107,6 +136,19 @@ export const chatRoomService = {
 								nickname: true,
 								profileImage: true,
 							},
+						},
+					},
+				},
+				market: {
+					select: {
+						id: true,
+						title: true,
+						price: true,
+						status: true,
+						userId: true,
+						images: {
+							take: 1,
+							select: { imageUrl: true },
 						},
 					},
 				},
@@ -176,6 +218,116 @@ export const chatRoomService = {
 		// 새 채팅방 생성
 		return this.create({
 			memberIds: [userId1, userId2],
+		});
+	},
+
+	/**
+	 * 마켓 거래용 채팅방 조회 또는 생성
+	 * 구매자가 특정 마켓에 대해 판매자와 채팅할 때 사용
+	 */
+	async findOrCreateForMarket(
+		buyerId: string,
+		sellerId: string,
+		marketId: string,
+	) {
+		// 해당 마켓에 대한 구매자-판매자 채팅방 찾기
+		const existingRoom = await prisma.chatRoom.findFirst({
+			where: {
+				marketId,
+				AND: [
+					{ members: { some: { userId: buyerId } } },
+					{ members: { some: { userId: sellerId } } },
+				],
+			},
+			include: {
+				members: {
+					include: {
+						user: {
+							select: {
+								id: true,
+								nickname: true,
+								profileImage: true,
+							},
+						},
+					},
+				},
+				market: {
+					select: {
+						id: true,
+						title: true,
+						price: true,
+						status: true,
+						userId: true,
+						images: {
+							take: 1,
+							select: { imageUrl: true },
+						},
+					},
+				},
+			},
+		});
+
+		if (existingRoom) {
+			return existingRoom;
+		}
+
+		// 새 채팅방 생성
+		return this.create({
+			memberIds: [buyerId, sellerId],
+			marketId,
+		});
+	},
+
+	/**
+	 * 특정 마켓의 채팅방 목록 조회 (판매자용)
+	 */
+	async findByMarketId(marketId: string) {
+		return prisma.chatRoom.findMany({
+			where: { marketId },
+			include: {
+				members: {
+					include: {
+						user: {
+							select: {
+								id: true,
+								nickname: true,
+								profileImage: true,
+							},
+						},
+					},
+				},
+				market: {
+					select: {
+						id: true,
+						title: true,
+						price: true,
+						status: true,
+						userId: true,
+						images: {
+							take: 1,
+							select: { imageUrl: true },
+						},
+					},
+				},
+				messages: {
+					take: 1,
+					orderBy: { createdAt: "desc" },
+					include: {
+						user: {
+							select: {
+								id: true,
+								nickname: true,
+							},
+						},
+					},
+				},
+				_count: {
+					select: {
+						messages: true,
+					},
+				},
+			},
+			orderBy: { createdAt: "desc" },
 		});
 	},
 

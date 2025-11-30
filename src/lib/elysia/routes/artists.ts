@@ -378,7 +378,10 @@ export const artistRoutes = new Elysia()
 		{
 			params: t.Object({ id: t.String() }),
 			body: t.Object({ name: t.String({ minLength: 1 }) }),
-			response: t.Union([AgencySchema, ErrorSchema]),
+			response: {
+				200: AgencySchema,
+				404: ErrorSchema,
+			},
 			detail: {
 				tags: ["Artists"],
 				summary: "소속사 수정",
@@ -399,7 +402,10 @@ export const artistRoutes = new Elysia()
 		},
 		{
 			params: t.Object({ id: t.String() }),
-			response: t.Union([MessageSchema, ErrorSchema]),
+			response: {
+				200: MessageSchema,
+				404: ErrorSchema,
+			},
 			detail: {
 				tags: ["Artists"],
 				summary: "소속사 삭제",
@@ -485,7 +491,10 @@ export const artistRoutes = new Elysia()
 		},
 		{
 			params: t.Object({ id: t.String() }),
-			response: t.Union([MessageSchema, ErrorSchema]),
+			response: {
+				200: MessageSchema,
+				404: ErrorSchema,
+			},
 			detail: {
 				tags: ["Artists"],
 				summary: "그룹 삭제",
@@ -571,7 +580,10 @@ export const artistRoutes = new Elysia()
 		},
 		{
 			params: t.Object({ id: t.String() }),
-			response: t.Union([MessageSchema, ErrorSchema]),
+			response: {
+				200: MessageSchema,
+				404: ErrorSchema,
+			},
 			detail: {
 				tags: ["Artists"],
 				summary: "아티스트 삭제",

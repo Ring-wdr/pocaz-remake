@@ -71,6 +71,160 @@ const MessageSchema = t.Object({
 export const storageRoutes = new Elysia({ prefix: "/storage" })
 	.use(authGuard)
 
+	// POST /api/storage/upload/file - FormData 단일 파일 업로드
+	.post(
+		"/upload/file",
+		async ({ body, set }) => {
+			const { bucket, file } = body;
+
+			// Bucket 검증
+			const validBuckets = Object.values(STORAGE_BUCKETS);
+			if (!validBuckets.includes(bucket as StorageBucket)) {
+				set.status = 400;
+				return {
+					error: `Invalid bucket. Allowed: ${validBuckets.join(", ")}`,
+				};
+			}
+
+			// MIME 타입 검증
+			if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+				set.status = 400;
+				return {
+					error: `Unsupported file type. Allowed: ${ALLOWED_IMAGE_TYPES.join(", ")}`,
+				};
+			}
+
+			// 파일 크기 검증
+			if (file.size > MAX_FILE_SIZE) {
+				set.status = 400;
+				return { error: "File too large. Maximum size is 20MB" };
+			}
+
+			try {
+				const buffer = Buffer.from(await file.arrayBuffer());
+				const result = await storageService.uploadBuffer(
+					bucket as StorageBucket,
+					buffer,
+					file.name,
+					file.type,
+				);
+
+				set.status = 201;
+				return {
+					path: result.path,
+					publicUrl: result.publicUrl,
+				};
+			} catch (error) {
+				set.status = 500;
+				return {
+					error: error instanceof Error ? error.message : "Upload failed",
+				};
+			}
+		},
+		{
+			body: t.Object({
+				bucket: t.String(),
+				file: t.File(),
+			}),
+			response: {
+				201: UploadResultSchema,
+				400: ErrorSchema,
+				500: ErrorSchema,
+			},
+			detail: {
+				tags: ["Storage"],
+				summary: "FormData 단일 파일 업로드",
+				description: "FormData로 단일 파일을 업로드합니다.",
+			},
+		},
+	)
+
+	// POST /api/storage/upload/files - FormData 여러 파일 업로드
+	.post(
+		"/upload/files",
+		async ({ body, set }) => {
+			const { bucket, files } = body;
+
+			// Bucket 검증
+			const validBuckets = Object.values(STORAGE_BUCKETS);
+			if (!validBuckets.includes(bucket as StorageBucket)) {
+				set.status = 400;
+				return {
+					error: `Invalid bucket. Allowed: ${validBuckets.join(", ")}`,
+				};
+			}
+
+			const results: { index: number; path: string; publicUrl: string }[] = [];
+			const errors: { index: number; fileName: string; error: string }[] = [];
+
+			for (let i = 0; i < files.length; i++) {
+				const file = files[i];
+
+				// MIME 타입 검증
+				if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+					errors.push({
+						index: i,
+						fileName: file.name,
+						error: "Unsupported file type",
+					});
+					continue;
+				}
+
+				// 파일 크기 검증
+				if (file.size > MAX_FILE_SIZE) {
+					errors.push({
+						index: i,
+						fileName: file.name,
+						error: "File too large",
+					});
+					continue;
+				}
+
+				try {
+					const buffer = Buffer.from(await file.arrayBuffer());
+					const result = await storageService.uploadBuffer(
+						bucket as StorageBucket,
+						buffer,
+						file.name,
+						file.type,
+					);
+					results.push({
+						index: i,
+						path: result.path,
+						publicUrl: result.publicUrl,
+					});
+				} catch (error) {
+					errors.push({
+						index: i,
+						fileName: file.name,
+						error: error instanceof Error ? error.message : "Upload failed",
+					});
+				}
+			}
+
+			set.status = 201;
+			return {
+				uploaded: results,
+				errors: errors.length > 0 ? errors : undefined,
+			};
+		},
+		{
+			body: t.Object({
+				bucket: t.String(),
+				files: t.Files(),
+			}),
+			response: {
+				201: MultipleUploadResultSchema,
+				400: ErrorSchema,
+			},
+			detail: {
+				tags: ["Storage"],
+				summary: "FormData 여러 파일 업로드",
+				description: "FormData로 여러 파일을 업로드합니다 (최대 10개).",
+			},
+		},
+	)
+
 	// POST /api/storage/upload - Base64 이미지 업로드
 	.post(
 		"/upload",

@@ -96,6 +96,7 @@ export const reviewRoutes = new Elysia({ prefix: "/reviews" })
 | `SERVICE.md` | 서비스 레이어 템플릿 |
 | `PRISMA.md` | Prisma 모델 패턴 |
 | `AUTH.md` | 인증 통합 가이드 |
+| `EDEN.md` | Eden Treaty 클라이언트 가이드 |
 
 ## Key Patterns
 

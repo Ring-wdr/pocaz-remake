@@ -1,35 +1,25 @@
 import * as stylex from "@stylexjs/stylex";
 import { ChevronRight, Star } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
+import BackgroundImage from "./background-image";
 import BottomMenu from "./bottom-menu";
 import Header from "./header";
 import ScrollTopButton from "./scroll-top-button";
 
-const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
 
 const styles = stylex.create({
 	wrapper: {
 		position: "relative",
 		minHeight: "100vh",
-		backgroundColor: "#000",
-	},
-	bgFixed: {
-		position: "fixed",
-		top: 0,
-		left: 0,
-		width: "100vw",
-		height: "100vh",
-		zIndex: 0,
-		pointerEvents: "none",
-		display: {
-			default: "block",
-			[MOBILE]: "none",
-		},
-	},
-	bgContent: {
-		objectFit: "cover",
+		backgroundColor: colors.accentPrimary,
 	},
 	contentLayer: {
 		position: "relative",
@@ -49,14 +39,14 @@ const styles = stylex.create({
 		},
 	},
 	txtBoxInner: {
-		marginBottom: "20px",
+		marginBottom: spacing.sm,
 	},
 	starText: {
 		display: "flex",
 		justifyContent: "center",
-		fontSize: "14px",
-		fontWeight: 700,
-		color: "#fff",
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.bold,
+		color: "#ffffff",
 	},
 	starIcon: {
 		color: "#fef08a",
@@ -74,25 +64,32 @@ const styles = stylex.create({
 	},
 	atozText: {
 		position: "relative",
-		padding: "8px",
+		padding: spacing.xxs,
 		fontStyle: "italic",
-		color: "#fff",
+		color: "#ffffff",
 	},
 	pocazTitle: {
-		marginTop: "24px",
-		marginBottom: "24px",
-		color: "#fff",
+		marginTop: spacing.md,
+		marginBottom: spacing.md,
+		color: "#ffffff",
 		fontStyle: "italic",
 		fontSize: "72px",
-		fontWeight: 900,
+		fontWeight: fontWeight.black,
 		letterSpacing: "-2px",
 	},
 	ctaButton: {
-		marginTop: "20px",
-		marginBottom: "20px",
+		display: "inline-flex",
+		alignItems: "center",
+		justifyContent: "center",
+		marginTop: spacing.sm,
+		marginBottom: spacing.sm,
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
+		paddingLeft: spacing.md,
+		paddingRight: spacing.md,
 		backgroundColor: "#27272a",
-		color: "#fff",
-		borderRadius: "8px",
+		color: "#ffffff",
+		borderRadius: radius.sm,
 		borderWidth: 0,
 		cursor: "pointer",
 		transition: "background-color 0.2s ease-in",
@@ -100,15 +97,11 @@ const styles = stylex.create({
 			backgroundColor: "#18181b",
 		},
 	},
-	ctaButtonInner: {
-		display: "flex",
-	},
 	ctaLink: {
-		paddingTop: "16px",
-		paddingBottom: "16px",
-		paddingLeft: "24px",
-		paddingRight: "24px",
-		color: "#fff",
+		display: "inline-flex",
+		alignItems: "center",
+		gap: "4px",
+		color: "#ffffff",
 		textDecoration: "none",
 	},
 	mobileWrap: {
@@ -129,7 +122,7 @@ const styles = stylex.create({
 		minHeight: "100vh",
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 	mainContent: {
 		flex: 1,
@@ -145,16 +138,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
 	return (
 		<div {...stylex.props(styles.wrapper)}>
-			<div {...stylex.props(styles.bgFixed)}>
-				<Image
-					src="/pocaz_bg.png"
-					alt=""
-					fill
-					priority
-					sizes="100vw"
-					{...stylex.props(styles.bgContent)}
-				/>
-			</div>
+			<BackgroundImage />
 			<div {...stylex.props(styles.contentLayer)}>
 				<div {...stylex.props(styles.txtBox)}>
 					<div {...stylex.props(styles.txtBoxInner)}>
@@ -172,14 +156,13 @@ export default function Layout({ children }: LayoutProps) {
 						</p>
 					</div>
 					<h2 {...stylex.props(styles.pocazTitle)}>POCAZ.</h2>
-					<button type="button" {...stylex.props(styles.ctaButton)}>
-						<p {...stylex.props(styles.ctaButtonInner)}>
-							<Link href="/market" {...stylex.props(styles.ctaLink)}>
-								내 최애 포카 찾으러 가기
-								<ChevronRight size={18} />
-							</Link>
-						</p>
-					</button>
+					<Link
+						href="/market"
+						{...stylex.props(styles.ctaButton, styles.ctaLink)}
+					>
+						내 최애 포카 찾으러 가기
+						<ChevronRight size={18} />
+					</Link>
 				</div>
 				<div {...stylex.props(styles.mobileWrap)}>
 					<Header />

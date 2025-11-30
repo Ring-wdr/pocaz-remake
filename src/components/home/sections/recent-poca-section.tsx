@@ -2,7 +2,12 @@ import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { MainRecentPocaItem } from "@/components/home";
 
-import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import { api } from "@/utils/eden";
+import type { MarketItem } from "@/types/entities";
+
+const MOBILE = "@media (max-width: 767px)" as const;
+const TABLET = "@media (max-width: 1023px)" as const;
 
 const styles = stylex.create({
 	newPoca: {
@@ -27,66 +32,32 @@ const styles = stylex.create({
 		cursor: "default",
 		margin: 0,
 	},
+	emptyState: {
+		height: {
+			default: "350px",
+			[TABLET]: "446px",
+			[MOBILE]: "302px",
+		},
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: colors.bgSecondary,
+		color: colors.textMuted,
+		fontSize: fontSize.md,
+		borderRadius: radius.md,
+	},
 });
 
-interface RecentPocaItem {
-	id: number;
-	groupName: string;
-	stageName: string;
-	pocaName: string;
-	price: number;
-	filePath: string;
-}
+async function getRecentPocaItems(): Promise<MarketItem[]> {
+	const { data, error } = await api.markets.get({
+		query: { limit: "5" },
+	});
 
-// TODO: Replace with actual API call
-async function getRecentPocaItems(): Promise<RecentPocaItem[]> {
-	// 실제 API 연동 시:
-	// const response = await fetch('/api/poca/recent', { next: { revalidate: 60 } });
-	// return response.json();
+	if (error || !data) {
+		return [];
+	}
 
-	// Placeholder data
-	return [
-		{
-			id: 6,
-			groupName: "SEVENTEEN",
-			stageName: "민규",
-			pocaName: "FML 앨범 포카",
-			price: 19000,
-			filePath: "https://placehold.co/300x400/dbeafe/3b82f6?text=RECENT",
-		},
-		{
-			id: 7,
-			groupName: "Stray Kids",
-			stageName: "방찬",
-			pocaName: "ROCK-STAR 포카",
-			price: 16000,
-			filePath: "https://placehold.co/300x400/dbeafe/3b82f6?text=RECENT",
-		},
-		{
-			id: 8,
-			groupName: "NCT DREAM",
-			stageName: "마크",
-			pocaName: "ISTJ 앨범 포카",
-			price: 14000,
-			filePath: "https://placehold.co/300x400/dbeafe/3b82f6?text=RECENT",
-		},
-		{
-			id: 9,
-			groupName: "ENHYPEN",
-			stageName: "성훈",
-			pocaName: "DARK BLOOD 포카",
-			price: 17000,
-			filePath: "https://placehold.co/300x400/dbeafe/3b82f6?text=RECENT",
-		},
-		{
-			id: 10,
-			groupName: "TXT",
-			stageName: "수빈",
-			pocaName: "이름의 장 포카",
-			price: 13000,
-			filePath: "https://placehold.co/300x400/dbeafe/3b82f6?text=RECENT",
-		},
-	];
+	return data.items;
 }
 
 export default async function RecentPocaSection() {
@@ -102,7 +73,13 @@ export default async function RecentPocaSection() {
 					어제 컴백한 내 가수가 이 세계 포카?! ✨
 				</h4>
 			</div>
-			<MainRecentPocaItem items={items} />
+			{items.length === 0 ? (
+				<div {...stylex.props(styles.emptyState)}>
+					아직 등록된 상품이 없어요
+				</div>
+			) : (
+				<MainRecentPocaItem items={items} />
+			)}
 		</div>
 	);
 }

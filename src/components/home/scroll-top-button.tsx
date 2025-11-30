@@ -3,6 +3,13 @@
 import * as stylex from "@stylexjs/stylex";
 import { ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import {
+	colors,
+	fontSize,
+	radius,
+	size,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	wrapper: {
@@ -14,11 +21,11 @@ const styles = stylex.create({
 	},
 	topBtn: {
 		position: "absolute",
-		right: "14px",
-		width: "40px",
-		height: "40px",
-		borderRadius: "50%",
-		backgroundColor: "#000",
+		right: spacing.xs,
+		width: size.touchTarget,
+		height: size.touchTarget,
+		borderRadius: radius.full,
+		backgroundColor: colors.bgInverse,
 		opacity: 0,
 		transition: "opacity 0.4s",
 		visibility: "hidden",
@@ -33,8 +40,8 @@ const styles = stylex.create({
 		justifyContent: "center",
 		width: "100%",
 		height: "100%",
-		fontSize: "24px",
-		color: "#fff",
+		fontSize: fontSize.xl,
+		color: colors.textInverse,
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",
@@ -49,7 +56,7 @@ export default function ScrollTopButton() {
 	const handleFlow = useCallback(() => {
 		if (timer) clearTimeout(timer);
 		setBtnStatus(true);
-		timer = setTimeout(() => setBtnStatus(false), 500);
+		timer = setTimeout(() => setBtnStatus(false), 1500);
 	}, []);
 
 	const handleTop = () => {
