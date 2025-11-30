@@ -29,8 +29,8 @@ export async function updateSession(request: NextRequest) {
 		},
 	);
 
-	// 세션 갱신 (중요!)
-	await supabase.auth.getUser();
+	// 세션 갱신 (중요!) - getClaims()를 사용하여 JWT claims 기반 인증
+	await supabase.auth.getClaims();
 
 	return supabaseResponse;
 }

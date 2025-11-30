@@ -7,8 +7,7 @@ export async function signInWithGoogle(): Promise<void> {
 	const supabase = await createSupabaseServerClient();
 
 	// 현재 origin 가져오기 (서버 사이드에서는 환경변수 사용)
-	const siteUrl =
-		process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+	const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 	const { data, error } = await supabase.auth.signInWithOAuth({
 		provider: "google",
@@ -39,10 +38,8 @@ export async function signOut() {
 
 export async function getUser() {
 	const supabase = await createSupabaseServerClient();
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-	return user;
+	const { data } = await supabase.auth.getClaims();
+	return data?.claims;
 }
 
 export async function getSession() {

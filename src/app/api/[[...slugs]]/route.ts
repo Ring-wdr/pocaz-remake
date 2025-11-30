@@ -1,4 +1,3 @@
-import { openapi } from "@elysiajs/openapi";
 import { Elysia, t } from "elysia";
 import { authGuard, optionalAuth } from "@/lib/elysia/auth";
 import { artistRoutes, publicArtistRoutes } from "@/lib/elysia/routes/artists";
@@ -67,15 +66,15 @@ const authRoutes = new Elysia({ prefix: "/auth" }).use(optionalAuth).get(
 				t.Object({
 					id: t.String(),
 					email: t.Optional(t.String()),
-					name: t.Optional(t.String()),
-					avatarUrl: t.Optional(t.String()),
+					name: t.Nullable(t.String()),
+					avatarUrl: t.Nullable(t.String()),
 				}),
 			),
 		}),
 		detail: {
 			tags: ["Auth"],
 			summary: "인증된 사용자 정보 조회",
-			description: "인증된 사용자 정보를 조회합니다.",
+			description: "JWT Claims 기반의 사용자 정보를 조회합니다.",
 		},
 	},
 );
@@ -94,7 +93,6 @@ const protectedRoutes = new Elysia({ prefix: "/protected" })
 			name: auth.user.user_metadata?.full_name ?? null,
 			avatarUrl: auth.user.user_metadata?.avatar_url ?? null,
 			provider: auth.user.app_metadata?.provider ?? null,
-			createdAt: auth.user.created_at,
 		}),
 		{
 			response: t.Object({
@@ -103,12 +101,11 @@ const protectedRoutes = new Elysia({ prefix: "/protected" })
 				name: t.Nullable(t.String()),
 				avatarUrl: t.Nullable(t.String()),
 				provider: t.Nullable(t.String()),
-				createdAt: t.String(),
 			}),
 			detail: {
 				tags: ["Auth"],
 				summary: "인증된 사용자 프로필 조회",
-				description: "Supabase Auth 기반의 사용자 프로필을 조회합니다.",
+				description: "JWT Claims 기반의 사용자 프로필을 조회합니다.",
 			},
 		},
 	);
@@ -116,44 +113,48 @@ const protectedRoutes = new Elysia({ prefix: "/protected" })
 // ==============================================
 // Main App
 // ==============================================
-export const app = new Elysia({ prefix: "/api" })
-	.use(
-		openapi({
-			documentation: {
-				info: {
-					title: "Pocaz API",
-					version: "1.0.0",
-					description: "Pocaz 서비스 API 문서",
-				},
-				tags: [
-					{ name: "Auth", description: "인증 관련 API" },
-					{ name: "Users", description: "사용자 관련 API" },
-					{ name: "Posts", description: "게시글 관련 API" },
-					{ name: "Markets", description: "장터 관련 API" },
-					{ name: "Artists", description: "아티스트/그룹/소속사 관련 API" },
-					{ name: "Photocards", description: "포토카드 관련 API" },
-					{ name: "GalmangPoca", description: "갈망포카 관련 API" },
-					{ name: "Likes", description: "좋아요 관련 API" },
-					{ name: "Chat", description: "채팅 관련 API" },
-					{ name: "Storage", description: "파일 저장소 관련 API" },
-				],
-			},
-		}),
-	)
-	.get(
-		"/",
-		() => ({
-			message: "Pocaz API",
-			version: "1.0.0",
-		}),
-		{
-			detail: {
-				tags: ["Auth"],
-				summary: "API 상태 확인",
-				description: "API 서버 상태를 확인합니다.",
-			},
+export const app = new Elysia({ prefix: "/api" }).get(
+	"/",
+	() => ({
+		message: "Pocaz API",
+		version: "1.0.0",
+	}),
+	{
+		detail: {
+			tags: ["Auth"],
+			summary: "API 상태 확인",
+			description: "API 서버 상태를 확인합니다.",
 		},
-	);
+	},
+);
+
+if (process.env.NODE_ENV === "development") {
+	import("@elysiajs/openapi").then(({ openapi }) => {
+		app.use(
+			openapi({
+				documentation: {
+					info: {
+						title: "Pocaz API",
+						version: "1.0.0",
+						description: "Pocaz 서비스 API 문서",
+					},
+					tags: [
+						{ name: "Auth", description: "인증 관련 API" },
+						{ name: "Users", description: "사용자 관련 API" },
+						{ name: "Posts", description: "게시글 관련 API" },
+						{ name: "Markets", description: "장터 관련 API" },
+						{ name: "Artists", description: "아티스트/그룹/소속사 관련 API" },
+						{ name: "Photocards", description: "포토카드 관련 API" },
+						{ name: "GalmangPoca", description: "갈망포카 관련 API" },
+						{ name: "Likes", description: "좋아요 관련 API" },
+						{ name: "Chat", description: "채팅 관련 API" },
+						{ name: "Storage", description: "파일 저장소 관련 API" },
+					],
+				},
+			}),
+		);
+	});
+}
 
 // Core Routes
 app
