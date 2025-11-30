@@ -1,8 +1,10 @@
 /**
  * 환경에 맞는 base URL 결정
- * - 브라우저: window.location.origin 사용
- * - 서버 (Vercel): VERCEL_URL 환경 변수 사용
- * - 서버 (로컬): localhost 사용
+ * 우선순위:
+ * 1. 브라우저: window.location.origin
+ * 2. 명시적 환경 변수: NEXT_PUBLIC_SITE_URL
+ * 3. Vercel 시스템 변수: VERCEL_PROJECT_PRODUCTION_URL → VERCEL_URL
+ * 4. 로컬 개발: localhost
  */
 export function getBaseUrl(): string {
 	// 브라우저 환경
@@ -10,7 +12,17 @@ export function getBaseUrl(): string {
 		return window.location.origin;
 	}
 
-	// Vercel 환경
+	// 명시적으로 설정한 사이트 URL (Vercel 대시보드에서 설정)
+	if (process.env.NEXT_PUBLIC_SITE_URL) {
+		return process.env.NEXT_PUBLIC_SITE_URL;
+	}
+
+	// Vercel Production URL (프로덕션 배포시)
+	if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+		return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+	}
+
+	// Vercel Preview URL (프리뷰 배포시)
 	if (process.env.VERCEL_URL) {
 		return `https://${process.env.VERCEL_URL}`;
 	}
