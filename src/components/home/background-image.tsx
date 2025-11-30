@@ -16,6 +16,7 @@ const styles = stylex.create({
 		height: "100vh",
 		zIndex: 0,
 		pointerEvents: "none",
+		backgroundColor: "#2563eb",
 		display: {
 			default: "block",
 			[MOBILE]: "none",
@@ -39,7 +40,7 @@ export default function BackgroundImage() {
 		<div {...stylex.props(styles.bgFixed)}>
 			<Image
 				src="/pocaz_bg.png"
-				alt=""
+				alt="배경 이미지"
 				fill
 				priority
 				sizes="100vw"

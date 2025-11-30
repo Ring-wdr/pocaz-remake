@@ -35,3 +35,19 @@ export interface MarketWithSeller extends MarketDetail {
 		profileImage: string | null;
 	};
 }
+
+/** Market API 응답 아이템 (목록/상세 공통) */
+export interface MarketItem {
+	id: string;
+	title: string;
+	description: string | null;
+	price: number | null;
+	status: string;
+	createdAt: string;
+	user: {
+		id: string;
+		nickname: string;
+		profileImage: string | null;
+	};
+	images: Array<{ id: string; imageUrl: string }>;
+}

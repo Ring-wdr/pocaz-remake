@@ -2,7 +2,12 @@ import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { MainPocaItem } from "@/components/home";
 
-import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import { api } from "@/utils/eden";
+import type { MarketItem } from "@/types/entities";
+
+const MOBILE = "@media (max-width: 767px)" as const;
+const TABLET = "@media (max-width: 1023px)" as const;
 
 const styles = stylex.create({
 	bestPoca: {
@@ -27,66 +32,32 @@ const styles = stylex.create({
 		cursor: "default",
 		margin: 0,
 	},
+	emptyState: {
+		height: {
+			default: "350px",
+			[TABLET]: "446px",
+			[MOBILE]: "302px",
+		},
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: colors.bgSecondary,
+		color: colors.textMuted,
+		fontSize: fontSize.md,
+		borderRadius: radius.md,
+	},
 });
 
-interface BestPocaItem {
-	id: number;
-	groupName: string;
-	stageName: string;
-	pocaName: string;
-	price: number;
-	pocaImg: string;
-}
+async function getBestPocaItems(): Promise<MarketItem[]> {
+	const { data, error } = await api.markets.get({
+		query: { limit: "5" },
+	});
 
-// TODO: Replace with actual API call
-async function getBestPocaItems(): Promise<BestPocaItem[]> {
-	// 실제 API 연동 시:
-	// const response = await fetch('/api/poca/best', { next: { revalidate: 300 } });
-	// return response.json();
+	if (error || !data) {
+		return [];
+	}
 
-	// Placeholder data
-	return [
-		{
-			id: 1,
-			groupName: "LE SSERAFIM",
-			stageName: "김채원",
-			pocaName: "FEARLESS 앨범 포카",
-			price: 15000,
-			pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-		},
-		{
-			id: 2,
-			groupName: "NewJeans",
-			stageName: "하니",
-			pocaName: "OMG 특전 포카",
-			price: 25000,
-			pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-		},
-		{
-			id: 3,
-			groupName: "IVE",
-			stageName: "장원영",
-			pocaName: "I AM 앨범 포카",
-			price: 18000,
-			pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-		},
-		{
-			id: 4,
-			groupName: "aespa",
-			stageName: "카리나",
-			pocaName: "MY WORLD 포카",
-			price: 22000,
-			pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-		},
-		{
-			id: 5,
-			groupName: "THE BOYZ",
-			stageName: "주연",
-			pocaName: "PHANTASY 포카",
-			price: 12000,
-			pocaImg: "https://placehold.co/300x400/e2e8f0/64748b?text=PHOTOCARD",
-		},
-	];
+	return data.items;
 }
 
 export default async function BestPocaSection() {
@@ -102,7 +73,13 @@ export default async function BestPocaSection() {
 					내가 사는 포카〰️ 너를 위해 구매했지! 🍪
 				</h4>
 			</div>
-			<MainPocaItem items={items} />
+			{items.length === 0 ? (
+				<div {...stylex.props(styles.emptyState)}>
+					아직 등록된 상품이 없어요
+				</div>
+			) : (
+				<MainPocaItem items={items} />
+			)}
 		</div>
 	);
 }

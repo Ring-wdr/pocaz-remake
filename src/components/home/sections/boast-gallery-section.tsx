@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 
 import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	boardBoast: {
@@ -52,31 +53,46 @@ const styles = stylex.create({
 		height: "100%",
 		objectFit: "cover",
 	},
+	placeholderImage: {
+		width: "100%",
+		height: "100%",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: colors.bgSecondary,
+		color: colors.textMuted,
+		fontSize: fontSize.xs,
+	},
+	emptyState: {
+		height: "432px", // 144px * 3 rows
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: colors.bgSecondary,
+		color: colors.textMuted,
+		fontSize: fontSize.md,
+		borderRadius: "8px",
+	},
 });
 
 interface BoastPost {
-	id: number;
-	filePath: string;
+	id: string;
+	imageUrl: string | null;
 }
 
-// TODO: Replace with actual API call
 async function getBoastPosts(): Promise<BoastPost[]> {
-	// 실제 API 연동 시:
-	// const response = await fetch('/api/posts/boast', { next: { revalidate: 60 } });
-	// return response.json();
+	const { data, error } = await api.posts.get({
+		query: { limit: "9", category: "boast" },
+	});
 
-	// Placeholder data
-	return [
-		{ id: 1, filePath: "https://placehold.co/200x200/fef3c7/d97706?text=1" },
-		{ id: 2, filePath: "https://placehold.co/200x200/fce7f3/db2777?text=2" },
-		{ id: 3, filePath: "https://placehold.co/200x200/dbeafe/2563eb?text=3" },
-		{ id: 4, filePath: "https://placehold.co/200x200/d1fae5/059669?text=4" },
-		{ id: 5, filePath: "https://placehold.co/200x200/ede9fe/7c3aed?text=5" },
-		{ id: 6, filePath: "https://placehold.co/200x200/fee2e2/dc2626?text=6" },
-		{ id: 7, filePath: "https://placehold.co/200x200/fef9c3/ca8a04?text=7" },
-		{ id: 8, filePath: "https://placehold.co/200x200/cffafe/0891b2?text=8" },
-		{ id: 9, filePath: "https://placehold.co/200x200/f3e8ff/9333ea?text=9" },
-	];
+	if (error || !data) {
+		return [];
+	}
+
+	return data.items.map((post) => ({
+		id: post.id,
+		imageUrl: post.images[0]?.imageUrl ?? null,
+	}));
 }
 
 export default async function BoastGallerySection() {
@@ -93,22 +109,34 @@ export default async function BoastGallerySection() {
 				</h4>
 			</div>
 			<div {...stylex.props(styles.boastGallery)}>
-				<ul {...stylex.props(styles.boastGrid)}>
-					{posts.slice(0, 9).map((post) => (
-						<li key={post.id} {...stylex.props(styles.boastItem)}>
-							<Link
-								href={`/community/2/${post.id}`}
-								{...stylex.props(styles.boastButton)}
-							>
-								<img
-									src={post.filePath}
-									{...stylex.props(styles.boastImage)}
-									alt="포꾸 자랑 업로드 이미지"
-								/>
-							</Link>
-						</li>
-					))}
-				</ul>
+				{posts.length === 0 ? (
+					<div {...stylex.props(styles.emptyState)}>
+						아직 자랑 게시물이 없어요
+					</div>
+				) : (
+					<ul {...stylex.props(styles.boastGrid)}>
+						{posts.map((post) => (
+							<li key={post.id} {...stylex.props(styles.boastItem)}>
+								<Link
+									href={`/community/posts/${post.id}`}
+									{...stylex.props(styles.boastButton)}
+								>
+									{post.imageUrl ? (
+										<img
+											src={post.imageUrl}
+											{...stylex.props(styles.boastImage)}
+											alt="포꾸 자랑 업로드 이미지"
+										/>
+									) : (
+										<div {...stylex.props(styles.placeholderImage)}>
+											이미지 없음
+										</div>
+									)}
+								</Link>
+							</li>
+						))}
+					</ul>
+				)}
 			</div>
 		</div>
 	);

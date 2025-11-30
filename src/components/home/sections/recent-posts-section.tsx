@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	boardWrap: {
@@ -21,7 +22,9 @@ const styles = stylex.create({
 		color: colors.textPrimary,
 		textDecoration: "none",
 	},
-	boardList: {},
+	boardList: {
+		minHeight: "110px", // 5 items * ~22px each
+	},
 	boardListUl: {
 		listStyle: "none",
 		margin: 0,
@@ -54,28 +57,34 @@ const styles = stylex.create({
 		fontWeight: fontWeight.normal,
 		color: colors.textPrimary,
 	},
+	emptyState: {
+		height: "110px",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: colors.bgSecondary,
+		color: colors.textMuted,
+		fontSize: fontSize.md,
+		borderRadius: "8px",
+	},
 });
 
 interface Post {
-	id: number;
-	title: string;
-	createAt: string;
+	id: string;
+	content: string;
+	createdAt: string;
 }
 
-// TODO: Replace with actual API call
 async function getRecentPosts(): Promise<Post[]> {
-	// 실제 API 연동 시:
-	// const response = await fetch('/api/posts/recent', { next: { revalidate: 60 } });
-	// return response.json();
+	const { data, error } = await api.posts.get({
+		query: { limit: "5" },
+	});
 
-	// Placeholder data
-	return [
-		{ id: 1, title: "르세라핌 김채원 포카 양도합니다", createAt: "2024-01-15" },
-		{ id: 2, title: "뉴진스 하니 OMG 포카 구해요", createAt: "2024-01-14" },
-		{ id: 3, title: "아이브 장원영 포카 교환 원해요", createAt: "2024-01-13" },
-		{ id: 4, title: "에스파 카리나 MY WORLD 포카 팝니다", createAt: "2024-01-12" },
-		{ id: 5, title: "세븐틴 민규 FML 앨범 포카 양도", createAt: "2024-01-11" },
-	];
+	if (error || !data) {
+		return [];
+	}
+
+	return data.items;
 }
 
 export default async function RecentPostsSection() {
@@ -88,22 +97,31 @@ export default async function RecentPostsSection() {
 				<ChevronRight size={24} />
 			</Link>
 			<div {...stylex.props(styles.boardList)}>
-				<ul {...stylex.props(styles.boardListUl)}>
-					{posts.slice(0, 5).map((post) => {
-						const days = dayjs(post.createAt).format("YYYY-MM-DD");
-						return (
-							<li key={post.id} {...stylex.props(styles.boardListItem)}>
-								<Link
-									href={`/community/1/${post.id}`}
-									{...stylex.props(styles.boardItemButton)}
-								>
-									<h4 {...stylex.props(styles.boardItemTitle)}>{post.title}</h4>
-									<time {...stylex.props(styles.boardItemTime)}>{days}</time>
-								</Link>
-							</li>
-						);
-					})}
-				</ul>
+				{posts.length === 0 ? (
+					<div {...stylex.props(styles.emptyState)}>
+						아직 게시물이 없어요
+					</div>
+				) : (
+					<ul {...stylex.props(styles.boardListUl)}>
+						{posts.map((post) => {
+							const days = dayjs(post.createdAt).format("YYYY-MM-DD");
+							const title = post.content.length > 30
+								? `${post.content.slice(0, 30)}...`
+								: post.content;
+							return (
+								<li key={post.id} {...stylex.props(styles.boardListItem)}>
+									<Link
+										href={`/community/posts/${post.id}`}
+										{...stylex.props(styles.boardItemButton)}
+									>
+										<h4 {...stylex.props(styles.boardItemTitle)}>{title}</h4>
+										<time {...stylex.props(styles.boardItemTime)}>{days}</time>
+									</Link>
+								</li>
+							);
+						})}
+					</ul>
+				)}
 			</div>
 		</div>
 	);

@@ -1,11 +1,17 @@
 import * as stylex from "@stylexjs/stylex";
 import { ChevronRight, Star } from "lucide-react";
 import Link from "next/link";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import BackgroundImage from "./background-image";
 import BottomMenu from "./bottom-menu";
 import Header from "./header";
 import ScrollTopButton from "./scroll-top-button";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 
 const TABLET = "@media (max-width: 1023px)" as const;
 
@@ -13,7 +19,7 @@ const styles = stylex.create({
 	wrapper: {
 		position: "relative",
 		minHeight: "100vh",
-		backgroundColor: "#000",
+		backgroundColor: colors.accentPrimary,
 	},
 	contentLayer: {
 		position: "relative",
@@ -72,8 +78,15 @@ const styles = stylex.create({
 		letterSpacing: "-2px",
 	},
 	ctaButton: {
+		display: "inline-flex",
+		alignItems: "center",
+		justifyContent: "center",
 		marginTop: spacing.sm,
 		marginBottom: spacing.sm,
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
+		paddingLeft: spacing.md,
+		paddingRight: spacing.md,
 		backgroundColor: "#27272a",
 		color: "#ffffff",
 		borderRadius: radius.sm,
@@ -84,14 +97,10 @@ const styles = stylex.create({
 			backgroundColor: "#18181b",
 		},
 	},
-	ctaButtonInner: {
-		display: "flex",
-	},
 	ctaLink: {
-		paddingTop: spacing.sm,
-		paddingBottom: spacing.sm,
-		paddingLeft: spacing.md,
-		paddingRight: spacing.md,
+		display: "inline-flex",
+		alignItems: "center",
+		gap: "4px",
 		color: "#ffffff",
 		textDecoration: "none",
 	},
@@ -147,14 +156,13 @@ export default function Layout({ children }: LayoutProps) {
 						</p>
 					</div>
 					<h2 {...stylex.props(styles.pocazTitle)}>POCAZ.</h2>
-					<button type="button" {...stylex.props(styles.ctaButton)}>
-						<p {...stylex.props(styles.ctaButtonInner)}>
-							<Link href="/market" {...stylex.props(styles.ctaLink)}>
-								내 최애 포카 찾으러 가기
-								<ChevronRight size={18} />
-							</Link>
-						</p>
-					</button>
+					<Link
+						href="/market"
+						{...stylex.props(styles.ctaButton, styles.ctaLink)}
+					>
+						내 최애 포카 찾으러 가기
+						<ChevronRight size={18} />
+					</Link>
 				</div>
 				<div {...stylex.props(styles.mobileWrap)}>
 					<Header />

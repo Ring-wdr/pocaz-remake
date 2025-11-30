@@ -6,6 +6,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import type { MarketItem } from "@/types/entities";
 
 const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
@@ -34,18 +35,31 @@ const styles = stylex.create({
 		height: "100%",
 		objectFit: "cover",
 	},
+	placeholderImage: {
+		width: "100%",
+		height: "100%",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: colors.bgSecondary,
+		color: colors.textMuted,
+		fontSize: fontSize.sm,
+	},
 	pocaListWrap: {
 		marginTop: spacing.xxxs,
 		fontSize: fontSize.sm,
 		textAlign: "left",
 	},
-	groupName: {
+	sellerName: {
 		fontWeight: fontWeight.extrabold,
 		margin: 0,
 	},
-	memberName: {
+	pocaTitle: {
 		fontSize: fontSize.md,
 		margin: 0,
+		whiteSpace: "nowrap",
+		textOverflow: "ellipsis",
+		overflow: "hidden",
 	},
 	pocaDesc: {
 		marginBottom: spacing.xxxs,
@@ -60,47 +74,53 @@ const styles = stylex.create({
 	won: {},
 });
 
-export interface RecentPocaItemData {
-	id: number;
-	groupName: string;
-	stageName: string;
-	pocaName: string;
-	price: number;
-	filePath: string;
-}
-
 interface MainRecentPocaItemProps {
-	items: RecentPocaItemData[];
+	items: MarketItem[];
 }
 
 export default function MainRecentPocaItem({ items }: MainRecentPocaItemProps) {
 	return (
 		<Swiper slidesPerView={2.4} spaceBetween={14}>
-			{items.map((poca) => (
-				<SwiperSlide key={poca.id}>
-					<Link
-						href={`/market/${poca.id}`}
-						{...stylex.props(styles.slideButton)}
-					>
-						<div {...stylex.props(styles.pocaThumb)}>
-							<img
-								src={poca.filePath}
-								{...stylex.props(styles.pocaImage)}
-								alt="장터 업로드 이미지"
-							/>
-						</div>
-						<div {...stylex.props(styles.pocaListWrap)}>
-							<p {...stylex.props(styles.groupName)}>{poca.groupName}</p>
-							<p {...stylex.props(styles.memberName)}>{poca.stageName}</p>
-							<p {...stylex.props(styles.pocaDesc)}>{poca.pocaName}</p>
-							<p {...stylex.props(styles.pocaPrice)}>
-								<span>{poca.price.toLocaleString()}</span>
-								<span {...stylex.props(styles.won)}>원</span>
-							</p>
-						</div>
-					</Link>
-				</SwiperSlide>
-			))}
+			{items.map((market) => {
+				const thumbnail = market.images[0]?.imageUrl;
+				return (
+					<SwiperSlide key={market.id}>
+						<Link
+							href={`/market/${market.id}`}
+							{...stylex.props(styles.slideButton)}
+						>
+							<div {...stylex.props(styles.pocaThumb)}>
+								{thumbnail ? (
+									<img
+										src={thumbnail}
+										{...stylex.props(styles.pocaImage)}
+										alt={market.title}
+									/>
+								) : (
+									<div {...stylex.props(styles.placeholderImage)}>
+										이미지 없음
+									</div>
+								)}
+							</div>
+							<div {...stylex.props(styles.pocaListWrap)}>
+								<p {...stylex.props(styles.sellerName)}>{market.user.nickname}</p>
+								<p {...stylex.props(styles.pocaTitle)}>{market.title}</p>
+								{market.description && (
+									<p {...stylex.props(styles.pocaDesc)}>
+										{market.description.length > 20
+											? `${market.description.slice(0, 20)}...`
+											: market.description}
+									</p>
+								)}
+								<p {...stylex.props(styles.pocaPrice)}>
+									<span>{market.price?.toLocaleString() ?? "-"}</span>
+									<span {...stylex.props(styles.won)}>원</span>
+								</p>
+							</div>
+						</Link>
+					</SwiperSlide>
+				);
+			})}
 		</Swiper>
 	);
 }
