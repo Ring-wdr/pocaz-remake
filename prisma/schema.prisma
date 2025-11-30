@@ -29,6 +29,10 @@ model User {
   replies      Reply[]
   markets      Market[]
   likes        Like[]
+  marketLikes  MarketLike[]
+  purchases    Transaction[] @relation("BuyerTransactions")
+  sales        Transaction[] @relation("SellerTransactions")
+  activities   Activity[]
   chatMessages ChatMessage[]
   chatRooms    ChatRoomMember[]
 }
@@ -146,7 +150,9 @@ model Market {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
 
-  images      MarketImage[]
+  images       MarketImage[]
+  likes        MarketLike[]
+  transactions Transaction[]
 }
 
 model MarketImage {
@@ -172,6 +178,58 @@ model Like {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+}
+
+// ============================================
+// Market Like (찜)
+// ============================================
+model MarketLike {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  marketId  String
+  market    Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, marketId])
+}
+
+// ============================================
+// Transaction (거래 내역)
+// ============================================
+model Transaction {
+  id          String   @id @default(uuid())
+  type        String   // purchase, sale
+  status      String   @default("completed") // pending, completed, cancelled
+  price       Int
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  buyerId     String
+  buyer       User     @relation("BuyerTransactions", fields: [buyerId], references: [id])
+
+  sellerId    String
+  seller      User     @relation("SellerTransactions", fields: [sellerId], references: [id])
+
+  marketId    String
+  market      Market   @relation(fields: [marketId], references: [id])
+}
+
+// ============================================
+// Activity (활동 내역)
+// ============================================
+model Activity {
+  id          String   @id @default(uuid())
+  type        String   // post, like, comment, trade, market
+  description String
+  targetId    String   // post/market/transaction ID
+  targetType  String   // post, market, transaction
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 // ============================================
