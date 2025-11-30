@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
-		"prestart": "pnpm run build",
+		"prestart": "bun run build",
 		"serve": "next start --port 3016",
 		"start": "next start",
 		"lint": "biome lint",

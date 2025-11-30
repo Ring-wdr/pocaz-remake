@@ -193,15 +193,15 @@ DIRECT_URL=postgresql://...pooler...5432/postgres
 
 ```bash
 # 개발 서버
-pnpm dev
+bun run dev
 
 # Prisma
-pnpm prisma generate    # Client 생성
-pnpm prisma migrate dev # 마이그레이션
-pnpm prisma studio      # DB GUI
+bun run prisma generate    # Client 생성
+bun run prisma migrate dev # 마이그레이션
+bun run prisma studio      # DB GUI
 
 # 빌드
-pnpm build
+bun run build
 ```
 
 ---
