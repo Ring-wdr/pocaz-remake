@@ -1,7 +1,15 @@
 {
-	"name": "@stylexswc/next-turbopack-example",
-	"version": "0.13.1-rc.2",
+	"name": "pocaz",
+	"version": "0.1.0",
 	"private": true,
+	"description": "포토카드 거래 및 커뮤니티 플랫폼",
+	"keywords": [
+		"photocard",
+		"k-pop",
+		"community",
+		"marketplace",
+		"trading"
+	],
 	"scripts": {
 		"dev": "next dev",
 		"build": "prisma generate && next build",
