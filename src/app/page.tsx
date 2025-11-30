@@ -15,7 +15,15 @@ import {
 } from "@/components/home/skeletons";
 
 const styles = stylex.create({
-	mainContentsWrap: {},
+	container: {
+		flex: 1,
+		display: "flex",
+		flexDirection: "column",
+		backgroundColor: "#fff",
+	},
+	mainContentsWrap: {
+		flex: 1,
+	},
 	contentSection: {
 		paddingLeft: "14px",
 		paddingRight: "14px",
@@ -26,7 +34,7 @@ const styles = stylex.create({
 
 export default function Home() {
 	return (
-		<>
+		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.mainContentsWrap)}>
 				<MainSlider />
 				<div {...stylex.props(styles.contentSection)}>
@@ -48,6 +56,6 @@ export default function Home() {
 				</div>
 			</div>
 			<Footer />
-		</>
+		</div>
 	);
 }

@@ -16,4 +16,7 @@ export default stylexPlugin({
 })({
 	reactCompiler: true,
 	transpilePackages: ["@stylexjs/open-props"],
+	experimental: {
+		authInterrupts: true,
+	},
 });

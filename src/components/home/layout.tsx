@@ -123,7 +123,15 @@ const styles = stylex.create({
 			default: "160px",
 			[TABLET]: 0,
 		},
+		minHeight: "100vh",
+		display: "flex",
+		flexDirection: "column",
 		backgroundColor: "#fff",
+	},
+	mainContent: {
+		flex: 1,
+		display: "flex",
+		flexDirection: "column",
 	},
 });
 
@@ -159,7 +167,7 @@ export default function Layout({ children }: LayoutProps) {
 				</div>
 				<div {...stylex.props(styles.mobileWrap)}>
 					<Header />
-					{children}
+					<div {...stylex.props(styles.mainContent)}>{children}</div>
 					<ScrollTopButton />
 					<BottomMenu />
 				</div>

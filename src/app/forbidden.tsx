@@ -1,20 +1,14 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
-import { Footer } from "@/components/home";
 
 const styles = stylex.create({
 	container: {
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
-	},
-	content: {
-		flex: 1,
-		display: "flex",
-		flexDirection: "column",
 		alignItems: "center",
 		justifyContent: "center",
+		backgroundColor: "#fff",
 		paddingTop: "40px",
 		paddingBottom: "40px",
 		paddingLeft: "20px",
@@ -24,7 +18,7 @@ const styles = stylex.create({
 		width: "80px",
 		height: "80px",
 		borderRadius: "40px",
-		backgroundColor: "#fee2e2",
+		backgroundColor: "#fef3c7",
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
@@ -32,7 +26,7 @@ const styles = stylex.create({
 	},
 	icon: {
 		fontSize: "40px",
-		color: "#dc2626",
+		color: "#d97706",
 	},
 	title: {
 		fontSize: "24px",
@@ -50,7 +44,7 @@ const styles = stylex.create({
 		textAlign: "center",
 		lineHeight: 1.6,
 	},
-	retryButton: {
+	homeButton: {
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
@@ -69,7 +63,7 @@ const styles = stylex.create({
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",
 	},
-	homeLink: {
+	backLink: {
 		marginTop: "16px",
 		fontSize: "14px",
 		color: "#6b7280",
@@ -77,28 +71,25 @@ const styles = stylex.create({
 	},
 });
 
-export default function AuthErrorPage() {
+export default function Forbidden() {
 	return (
 		<div {...stylex.props(styles.container)}>
-			<div {...stylex.props(styles.content)}>
-				<div {...stylex.props(styles.iconWrap)}>
-					<i className="ri-error-warning-line" {...stylex.props(styles.icon)} />
-				</div>
-				<h1 {...stylex.props(styles.title)}>로그인 오류</h1>
-				<p {...stylex.props(styles.description)}>
-					로그인 중 문제가 발생했어요.
-					<br />
-					잠시 후 다시 시도해주세요.
-				</p>
-				<Link href="/login" {...stylex.props(styles.retryButton)}>
-					<i className="ri-refresh-line" />
-					다시 시도하기
-				</Link>
-				<Link href="/" {...stylex.props(styles.homeLink)}>
-					홈으로 돌아가기
-				</Link>
+			<div {...stylex.props(styles.iconWrap)}>
+				<i className="ri-forbid-line" {...stylex.props(styles.icon)} />
 			</div>
-			<Footer />
+			<h1 {...stylex.props(styles.title)}>접근 권한이 없습니다</h1>
+			<p {...stylex.props(styles.description)}>
+				이 페이지에 접근할 권한이 없어요.
+				<br />
+				필요한 권한이 있는지 확인해주세요.
+			</p>
+			<Link href="/" {...stylex.props(styles.homeButton)}>
+				<i className="ri-home-line" />
+				홈으로 돌아가기
+			</Link>
+			<Link href="/mypage" {...stylex.props(styles.backLink)}>
+				마이페이지로 이동
+			</Link>
 		</div>
 	);
 }

@@ -10,11 +10,7 @@ export const metadata = {
 	description: "Build something amazing",
 };
 
-export default function RootLayout({
-	children,
-}: {
-	children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: LayoutProps<"/">) {
 	return (
 		<html {...stylex.props(styles.html, styles.reset)} lang="ko">
 			<body {...stylex.props(styles.reset, styles.body)}>
