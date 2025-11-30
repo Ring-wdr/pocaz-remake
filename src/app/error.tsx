@@ -3,6 +3,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Bug, Home, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
+import { colors } from "./global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
@@ -11,7 +12,7 @@ const styles = stylex.create({
 		flexDirection: "column",
 		alignItems: "center",
 		justifyContent: "center",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 		paddingTop: "40px",
 		paddingBottom: "40px",
 		paddingLeft: "20px",
@@ -21,7 +22,7 @@ const styles = stylex.create({
 		width: "80px",
 		height: "80px",
 		borderRadius: "40px",
-		backgroundColor: "#fee2e2",
+		backgroundColor: colors.statusErrorBg,
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
@@ -29,19 +30,19 @@ const styles = stylex.create({
 	},
 	icon: {
 		fontSize: "40px",
-		color: "#dc2626",
+		color: colors.statusError,
 	},
 	title: {
 		fontSize: "24px",
 		fontWeight: 700,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "12px",
 		textAlign: "center",
 	},
 	description: {
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 		marginBottom: "32px",
 		textAlign: "center",
@@ -62,8 +63,8 @@ const styles = stylex.create({
 		paddingRight: "24px",
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#fff",
-		backgroundColor: "#000",
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
 		borderRadius: "12px",
 		borderWidth: 0,
 		cursor: "pointer",
@@ -80,8 +81,8 @@ const styles = stylex.create({
 		paddingRight: "24px",
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#374151",
-		backgroundColor: "#f3f4f6",
+		color: colors.textTertiary,
+		backgroundColor: colors.bgTertiary,
 		borderRadius: "12px",
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",

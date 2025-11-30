@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { User } from "lucide-react";
 import Link from "next/link";
+import { colors } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
@@ -11,24 +12,24 @@ const styles = stylex.create({
 		marginBottom: "20px",
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 	},
 	avatar: {
 		width: "72px",
 		height: "72px",
 		borderRadius: "36px",
 		objectFit: "cover",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 	},
 	avatarPlaceholder: {
 		width: "72px",
 		height: "72px",
 		borderRadius: "36px",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 	},
 	info: {
 		flex: 1,
@@ -36,13 +37,13 @@ const styles = stylex.create({
 	name: {
 		fontSize: "20px",
 		fontWeight: 700,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "4px",
 	},
 	email: {
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 	},
 	editButton: {
@@ -52,8 +53,8 @@ const styles = stylex.create({
 		paddingRight: "14px",
 		fontSize: "13px",
 		fontWeight: 500,
-		color: "#374151",
-		backgroundColor: "#f3f4f6",
+		color: colors.textTertiary,
+		backgroundColor: colors.bgTertiary,
 		borderRadius: "8px",
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",
@@ -65,7 +66,7 @@ const styles = stylex.create({
 	},
 	loginText: {
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		marginBottom: "12px",
 	},
 	loginButton: {
@@ -76,8 +77,8 @@ const styles = stylex.create({
 		paddingRight: "24px",
 		fontSize: "14px",
 		fontWeight: 600,
-		color: "#fff",
-		backgroundColor: "#000",
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
 		borderRadius: "8px",
 		textDecoration: "none",
 	},

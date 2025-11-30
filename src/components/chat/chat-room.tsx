@@ -5,13 +5,14 @@ import dayjs from "dayjs";
 import { ArrowLeft, MoreVertical, Plus, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { colors } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
 		display: "flex",
 		flexDirection: "column",
 		height: "100vh",
-		backgroundColor: "#f9fafb",
+		backgroundColor: colors.bgSecondary,
 	},
 	header: {
 		display: "flex",
@@ -21,10 +22,10 @@ const styles = stylex.create({
 		paddingBottom: "12px",
 		paddingLeft: "14px",
 		paddingRight: "14px",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 	},
 	backButton: {
 		display: "flex",
@@ -35,7 +36,7 @@ const styles = stylex.create({
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",
-		color: "#374151",
+		color: colors.textTertiary,
 		fontSize: "24px",
 		textDecoration: "none",
 	},
@@ -50,17 +51,17 @@ const styles = stylex.create({
 		height: "40px",
 		borderRadius: "20px",
 		objectFit: "cover",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 	},
 	partnerName: {
 		fontSize: "16px",
 		fontWeight: 600,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 	},
 	onlineStatus: {
 		fontSize: "12px",
-		color: "#22c55e",
+		color: colors.statusSuccess,
 		margin: 0,
 	},
 	menuButton: {
@@ -72,7 +73,7 @@ const styles = stylex.create({
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",
-		color: "#374151",
+		color: colors.textTertiary,
 		fontSize: "20px",
 	},
 	productBanner: {
@@ -83,10 +84,10 @@ const styles = stylex.create({
 		paddingBottom: "10px",
 		paddingLeft: "14px",
 		paddingRight: "14px",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 		textDecoration: "none",
 		color: "inherit",
 	},
@@ -95,7 +96,7 @@ const styles = stylex.create({
 		height: "44px",
 		borderRadius: "8px",
 		objectFit: "cover",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 	},
 	productInfo: {
 		flex: 1,
@@ -103,21 +104,21 @@ const styles = stylex.create({
 	productTitle: {
 		fontSize: "13px",
 		fontWeight: 500,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "2px",
 	},
 	productPrice: {
 		fontSize: "14px",
 		fontWeight: 700,
-		color: "#000",
+		color: colors.textPrimary,
 		margin: 0,
 	},
 	productStatus: {
 		fontSize: "11px",
 		fontWeight: 600,
-		color: "#2563eb",
-		backgroundColor: "#dbeafe",
+		color: colors.accentPrimary,
+		backgroundColor: colors.accentPrimaryBg,
 		paddingTop: "4px",
 		paddingBottom: "4px",
 		paddingLeft: "8px",
@@ -139,8 +140,8 @@ const styles = stylex.create({
 	dateBadge: {
 		display: "inline-block",
 		fontSize: "12px",
-		color: "#6b7280",
-		backgroundColor: "#e5e7eb",
+		color: colors.textMuted,
+		backgroundColor: colors.borderPrimary,
 		paddingTop: "4px",
 		paddingBottom: "4px",
 		paddingLeft: "12px",
@@ -168,18 +169,18 @@ const styles = stylex.create({
 		lineHeight: 1.5,
 	},
 	bubbleMine: {
-		backgroundColor: "#000",
-		color: "#fff",
+		backgroundColor: colors.bgInverse,
+		color: colors.textInverse,
 		borderBottomRightRadius: "4px",
 	},
 	bubbleTheirs: {
-		backgroundColor: "#fff",
-		color: "#111827",
+		backgroundColor: colors.bgPrimary,
+		color: colors.textSecondary,
 		borderBottomLeftRadius: "4px",
 	},
 	messageTime: {
 		fontSize: "11px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 		marginTop: "4px",
 		marginLeft: "8px",
 		marginRight: "8px",
@@ -198,10 +199,10 @@ const styles = stylex.create({
 		paddingBottom: "12px",
 		paddingLeft: "14px",
 		paddingRight: "14px",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 		borderTopWidth: 1,
 		borderTopStyle: "solid",
-		borderTopColor: "#e5e7eb",
+		borderTopColor: colors.borderPrimary,
 	},
 	attachButton: {
 		display: "flex",
@@ -209,11 +210,11 @@ const styles = stylex.create({
 		justifyContent: "center",
 		width: "40px",
 		height: "40px",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 		borderRadius: "20px",
 		borderWidth: 0,
 		cursor: "pointer",
-		color: "#6b7280",
+		color: colors.textMuted,
 		fontSize: "20px",
 	},
 	inputWrap: {
@@ -224,7 +225,7 @@ const styles = stylex.create({
 		paddingBottom: "10px",
 		paddingLeft: "14px",
 		paddingRight: "14px",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 		borderRadius: "20px",
 	},
 	input: {
@@ -233,9 +234,9 @@ const styles = stylex.create({
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		outline: "none",
-		color: "#111827",
+		color: colors.textSecondary,
 		"::placeholder": {
-			color: "#9ca3af",
+			color: colors.textPlaceholder,
 		},
 	},
 	sendButton: {
@@ -244,15 +245,15 @@ const styles = stylex.create({
 		justifyContent: "center",
 		width: "40px",
 		height: "40px",
-		backgroundColor: "#000",
+		backgroundColor: colors.bgInverse,
 		borderRadius: "20px",
 		borderWidth: 0,
 		cursor: "pointer",
-		color: "#fff",
+		color: colors.textInverse,
 		fontSize: "18px",
 	},
 	sendButtonDisabled: {
-		backgroundColor: "#d1d5db",
+		backgroundColor: colors.borderPrimary,
 		cursor: "default",
 	},
 });

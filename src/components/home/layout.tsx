@@ -5,6 +5,7 @@ import Link from "next/link";
 import BottomMenu from "./bottom-menu";
 import Header from "./header";
 import ScrollTopButton from "./scroll-top-button";
+import { colors } from "@/app/global-tokens.stylex";
 
 const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
@@ -129,7 +130,7 @@ const styles = stylex.create({
 		minHeight: "100vh",
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 	mainContent: {
 		flex: 1,

@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { colors } from "./global-tokens.stylex";
 
 const spin = stylex.keyframes({
 	"0%": { transform: "rotate(0deg)" },
@@ -12,7 +13,7 @@ const styles = stylex.create({
 		flexDirection: "column",
 		alignItems: "center",
 		justifyContent: "center",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 		paddingTop: "40px",
 		paddingBottom: "40px",
 	},
@@ -21,8 +22,8 @@ const styles = stylex.create({
 		height: "48px",
 		borderWidth: 3,
 		borderStyle: "solid",
-		borderColor: "#e5e7eb",
-		borderTopColor: "#000",
+		borderColor: colors.borderPrimary,
+		borderTopColor: colors.bgInverse,
 		borderRadius: "24px",
 		animationName: spin,
 		animationDuration: "0.8s",
@@ -32,7 +33,7 @@ const styles = stylex.create({
 	text: {
 		marginTop: "16px",
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 	},
 });
 

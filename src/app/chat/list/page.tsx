@@ -5,13 +5,14 @@ import { Suspense } from "react";
 import { ChatListSection } from "@/components/chat/sections";
 import { ChatListSkeleton } from "@/components/chat/skeletons";
 import { Footer } from "@/components/home";
+import { colors } from "../../global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 	content: {
 		flex: 1,
@@ -29,7 +30,7 @@ const styles = stylex.create({
 	title: {
 		fontSize: "24px",
 		fontWeight: 800,
-		color: "#000",
+		color: colors.textPrimary,
 		margin: 0,
 	},
 	filterButton: {
@@ -42,8 +43,8 @@ const styles = stylex.create({
 		paddingRight: "12px",
 		fontSize: "13px",
 		fontWeight: 500,
-		color: "#6b7280",
-		backgroundColor: "#f3f4f6",
+		color: colors.textMuted,
+		backgroundColor: colors.bgTertiary,
 		borderRadius: "16px",
 		borderWidth: 0,
 		cursor: "pointer",

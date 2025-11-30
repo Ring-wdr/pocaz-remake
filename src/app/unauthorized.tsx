@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Lock, LogIn } from "lucide-react";
 import Link from "next/link";
+import { colors } from "./global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
@@ -9,7 +10,7 @@ const styles = stylex.create({
 		flexDirection: "column",
 		alignItems: "center",
 		justifyContent: "center",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 		paddingTop: "40px",
 		paddingBottom: "40px",
 		paddingLeft: "20px",
@@ -19,7 +20,7 @@ const styles = stylex.create({
 		width: "80px",
 		height: "80px",
 		borderRadius: "40px",
-		backgroundColor: "#fef3c7",
+		backgroundColor: colors.statusWarningBg,
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
@@ -27,19 +28,19 @@ const styles = stylex.create({
 	},
 	icon: {
 		fontSize: "40px",
-		color: "#d97706",
+		color: colors.statusWarning,
 	},
 	title: {
 		fontSize: "24px",
 		fontWeight: 700,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "12px",
 		textAlign: "center",
 	},
 	description: {
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 		marginBottom: "32px",
 		textAlign: "center",
@@ -58,8 +59,8 @@ const styles = stylex.create({
 		paddingRight: "24px",
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#fff",
-		backgroundColor: "#000",
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
 		borderRadius: "12px",
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",
@@ -67,7 +68,7 @@ const styles = stylex.create({
 	homeLink: {
 		marginTop: "16px",
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		textDecoration: "none",
 	},
 });

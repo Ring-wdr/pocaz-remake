@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
+import { colors } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
@@ -11,7 +12,7 @@ const styles = stylex.create({
 	item: {
 		paddingTop: "16px",
 		paddingBottom: "16px",
-		backgroundColor: "#f9fafb",
+		backgroundColor: colors.bgSecondary,
 		borderRadius: "12px",
 		textAlign: "center",
 		textDecoration: "none",
@@ -21,13 +22,13 @@ const styles = stylex.create({
 	number: {
 		fontSize: "24px",
 		fontWeight: 700,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "4px",
 	},
 	label: {
 		fontSize: "12px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 	},
 });

@@ -3,6 +3,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { colors } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	wrapper: {
@@ -18,7 +19,7 @@ const styles = stylex.create({
 		width: "40px",
 		height: "40px",
 		borderRadius: "50%",
-		backgroundColor: "#000",
+		backgroundColor: colors.bgInverse,
 		opacity: 0,
 		transition: "opacity 0.4s",
 		visibility: "hidden",
@@ -34,7 +35,7 @@ const styles = stylex.create({
 		width: "100%",
 		height: "100%",
 		fontSize: "24px",
-		color: "#fff",
+		color: colors.textInverse,
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",

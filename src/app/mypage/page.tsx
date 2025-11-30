@@ -14,13 +14,14 @@ import {
 	StatsSkeleton,
 } from "@/components/mypage/skeletons";
 import { getSession } from "@/lib/auth/actions";
+import { colors } from "../global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 	content: {
 		flex: 1,
@@ -32,7 +33,7 @@ const styles = stylex.create({
 	pageTitle: {
 		fontSize: "24px",
 		fontWeight: 800,
-		color: "#000",
+		color: colors.textPrimary,
 		margin: 0,
 		marginBottom: "20px",
 	},

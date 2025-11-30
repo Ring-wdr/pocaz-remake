@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Home } from "lucide-react";
 import Link from "next/link";
+import { colors } from "./global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
@@ -9,7 +10,7 @@ const styles = stylex.create({
 		flexDirection: "column",
 		alignItems: "center",
 		justifyContent: "center",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 		paddingTop: "40px",
 		paddingBottom: "40px",
 		paddingLeft: "20px",
@@ -19,7 +20,7 @@ const styles = stylex.create({
 		fontSize: "120px",
 		fontWeight: 900,
 		fontStyle: "italic",
-		color: "#e5e7eb",
+		color: colors.borderPrimary,
 		margin: 0,
 		lineHeight: 1,
 		letterSpacing: "-4px",
@@ -27,7 +28,7 @@ const styles = stylex.create({
 	title: {
 		fontSize: "24px",
 		fontWeight: 700,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginTop: "16px",
 		marginBottom: "12px",
@@ -35,7 +36,7 @@ const styles = stylex.create({
 	},
 	description: {
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 		marginBottom: "32px",
 		textAlign: "center",
@@ -56,8 +57,8 @@ const styles = stylex.create({
 		paddingRight: "24px",
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#fff",
-		backgroundColor: "#000",
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
 		borderRadius: "12px",
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",
@@ -73,8 +74,8 @@ const styles = stylex.create({
 		paddingRight: "24px",
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#374151",
-		backgroundColor: "#f3f4f6",
+		color: colors.textTertiary,
+		backgroundColor: colors.bgTertiary,
 		borderRadius: "12px",
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",

@@ -2,13 +2,14 @@ import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { Footer } from "@/components/home";
 import { signInWithGoogle } from "@/lib/auth/actions";
+import { colors } from "../global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 	content: {
 		flex: 1,
@@ -28,20 +29,20 @@ const styles = stylex.create({
 		fontSize: "48px",
 		fontWeight: 900,
 		fontStyle: "italic",
-		color: "#000",
+		color: colors.textPrimary,
 		letterSpacing: "-2px",
 	},
 	title: {
 		fontSize: "24px",
 		fontWeight: 700,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "8px",
 		textAlign: "center",
 	},
 	subtitle: {
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 		marginBottom: "32px",
 		textAlign: "center",
@@ -62,16 +63,16 @@ const styles = stylex.create({
 		paddingRight: "16px",
 		fontSize: "14px",
 		fontWeight: 500,
-		color: "#1f1f1f",
-		backgroundColor: "#fff",
+		color: colors.textSecondary,
+		backgroundColor: colors.bgPrimary,
 		borderWidth: 1,
 		borderStyle: "solid",
-		borderColor: "#dadce0",
+		borderColor: colors.borderPrimary,
 		borderRadius: "8px",
 		cursor: "pointer",
 		transition: "background-color 0.2s ease, box-shadow 0.2s ease",
 		":hover": {
-			backgroundColor: "#f8fafc",
+			backgroundColor: colors.bgSecondary,
 			boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
 		},
 	},
@@ -91,26 +92,26 @@ const styles = stylex.create({
 	dividerLine: {
 		flex: 1,
 		height: "1px",
-		backgroundColor: "#e5e7eb",
+		backgroundColor: colors.borderPrimary,
 	},
 	dividerText: {
 		fontSize: "12px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 	},
 	guestLink: {
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		textDecoration: "none",
 	},
 	terms: {
 		marginTop: "32px",
 		fontSize: "12px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 		textAlign: "center",
 		lineHeight: 1.6,
 	},
 	termsLink: {
-		color: "#6b7280",
+		color: colors.textMuted,
 		textDecoration: "underline",
 	},
 });

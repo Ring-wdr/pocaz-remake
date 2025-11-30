@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ComponentType } from "react";
+import { colors } from "@/app/global-tokens.stylex";
 
 interface MenuItem {
 	id: number;
@@ -102,13 +103,13 @@ const styles = stylex.create({
 	sectionTitle: {
 		fontSize: "13px",
 		fontWeight: 600,
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 		marginBottom: "12px",
 		paddingLeft: "4px",
 	},
 	list: {
-		backgroundColor: "#f9fafb",
+		backgroundColor: colors.bgSecondary,
 		borderRadius: "12px",
 		overflow: "hidden",
 	},
@@ -121,16 +122,16 @@ const styles = stylex.create({
 		paddingLeft: "16px",
 		paddingRight: "16px",
 		textDecoration: "none",
-		color: "#111827",
+		color: colors.textSecondary,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#e5e7eb",
+		borderBottomColor: colors.borderPrimary,
 	},
 	itemLast: {
 		borderBottomWidth: 0,
 	},
 	icon: {
-		color: "#6b7280",
+		color: colors.textMuted,
 	},
 	label: {
 		flex: 1,
@@ -138,7 +139,7 @@ const styles = stylex.create({
 		fontWeight: 500,
 	},
 	arrow: {
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 	},
 	logoutButton: {
 		width: "100%",
@@ -146,8 +147,8 @@ const styles = stylex.create({
 		paddingBottom: "14px",
 		fontSize: "14px",
 		fontWeight: 500,
-		color: "#dc2626",
-		backgroundColor: "#fef2f2",
+		color: colors.statusError,
+		backgroundColor: colors.statusErrorBgLight,
 		borderWidth: 0,
 		borderRadius: "12px",
 		cursor: "pointer",

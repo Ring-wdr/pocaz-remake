@@ -7,13 +7,14 @@ import {
 	ProductGridSection,
 } from "@/components/market/sections";
 import { ProductGridSkeleton } from "@/components/market/skeletons";
+import { colors } from "../global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 	content: {
 		flex: 1,

@@ -8,13 +8,14 @@ import {
 } from "@/components/community/sections";
 import { PostListSkeleton } from "@/components/community/skeletons";
 import { Footer } from "@/components/home";
+import { colors } from "../../global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
 	},
 	content: {
 		flex: 1,

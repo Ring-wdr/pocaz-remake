@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Heart, Store } from "lucide-react";
 import Link from "next/link";
+import { colors } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	grid: {
@@ -19,7 +20,7 @@ const styles = stylex.create({
 		aspectRatio: "1",
 		borderRadius: "8px",
 		overflow: "hidden",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 	},
 	image: {
 		width: "100%",
@@ -37,19 +38,19 @@ const styles = stylex.create({
 		borderRadius: "4px",
 		fontSize: "11px",
 		fontWeight: 600,
-		color: "#fff",
+		color: colors.textInverse,
 	},
 	statusSell: {
-		backgroundColor: "#2563eb",
+		backgroundColor: colors.accentPrimary,
 	},
 	statusBuy: {
-		backgroundColor: "#dc2626",
+		backgroundColor: colors.statusError,
 	},
 	statusTrade: {
-		backgroundColor: "#7c3aed",
+		backgroundColor: colors.purple,
 	},
 	statusSold: {
-		backgroundColor: "#6b7280",
+		backgroundColor: colors.textMuted,
 	},
 	likeBadge: {
 		position: "absolute",
@@ -65,7 +66,7 @@ const styles = stylex.create({
 		borderRadius: "4px",
 		fontSize: "11px",
 		fontWeight: 500,
-		color: "#fff",
+		color: colors.textInverse,
 		backgroundColor: "rgba(0, 0, 0, 0.5)",
 	},
 	info: {
@@ -73,13 +74,13 @@ const styles = stylex.create({
 	},
 	artist: {
 		fontSize: "12px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		marginBottom: "2px",
 	},
 	title: {
 		fontSize: "14px",
 		fontWeight: 500,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "4px",
 		overflow: "hidden",
@@ -89,13 +90,13 @@ const styles = stylex.create({
 	price: {
 		fontSize: "15px",
 		fontWeight: 700,
-		color: "#000",
+		color: colors.textPrimary,
 	},
 	emptyState: {
 		textAlign: "center",
 		paddingTop: "48px",
 		paddingBottom: "48px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 	},
 	emptyIcon: {
 		fontSize: "48px",

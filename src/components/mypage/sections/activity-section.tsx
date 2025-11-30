@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
 import Link from "next/link";
+import { colors } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
@@ -15,12 +16,12 @@ const styles = stylex.create({
 	title: {
 		fontSize: "16px",
 		fontWeight: 700,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 	},
 	moreLink: {
 		fontSize: "13px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		textDecoration: "none",
 	},
 	list: {},
@@ -32,7 +33,7 @@ const styles = stylex.create({
 		paddingBottom: "12px",
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#f3f4f6",
+		borderBottomColor: colors.borderSecondary,
 		textDecoration: "none",
 		color: "inherit",
 	},
@@ -41,7 +42,7 @@ const styles = stylex.create({
 		height: "48px",
 		borderRadius: "8px",
 		objectFit: "cover",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
 		flexShrink: 0,
 	},
 	content: {
@@ -51,7 +52,7 @@ const styles = stylex.create({
 	itemTitle: {
 		fontSize: "14px",
 		fontWeight: 500,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "4px",
 		overflow: "hidden",
@@ -60,7 +61,7 @@ const styles = stylex.create({
 	},
 	meta: {
 		fontSize: "12px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 		margin: 0,
 	},
 	badge: {
@@ -74,22 +75,22 @@ const styles = stylex.create({
 		flexShrink: 0,
 	},
 	badgeSell: {
-		color: "#2563eb",
-		backgroundColor: "#dbeafe",
+		color: colors.accentPrimary,
+		backgroundColor: colors.accentPrimaryBg,
 	},
 	badgeBuy: {
-		color: "#dc2626",
-		backgroundColor: "#fee2e2",
+		color: colors.statusError,
+		backgroundColor: colors.statusErrorBg,
 	},
 	badgeComplete: {
-		color: "#059669",
-		backgroundColor: "#d1fae5",
+		color: colors.statusSuccess,
+		backgroundColor: colors.statusSuccessBg,
 	},
 	emptyState: {
 		textAlign: "center",
 		paddingTop: "32px",
 		paddingBottom: "32px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 	},
 	emptyText: {
 		fontSize: "14px",

@@ -2,12 +2,14 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { useEffect } from "react";
+import { colors } from "./global-tokens.stylex";
 
 const styles = stylex.create({
 	html: {
 		minHeight: "100%",
 		margin: 0,
 		padding: 0,
+		colorScheme: "light dark",
 	},
 	body: {
 		minHeight: "100vh",
@@ -16,7 +18,8 @@ const styles = stylex.create({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		backgroundColor: "#fff",
+		backgroundColor: colors.bgPrimary,
+		color: colors.textPrimary,
 		fontFamily:
 			'-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 	},
@@ -34,24 +37,24 @@ const styles = stylex.create({
 		width: "80px",
 		height: "80px",
 		borderRadius: "40px",
-		backgroundColor: "#fee2e2",
+		backgroundColor: colors.statusErrorBg,
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
 		marginBottom: "24px",
 		fontSize: "40px",
-		color: "#dc2626",
+		color: colors.statusError,
 	},
 	title: {
 		fontSize: "24px",
 		fontWeight: 700,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: "12px",
 	},
 	description: {
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 		marginBottom: "32px",
 		lineHeight: 1.6,
@@ -71,8 +74,8 @@ const styles = stylex.create({
 		paddingRight: "24px",
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#fff",
-		backgroundColor: "#000",
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
 		borderRadius: "12px",
 		borderWidth: 0,
 		cursor: "pointer",
@@ -89,8 +92,8 @@ const styles = stylex.create({
 		paddingRight: "24px",
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#374151",
-		backgroundColor: "#f3f4f6",
+		color: colors.textTertiary,
+		backgroundColor: colors.bgTertiary,
 		borderRadius: "12px",
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",

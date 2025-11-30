@@ -4,6 +4,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ko";
 import { MessageCircleHeart, User } from "lucide-react";
 import Link from "next/link";
+import { colors } from "@/app/global-tokens.stylex";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
@@ -18,7 +19,7 @@ const styles = stylex.create({
 		paddingBottom: "16px",
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: "#f3f4f6",
+		borderBottomColor: colors.borderSecondary,
 		textDecoration: "none",
 		color: "inherit",
 	},
@@ -33,7 +34,10 @@ const styles = stylex.create({
 		height: "100%",
 		borderRadius: "26px",
 		objectFit: "cover",
-		backgroundColor: "#f3f4f6",
+		backgroundColor: colors.bgTertiary,
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
 	},
 	onlineIndicator: {
 		position: "absolute",
@@ -42,10 +46,10 @@ const styles = stylex.create({
 		width: "12px",
 		height: "12px",
 		borderRadius: "6px",
-		backgroundColor: "#22c55e",
+		backgroundColor: colors.statusSuccess,
 		borderWidth: 2,
 		borderStyle: "solid",
-		borderColor: "#fff",
+		borderColor: colors.bgPrimary,
 	},
 	content: {
 		flex: 1,
@@ -65,13 +69,13 @@ const styles = stylex.create({
 	name: {
 		fontSize: "15px",
 		fontWeight: 600,
-		color: "#111827",
+		color: colors.textSecondary,
 		margin: 0,
 	},
 	productBadge: {
 		fontSize: "11px",
-		color: "#6b7280",
-		backgroundColor: "#f3f4f6",
+		color: colors.textMuted,
+		backgroundColor: colors.bgTertiary,
 		paddingTop: "2px",
 		paddingBottom: "2px",
 		paddingLeft: "6px",
@@ -80,7 +84,7 @@ const styles = stylex.create({
 	},
 	time: {
 		fontSize: "12px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 	},
 	messageWrap: {
 		display: "flex",
@@ -90,7 +94,7 @@ const styles = stylex.create({
 	message: {
 		flex: 1,
 		fontSize: "14px",
-		color: "#6b7280",
+		color: colors.textMuted,
 		margin: 0,
 		overflow: "hidden",
 		textOverflow: "ellipsis",
@@ -102,8 +106,8 @@ const styles = stylex.create({
 		paddingLeft: "6px",
 		paddingRight: "6px",
 		borderRadius: "10px",
-		backgroundColor: "#ef4444",
-		color: "#fff",
+		backgroundColor: colors.statusErrorLight,
+		color: colors.textInverse,
 		fontSize: "11px",
 		fontWeight: 600,
 		display: "flex",
@@ -115,7 +119,7 @@ const styles = stylex.create({
 		textAlign: "center",
 		paddingTop: "64px",
 		paddingBottom: "64px",
-		color: "#9ca3af",
+		color: colors.textPlaceholder,
 	},
 	emptyIcon: {
 		fontSize: "56px",
@@ -124,7 +128,7 @@ const styles = stylex.create({
 	emptyTitle: {
 		fontSize: "16px",
 		fontWeight: 600,
-		color: "#374151",
+		color: colors.textTertiary,
 		margin: 0,
 		marginBottom: "8px",
 	},
