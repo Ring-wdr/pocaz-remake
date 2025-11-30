@@ -93,11 +93,23 @@ bun dev
 | 명령어 | 설명 |
 |--------|------|
 | `bun dev` | 개발 서버 실행 |
-| `bun run build` | 프로덕션 빌드 |
+| `bun run build` | Prisma 클라이언트 생성 + 프로덕션 빌드 |
 | `bun run serve` | 빌드 후 3016 포트에서 실행 |
 | `bun run lint` | Biome 린트 검사 |
 | `bun run check` | Biome 전체 검사 |
 | `bun run format` | 코드 포맷팅 |
+
+> `postinstall` 스크립트가 `prisma generate`를 자동 실행하여 Prisma 클라이언트를 생성합니다.
+
+## 배포
+
+### Vercel
+
+Vercel 배포 시 환경 변수를 설정하면 자동으로 빌드됩니다.
+
+1. Vercel 프로젝트에 환경 변수 추가
+2. `bun install` 시 `postinstall`이 Prisma 클라이언트 생성
+3. `bun run build`로 Next.js 빌드
 
 ## 데이터 모델
 
