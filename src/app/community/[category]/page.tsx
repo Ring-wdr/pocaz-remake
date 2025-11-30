@@ -26,22 +26,14 @@ const styles = stylex.create({
 	},
 });
 
-interface CategoryPageProps {
-	params: Promise<{
-		category: string;
-	}>;
-}
-
-export default async function CategoryPage({ params }: CategoryPageProps) {
-	const { category } = await params;
-
+export default async function CategoryPage() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.content)}>
 				<PageHeader />
 				<CategoryTabsSection />
 				<Suspense fallback={<PostListSkeleton />}>
-					<PostListSection category={category} />
+					<PostListSection />
 				</Suspense>
 			</div>
 			<Footer />

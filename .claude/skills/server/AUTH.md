@@ -8,6 +8,41 @@
 | `src/lib/supabase/elysia.ts` | Elysia용 Supabase 클라이언트 |
 | `src/lib/supabase/server.ts` | Server Components용 |
 | `src/lib/supabase/client.ts` | 브라우저용 (싱글톤) |
+| `src/utils/eden.ts` | Eden Treaty 클라이언트 |
+
+## ⚠️ 중요: authGuard 구현 주의사항
+
+### 1. `as: "scoped"` 필수 사용
+
+```typescript
+// ❌ WRONG - 모든 라우트에 적용되어 public 라우트도 인증 필요
+.derive({ as: "global" }, async ({ request }) => { ... })
+
+// ✅ CORRECT - authGuard를 use한 라우트에만 적용
+.derive({ as: "scoped" }, async ({ request }) => { ... })
+```
+
+### 2. derive + onBeforeHandle 조합으로 리다이렉트
+
+인증 실패 시 로그인 페이지로 리다이렉트하려면 `derive`와 `onBeforeHandle`을 조합합니다:
+
+```typescript
+// ✅ CORRECT - derive로 인증 정보 주입, onBeforeHandle에서 redirect
+export const authGuard = new Elysia({ name: "auth-guard" })
+  .derive({ as: "scoped" }, async ({ request }) => {
+    // ... 인증 로직 ...
+    return {
+      auth: { user, session } as AuthenticatedContext,
+    };
+  })
+  .onBeforeHandle({ as: "scoped" }, ({ auth, redirect }) => {
+    if (!auth.user || !auth.session) {
+      return redirect("/login");  // Elysia 내장 redirect (302)
+    }
+  });
+```
+
+**주의**: `redirect()`는 `derive`에서 직접 반환 불가, 반드시 `onBeforeHandle`에서 사용
 
 ## Auth Types
 

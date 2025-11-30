@@ -1,13 +1,27 @@
 import { treaty } from "@elysiajs/eden";
-import type { app } from "@/app/api/[[...slugs]]/route";
+import type { app as AppType } from "@/app/api/[[...slugs]]/route";
 import { getApiBaseUrl } from "./url";
 
 /**
  * Type-safe Eden Treaty 클라이언트
- * 서버/클라이언트 양쪽에서 사용 가능
+ * 서버/클라이언트 컴포넌트 모두에서 사용 가능
+ *
+ * - 클라이언트: credentials: "include"로 브라우저 쿠키 자동 전송
+ * - 서버: onRequest 훅에서 Next.js cookies()를 헤더에 주입
  */
-export const { api } = treaty<typeof app>(getApiBaseUrl(), {
+export const { api } = treaty<typeof AppType>(getApiBaseUrl(), {
 	fetch: {
 		credentials: "include",
+	},
+	async onRequest() {
+		if (typeof window === "undefined") {
+			const { cookies } = await import("next/headers");
+			const cookieStore = await cookies();
+			return {
+				headers: {
+					cookie: cookieStore.toString(),
+				},
+			};
+		}
 	},
 });

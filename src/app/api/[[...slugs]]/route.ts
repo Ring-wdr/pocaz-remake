@@ -113,7 +113,7 @@ const protectedRoutes = new Elysia({ prefix: "/protected" })
 // ==============================================
 // Main App
 // ==============================================
-export const app = new Elysia({ prefix: "/api" }).get(
+const baseApp = new Elysia({ prefix: "/api" }).get(
 	"/",
 	() => ({
 		message: "Pocaz API",
@@ -130,7 +130,7 @@ export const app = new Elysia({ prefix: "/api" }).get(
 
 if (process.env.NODE_ENV === "development") {
 	import("@elysiajs/openapi").then(({ openapi }) => {
-		app.use(
+		baseApp.use(
 			openapi({
 				documentation: {
 					info: {
@@ -156,8 +156,8 @@ if (process.env.NODE_ENV === "development") {
 	});
 }
 
-// Core Routes
-app
+// Core Routes - capture chained result for proper type inference
+export const app = baseApp
 	.use(publicRoutes)
 	.use(authRoutes)
 	.use(protectedRoutes)

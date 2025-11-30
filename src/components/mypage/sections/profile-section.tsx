@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { User } from "lucide-react";
 import Link from "next/link";
 import { colors } from "@/app/global-tokens.stylex";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -84,34 +85,10 @@ const styles = stylex.create({
 	},
 });
 
-interface UserProfile {
-	id: string;
-	name: string;
-	email: string;
-	avatar?: string;
-}
-
-// TODO: Replace with actual API call
-async function getUserProfile(): Promise<UserProfile | null> {
-	// Simulate delay
-	await new Promise((resolve) => setTimeout(resolve, 300));
-
-	// Placeholder data - 로그인 상태 시뮬레이션
-	return {
-		id: "1",
-		name: "포카덕후",
-		email: "pocaz@example.com",
-		avatar: "https://placehold.co/144x144/dbeafe/2563eb?text=P",
-	};
-
-	// 비로그인 상태 시뮬레이션
-	// return null;
-}
-
 export default async function ProfileSection() {
-	const profile = await getUserProfile();
+	const { data: profile, error } = await api.users.me.get();
 
-	if (!profile) {
+	if (error || !profile) {
 		return (
 			<div {...stylex.props(styles.loginPrompt)}>
 				<p {...stylex.props(styles.loginText)}>
@@ -126,10 +103,10 @@ export default async function ProfileSection() {
 
 	return (
 		<div {...stylex.props(styles.container)}>
-			{profile.avatar ? (
+			{profile.profileImage ? (
 				<img
-					src={profile.avatar}
-					alt={profile.name}
+					src={profile.profileImage}
+					alt={profile.nickname}
 					{...stylex.props(styles.avatar)}
 				/>
 			) : (
@@ -138,8 +115,10 @@ export default async function ProfileSection() {
 				</div>
 			)}
 			<div {...stylex.props(styles.info)}>
-				<h2 {...stylex.props(styles.name)}>{profile.name}</h2>
-				<p {...stylex.props(styles.email)}>{profile.email}</p>
+				<h2 {...stylex.props(styles.name)}>{profile.nickname}</h2>
+				{profile.email && (
+					<p {...stylex.props(styles.email)}>{profile.email}</p>
+				)}
 			</div>
 			<Link href="/mypage/edit" {...stylex.props(styles.editButton)}>
 				프로필 수정

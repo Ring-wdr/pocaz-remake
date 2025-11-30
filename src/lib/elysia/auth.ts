@@ -94,46 +94,35 @@ export const authPlugin = new Elysia({ name: "auth" }).derive(
  * Protected routes에 적용
  *
  * 이 guard를 사용하는 모든 라우트는 자동으로 401 응답 스키마가 추가됩니다.
+ * derive 내에서 직접 에러를 반환하여 실행 순서 문제를 방지합니다.
  */
 export const authGuard = new Elysia({ name: "auth-guard" })
-	.guard({
-		response: {
-			401: AuthErrorSchema,
-		},
+	.derive({ as: "scoped" }, async ({ request }) => {
+		const supabase = createSupabaseElysiaClient(request);
+		const [
+			{ data: claimsData },
+			{
+				data: { session },
+			},
+		] = await Promise.all([
+			supabase.auth.getClaims(),
+			supabase.auth.getSession(),
+		]);
+
+		const user = claimsData?.claims
+			? claimsToAuthUser(claimsData.claims)
+			: null;
+
+		return {
+			auth: {
+				user,
+				session,
+			} as AuthenticatedContext,
+		};
 	})
-	.derive(
-		{ as: "global" },
-		async ({ request }): Promise<{ auth: AuthenticatedContext }> => {
-			const supabase = createSupabaseElysiaClient(request);
-			const [
-				{ data: claimsData },
-				{
-					data: { session },
-				},
-			] = await Promise.all([
-				supabase.auth.getClaims(),
-				supabase.auth.getSession(),
-			]);
-
-			const user = claimsData?.claims
-				? claimsToAuthUser(claimsData.claims)
-				: null;
-
-			return {
-				auth: {
-					user: user!,
-					session: session!,
-				},
-			};
-		},
-	)
-	.onBeforeHandle(({ auth, set }) => {
+	.onBeforeHandle({ as: "scoped" }, ({ auth, redirect }) => {
 		if (!auth.user || !auth.session) {
-			set.status = 401;
-			return {
-				error: "Unauthorized",
-				message: "Authentication required",
-			};
+			return redirect("/login");
 		}
 	});
 

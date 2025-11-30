@@ -1,11 +1,12 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { ArrowLeft, ImagePlus, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 import { colors } from "@/app/global-tokens.stylex";
+import { api } from "@/utils/eden";
 
 const categories = [
 	{ id: 1, name: "자유게시판", slug: "free" },
@@ -236,12 +237,14 @@ const styles = stylex.create({
 
 export default function CommunityWritePage() {
 	const router = useRouter();
+	const [isPending, startTransition] = useTransition();
 	const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 	const [title, setTitle] = useState("");
 	const [content, setContent] = useState("");
 	const [images, setImages] = useState<string[]>([]);
 
 	const isFormValid = selectedCategory !== null && title.trim() && content.trim();
+	const isDisabled = !isFormValid || isPending;
 
 	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
@@ -262,18 +265,25 @@ export default function CommunityWritePage() {
 		setImages((prev) => prev.filter((_, i) => i !== index));
 	};
 
-	const handleSubmit = async () => {
-		if (!isFormValid) return;
+	const handleSubmit = () => {
+		if (isDisabled) return;
 
-		// TODO: API 연동
-		console.log({
-			category: selectedCategory,
-			title,
-			content,
-			images,
+		startTransition(async () => {
+			// Combine title and content for the API (API only has content field)
+			const fullContent = `[${categories.find((c) => c.id === selectedCategory)?.name}] ${title}\n\n${content}`;
+
+			const { error } = await api.posts.post({
+				content: fullContent,
+				imageUrls: images.length > 0 ? images : undefined,
+			});
+
+			if (error) {
+				console.error("Failed to create post:", error);
+				return;
+			}
+
+			router.push("/community");
 		});
-
-		router.push("/community");
 	};
 
 	return (
@@ -290,13 +300,13 @@ export default function CommunityWritePage() {
 				<button
 					type="button"
 					onClick={handleSubmit}
-					disabled={!isFormValid}
+					disabled={isDisabled}
 					{...stylex.props(
 						styles.submitButton,
-						!isFormValid && styles.submitButtonDisabled
+						isDisabled && styles.submitButtonDisabled
 					)}
 				>
-					등록
+					{isPending ? <Loader2 size={18} className="animate-spin" /> : "등록"}
 				</button>
 			</header>
 

@@ -1,11 +1,12 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { ArrowLeft, Camera, X } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 import { colors } from "@/app/global-tokens.stylex";
+import { api } from "@/utils/eden";
 
 const conditions = [
 	{ id: "new", name: "새 상품" },
@@ -299,6 +300,7 @@ const styles = stylex.create({
 
 export default function MarketRegisterPage() {
 	const router = useRouter();
+	const [isPending, startTransition] = useTransition();
 	const [images, setImages] = useState<string[]>([]);
 	const [title, setTitle] = useState("");
 	const [price, setPrice] = useState("");
@@ -312,6 +314,7 @@ export default function MarketRegisterPage() {
 		price.trim() &&
 		condition !== null &&
 		description.trim();
+	const isDisabled = !isFormValid || isPending;
 
 	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const files = e.target.files;
@@ -342,20 +345,27 @@ export default function MarketRegisterPage() {
 		setPrice(numValue.toLocaleString());
 	};
 
-	const handleSubmit = async () => {
-		if (!isFormValid) return;
+	const handleSubmit = () => {
+		if (isDisabled) return;
 
-		// TODO: API 연동
-		console.log({
-			images,
-			title,
-			price: price.replace(/,/g, ""),
-			condition,
-			description,
-			isNegotiable,
+		startTransition(async () => {
+			const priceNumber = parseInt(price.replace(/,/g, ""), 10);
+			const fullDescription = `[${conditions.find((c) => c.id === condition)?.name}] ${description}${isNegotiable ? "\n\n(가격 협상 가능)" : ""}`;
+
+			const { error } = await api.markets.post({
+				title,
+				description: fullDescription,
+				price: priceNumber,
+				imageUrls: images.length > 0 ? images : undefined,
+			});
+
+			if (error) {
+				console.error("Failed to create market item:", error);
+				return;
+			}
+
+			router.push("/market");
 		});
-
-		router.push("/market");
 	};
 
 	return (
@@ -372,13 +382,13 @@ export default function MarketRegisterPage() {
 				<button
 					type="button"
 					onClick={handleSubmit}
-					disabled={!isFormValid}
+					disabled={isDisabled}
 					{...stylex.props(
 						styles.submitButton,
-						!isFormValid && styles.submitButtonDisabled
+						isDisabled && styles.submitButtonDisabled
 					)}
 				>
-					등록
+					{isPending ? <Loader2 size={18} className="animate-spin" /> : "등록"}
 				</button>
 			</header>
 
