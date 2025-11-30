@@ -1,14 +1,14 @@
 import * as stylex from "@stylexjs/stylex";
 import { Store } from "lucide-react";
 import Link from "next/link";
-import { colors } from "@/app/global-tokens.stylex";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	grid: {
 		display: "grid",
 		gridTemplateColumns: "repeat(2, 1fr)",
-		gap: "12px",
+		gap: spacing.xs,
 	},
 	item: {
 		display: "flex",
@@ -19,7 +19,7 @@ const styles = stylex.create({
 	imageWrap: {
 		position: "relative",
 		aspectRatio: "1",
-		borderRadius: "8px",
+		borderRadius: radius.sm,
 		overflow: "hidden",
 		backgroundColor: colors.bgTertiary,
 	},
@@ -30,15 +30,15 @@ const styles = stylex.create({
 	},
 	statusBadge: {
 		position: "absolute",
-		top: "8px",
-		left: "8px",
-		paddingTop: "4px",
-		paddingBottom: "4px",
-		paddingLeft: "8px",
-		paddingRight: "8px",
-		borderRadius: "4px",
+		top: spacing.xxs,
+		left: spacing.xxs,
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xxs,
+		paddingRight: spacing.xxs,
+		borderRadius: radius.xs,
 		fontSize: "11px",
-		fontWeight: 600,
+		fontWeight: fontWeight.semibold,
 		color: colors.textInverse,
 	},
 	statusAvailable: {
@@ -51,40 +51,40 @@ const styles = stylex.create({
 		backgroundColor: colors.textMuted,
 	},
 	info: {
-		paddingTop: "8px",
+		paddingTop: spacing.xxs,
 	},
 	seller: {
-		fontSize: "12px",
+		fontSize: fontSize.sm,
 		color: colors.textMuted,
 		marginBottom: "2px",
 	},
 	title: {
-		fontSize: "14px",
-		fontWeight: 500,
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.medium,
 		color: colors.textSecondary,
 		margin: 0,
-		marginBottom: "4px",
+		marginBottom: spacing.xxxs,
 		overflow: "hidden",
 		textOverflow: "ellipsis",
 		whiteSpace: "nowrap",
 	},
 	price: {
 		fontSize: "15px",
-		fontWeight: 700,
+		fontWeight: fontWeight.bold,
 		color: colors.textPrimary,
 	},
 	emptyState: {
 		textAlign: "center",
-		paddingTop: "48px",
-		paddingBottom: "48px",
+		paddingTop: spacing.xl,
+		paddingBottom: spacing.xl,
 		color: colors.textPlaceholder,
 	},
 	emptyIcon: {
 		fontSize: "48px",
-		marginBottom: "12px",
+		marginBottom: spacing.xs,
 	},
 	emptyText: {
-		fontSize: "14px",
+		fontSize: fontSize.md,
 		margin: 0,
 	},
 });

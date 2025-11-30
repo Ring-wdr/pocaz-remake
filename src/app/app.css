@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,300;0,400;0,500;0,900;1,100;1,300;1,900&display=swap');
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.5/dist/web/static/pretendard.css');
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,300;0,400;0,500;0,900;1,100;1,300;1,900&display=swap");
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.5/dist/web/static/pretendard.css");
 
 @layer resets {
 	* {
@@ -17,6 +17,10 @@
 @stylex;
 
 /* Main Swiper Slider Styles */
+.mainSlideSwiper {
+	height: 288px;
+}
+
 .mainSlideSwiper .swiper-button-prev {
 	left: 0;
 }
@@ -40,5 +44,5 @@
 
 /* Font Family */
 body {
-	font-family: 'Montserrat', 'Pretendard', sans-serif;
+	font-family: "Montserrat", "Pretendard", sans-serif;
 }

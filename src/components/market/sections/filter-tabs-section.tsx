@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
-import { colors } from "@/app/global-tokens.stylex";
+import { colors, fontWeight, spacing } from "@/app/global-tokens.stylex";
 
 const filters = [
 	{ id: 0, name: "전체", value: "all" },
@@ -14,18 +14,18 @@ const filters = [
 const styles = stylex.create({
 	container: {
 		display: "flex",
-		gap: "8px",
-		marginBottom: "16px",
+		gap: spacing.xxs,
+		marginBottom: spacing.sm,
 		overflowX: "auto",
 	},
 	tab: {
 		paddingTop: "6px",
 		paddingBottom: "6px",
-		paddingLeft: "14px",
-		paddingRight: "14px",
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
 		borderRadius: "16px",
 		fontSize: "13px",
-		fontWeight: 500,
+		fontWeight: fontWeight.medium,
 		backgroundColor: colors.bgTertiary,
 		color: colors.textMuted,
 		borderWidth: 0,

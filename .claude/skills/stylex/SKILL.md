@@ -105,21 +105,48 @@ export function Component() {
 토큰 파일: `src/app/global-tokens.stylex.ts`
 
 ```typescript
-import { spacing, text, globalTokens, scales } from "@/app/global-tokens.stylex";
+import {
+  spacing, text, colors, globalTokens,
+  fontSize, fontWeight, lineHeight, radius, iconSize, size
+} from "@/app/global-tokens.stylex";
 
-// Fluid Typography (clamp 기반)
+// Fluid Typography (clamp 기반 반응형)
 text.xxs, text.xs, text.sm, text.p, text.h5, text.h4, text.h3, text.h2, text.h1
 
-// Fluid Spacing (clamp 기반)
+// Fluid Spacing (clamp 기반 반응형)
 spacing.xxxs, spacing.xxs, spacing.xs, spacing.sm, spacing.md,
 spacing.lg, spacing.xl, spacing.xxl, spacing.xxxl, spacing.xxxxl
 
-// Global Tokens
-globalTokens.fontSans, globalTokens.fontMono, globalTokens.maxWidth
-globalTokens.bgStartRGB, globalTokens.primaryGlow, globalTokens.secondaryGlow
+// Colors (라이트/다크 모드 지원)
+colors.bgPrimary, colors.bgSecondary, colors.textPrimary, colors.textMuted,
+colors.borderPrimary, colors.accentPrimary, colors.statusError, colors.statusSuccess
 
-// Scales
-scales.small, scales.medium, scales.large
+// Fixed Font Size (고정 px)
+fontSize.xs (10px), fontSize.sm (12px), fontSize.md (14px),
+fontSize.base (16px), fontSize.lg (18px), fontSize.xl (24px), fontSize.xxl (30px)
+
+// Font Weight
+fontWeight.normal (400), fontWeight.medium (500), fontWeight.semibold (600),
+fontWeight.bold (700), fontWeight.extrabold (800), fontWeight.black (900)
+
+// Line Height
+lineHeight.tight (1), lineHeight.snug (1.25), lineHeight.normal (1.5),
+lineHeight.relaxed (1.6), lineHeight.loose (2)
+
+// Border Radius
+radius.xs (4px), radius.sm (8px), radius.md (12px), radius.lg (20px), radius.full (50%)
+
+// Icon Size
+iconSize.xs (14px), iconSize.sm (16px), iconSize.md (18px),
+iconSize.lg (24px), iconSize.xl (28px)
+
+// Fixed Size (컴포넌트 크기)
+size.touchTarget (40px), size.iconButton (24px),
+size.avatarSm (32px), size.avatarMd (48px), size.avatarLg (64px),
+size.thumbnail (100px), size.bottomMenuHeight (56px)
+
+// Global Tokens
+globalTokens.fontSans
 ```
 
 ## Reference Files

@@ -1,16 +1,16 @@
 import * as stylex from "@stylexjs/stylex";
 import { User } from "lucide-react";
 import Link from "next/link";
-import { colors } from "@/app/global-tokens.stylex";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
 		display: "flex",
 		alignItems: "center",
-		gap: "16px",
-		paddingBottom: "20px",
-		marginBottom: "20px",
+		gap: spacing.sm,
+		paddingBottom: spacing.sm,
+		marginBottom: spacing.sm,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
 		borderBottomColor: colors.borderPrimary,
@@ -37,50 +37,50 @@ const styles = stylex.create({
 	},
 	name: {
 		fontSize: "20px",
-		fontWeight: 700,
+		fontWeight: fontWeight.bold,
 		color: colors.textSecondary,
 		margin: 0,
-		marginBottom: "4px",
+		marginBottom: spacing.xxxs,
 	},
 	email: {
-		fontSize: "14px",
+		fontSize: fontSize.md,
 		color: colors.textMuted,
 		margin: 0,
 	},
 	editButton: {
-		paddingTop: "8px",
-		paddingBottom: "8px",
-		paddingLeft: "14px",
-		paddingRight: "14px",
+		paddingTop: spacing.xxs,
+		paddingBottom: spacing.xxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
 		fontSize: "13px",
-		fontWeight: 500,
+		fontWeight: fontWeight.medium,
 		color: colors.textTertiary,
 		backgroundColor: colors.bgTertiary,
-		borderRadius: "8px",
+		borderRadius: radius.sm,
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",
 	},
 	loginPrompt: {
 		textAlign: "center",
-		paddingTop: "20px",
-		paddingBottom: "20px",
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
 	},
 	loginText: {
-		fontSize: "14px",
+		fontSize: fontSize.md,
 		color: colors.textMuted,
-		marginBottom: "12px",
+		marginBottom: spacing.xs,
 	},
 	loginButton: {
 		display: "inline-block",
-		paddingTop: "10px",
-		paddingBottom: "10px",
-		paddingLeft: "24px",
-		paddingRight: "24px",
-		fontSize: "14px",
-		fontWeight: 600,
+		paddingTop: spacing.xxs,
+		paddingBottom: spacing.xxs,
+		paddingLeft: spacing.md,
+		paddingRight: spacing.md,
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.semibold,
 		color: colors.textInverse,
 		backgroundColor: colors.bgInverse,
-		borderRadius: "8px",
+		borderRadius: radius.sm,
 		textDecoration: "none",
 	},
 });

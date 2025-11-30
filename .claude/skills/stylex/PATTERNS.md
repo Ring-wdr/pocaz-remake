@@ -182,21 +182,48 @@ const styles = stylex.create({
 ## Using Design Tokens
 
 ```typescript
-import { spacing, text, globalTokens } from '@/app/global-tokens.stylex';
+import {
+  spacing, text, colors, globalTokens,
+  fontSize, fontWeight, lineHeight, radius, iconSize, size
+} from '@/app/global-tokens.stylex';
 
 const styles = stylex.create({
   card: {
     padding: spacing.md,
-    fontSize: text.p,
-    fontFamily: globalTokens.fontSans,
+    fontSize: fontSize.md,        // 고정 14px
+    fontWeight: fontWeight.medium,
+    lineHeight: lineHeight.normal,
+    borderRadius: radius.sm,
+    backgroundColor: colors.bgPrimary,
+    color: colors.textPrimary,
+  },
+  avatar: {
+    width: size.avatarMd,         // 48px
+    height: size.avatarMd,
+    borderRadius: radius.full,
+  },
+  icon: {
+    width: iconSize.md,           // 18px
+    height: iconSize.md,
+  },
+  button: {
+    height: size.touchTarget,     // 40px
+    paddingInline: spacing.md,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
   },
 });
 
 // Available tokens:
-// text: xxs, xs, sm, p, h5, h4, h3, h2, h1 (fluid typography)
-// spacing: xxxs, xxs, xs, sm, md, lg, xl, xxl, xxxl, xxxxl (fluid spacing)
-// globalTokens: fontSans, fontMono, maxWidth, bgStartRGB, primaryGlow, etc.
-// scales: small, medium, large
+// text: xxs~h1 (fluid 반응형)
+// spacing: xxxs~xxxxl (fluid 반응형)
+// colors: bgPrimary, textPrimary, borderPrimary, accentPrimary 등 (다크모드 지원)
+// fontSize: xs (10px) ~ xxl (30px) (고정)
+// fontWeight: normal (400) ~ black (900)
+// lineHeight: tight (1) ~ loose (2)
+// radius: xs (4px) ~ full (50%)
+// iconSize: xs (14px) ~ xl (28px)
+// size: touchTarget, avatarSm/Md/Lg, thumbnail, bottomMenuHeight 등
 ```
 
 ## Grid Layout with Cards

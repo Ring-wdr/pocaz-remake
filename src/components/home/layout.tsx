@@ -5,7 +5,7 @@ import Link from "next/link";
 import BottomMenu from "./bottom-menu";
 import Header from "./header";
 import ScrollTopButton from "./scroll-top-button";
-import { colors } from "@/app/global-tokens.stylex";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 
 const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
@@ -50,14 +50,14 @@ const styles = stylex.create({
 		},
 	},
 	txtBoxInner: {
-		marginBottom: "20px",
+		marginBottom: spacing.sm,
 	},
 	starText: {
 		display: "flex",
 		justifyContent: "center",
-		fontSize: "14px",
-		fontWeight: 700,
-		color: "#fff",
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.bold,
+		color: colors.textInverse,
 	},
 	starIcon: {
 		color: "#fef08a",
@@ -75,25 +75,25 @@ const styles = stylex.create({
 	},
 	atozText: {
 		position: "relative",
-		padding: "8px",
+		padding: spacing.xxs,
 		fontStyle: "italic",
-		color: "#fff",
+		color: colors.textInverse,
 	},
 	pocazTitle: {
-		marginTop: "24px",
-		marginBottom: "24px",
-		color: "#fff",
+		marginTop: spacing.md,
+		marginBottom: spacing.md,
+		color: colors.textInverse,
 		fontStyle: "italic",
 		fontSize: "72px",
-		fontWeight: 900,
+		fontWeight: fontWeight.black,
 		letterSpacing: "-2px",
 	},
 	ctaButton: {
-		marginTop: "20px",
-		marginBottom: "20px",
+		marginTop: spacing.sm,
+		marginBottom: spacing.sm,
 		backgroundColor: "#27272a",
-		color: "#fff",
-		borderRadius: "8px",
+		color: colors.textInverse,
+		borderRadius: radius.sm,
 		borderWidth: 0,
 		cursor: "pointer",
 		transition: "background-color 0.2s ease-in",
@@ -105,11 +105,11 @@ const styles = stylex.create({
 		display: "flex",
 	},
 	ctaLink: {
-		paddingTop: "16px",
-		paddingBottom: "16px",
-		paddingLeft: "24px",
-		paddingRight: "24px",
-		color: "#fff",
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
+		paddingLeft: spacing.md,
+		paddingRight: spacing.md,
+		color: colors.textInverse,
 		textDecoration: "none",
 	},
 	mobileWrap: {

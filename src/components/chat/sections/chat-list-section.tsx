@@ -4,7 +4,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ko";
 import { MessageCircleHeart, User } from "lucide-react";
 import Link from "next/link";
-import { colors } from "@/app/global-tokens.stylex";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
 
 dayjs.extend(relativeTime);
@@ -15,9 +15,9 @@ const styles = stylex.create({
 	item: {
 		display: "flex",
 		alignItems: "center",
-		gap: "12px",
-		paddingTop: "16px",
-		paddingBottom: "16px",
+		gap: spacing.xs,
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
 		borderBottomColor: colors.borderSecondary,
@@ -48,7 +48,7 @@ const styles = stylex.create({
 		display: "flex",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: "4px",
+		marginBottom: spacing.xxxs,
 	},
 	nameWrap: {
 		display: "flex",
@@ -57,7 +57,7 @@ const styles = stylex.create({
 	},
 	name: {
 		fontSize: "15px",
-		fontWeight: 600,
+		fontWeight: fontWeight.semibold,
 		color: colors.textSecondary,
 		margin: 0,
 	},
@@ -69,20 +69,20 @@ const styles = stylex.create({
 		paddingBottom: "2px",
 		paddingLeft: "6px",
 		paddingRight: "6px",
-		borderRadius: "4px",
+		borderRadius: radius.xs,
 	},
 	time: {
-		fontSize: "12px",
+		fontSize: fontSize.sm,
 		color: colors.textPlaceholder,
 	},
 	messageWrap: {
 		display: "flex",
 		alignItems: "center",
-		gap: "8px",
+		gap: spacing.xxs,
 	},
 	message: {
 		flex: 1,
-		fontSize: "14px",
+		fontSize: fontSize.md,
 		color: colors.textMuted,
 		margin: 0,
 		overflow: "hidden",
@@ -91,23 +91,23 @@ const styles = stylex.create({
 	},
 	emptyState: {
 		textAlign: "center",
-		paddingTop: "64px",
-		paddingBottom: "64px",
+		paddingTop: spacing.xxl,
+		paddingBottom: spacing.xxl,
 		color: colors.textPlaceholder,
 	},
 	emptyIcon: {
 		fontSize: "56px",
-		marginBottom: "16px",
+		marginBottom: spacing.sm,
 	},
 	emptyTitle: {
-		fontSize: "16px",
-		fontWeight: 600,
+		fontSize: fontSize.base,
+		fontWeight: fontWeight.semibold,
 		color: colors.textTertiary,
 		margin: 0,
-		marginBottom: "8px",
+		marginBottom: spacing.xxs,
 	},
 	emptyText: {
-		fontSize: "14px",
+		fontSize: fontSize.md,
 		margin: 0,
 	},
 });
