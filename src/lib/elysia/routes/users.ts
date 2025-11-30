@@ -14,7 +14,6 @@ const UserResponseSchema = t.Object({
 	nickname: t.String(),
 	profileImage: t.Nullable(t.String()),
 	score: t.Number(),
-	artistId: t.Nullable(t.String()),
 	createdAt: t.String(),
 });
 
@@ -23,7 +22,6 @@ const PublicUserSchema = t.Object({
 	nickname: t.String(),
 	profileImage: t.Nullable(t.String()),
 	score: t.Number(),
-	artistId: t.Optional(t.Nullable(t.String())),
 });
 
 const ErrorSchema = t.Object({
@@ -55,7 +53,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				nickname: user.nickname,
 				profileImage: user.profileImage,
 				score: user.score,
-				artistId: user.artistId,
 				createdAt: user.createdAt.toISOString(),
 			};
 		},
@@ -85,7 +82,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			const user = await userService.update(existingUser.id, {
 				nickname: body.nickname,
 				profileImage: body.profileImage,
-				artistId: body.artistId,
 			});
 
 			return {
@@ -95,7 +91,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				nickname: user.nickname,
 				profileImage: user.profileImage,
 				score: user.score,
-				artistId: user.artistId,
 				updatedAt: user.updatedAt.toISOString(),
 			};
 		},
@@ -103,7 +98,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			body: t.Object({
 				nickname: t.Optional(t.String({ minLength: 1, maxLength: 50 })),
 				profileImage: t.Optional(t.Nullable(t.String())),
-				artistId: t.Optional(t.Nullable(t.String())),
 			}),
 			response: {
 				200: t.Object({
@@ -113,7 +107,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 					nickname: t.String(),
 					profileImage: t.Nullable(t.String()),
 					score: t.Number(),
-					artistId: t.Nullable(t.String()),
 					updatedAt: t.String(),
 				}),
 				404: ErrorSchema,
@@ -174,7 +167,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				nickname: user.nickname,
 				profileImage: user.profileImage,
 				score: user.score,
-				artistId: user.artistId,
 			};
 		},
 		{

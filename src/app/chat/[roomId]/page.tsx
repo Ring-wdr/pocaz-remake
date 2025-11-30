@@ -1,78 +1,90 @@
+import { notFound } from "next/navigation";
+
 import { ChatRoom } from "@/components/chat";
+import { getCurrentUser } from "@/lib/auth/actions";
+import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
+import { api } from "@/utils/eden";
 
-interface ChatRoomPageProps {
-	params: Promise<{
-		roomId: string;
-	}>;
-}
+async function getChatRoomData(roomId: string, currentUserId: string) {
+	// 채팅방 상세 정보 조회
+	const { data: roomData, error: roomError } = await api.chat
+		.rooms({ id: roomId })
+		.get();
 
-// TODO: Replace with actual API call
-async function getChatRoomData(roomId: string) {
-	// Simulate delay
-	await new Promise((resolve) => setTimeout(resolve, 300));
+	if (roomError || !roomData) {
+		return null;
+	}
 
-	// Placeholder data
+	// 메시지 목록 조회
+	const { data: messagesData } = await api.chat
+		.rooms({ id: roomId })
+		.messages.get({
+			query: { limit: "50" },
+		});
+
+	// API 응답을 entity 타입으로 변환
+	const members: ChatMember[] = roomData.members.map((m) => ({
+		id: m.id,
+		nickname: m.nickname,
+		profileImage: m.profileImage,
+		joinedAt: m.joinedAt,
+	}));
+
+	const market: ChatMarketInfo | null = roomData.market
+		? {
+				id: roomData.market.id,
+				title: roomData.market.title,
+				price: roomData.market.price,
+				status: roomData.market.status,
+				userId: roomData.market.userId,
+				thumbnail: roomData.market.thumbnail,
+			}
+		: null;
+
+	const messages: ChatMessage[] =
+		messagesData?.messages.map((msg) => ({
+			id: msg.id,
+			content: msg.content,
+			createdAt: msg.createdAt,
+			user: {
+				id: msg.user.id,
+				nickname: msg.user.nickname,
+				profileImage: msg.user.profileImage,
+			},
+		})) ?? [];
+
 	return {
-		roomId,
-		partner: {
-			id: "user1",
-			name: "포카덕후",
-			avatar: "https://placehold.co/80x80/fef3c7/d97706?text=P",
-			isOnline: true,
-		},
-		product: {
-			id: 1,
-			title: "르세라핌 김채원 UNFORGIVEN 포카",
-			price: 25000,
-			image: "https://placehold.co/88x88/fce7f3/db2777?text=PC",
-			status: "판매중",
-		},
-		messages: [
-			{
-				id: "1",
-				senderId: "user1",
-				content: "안녕하세요! 혹시 포카 아직 있나요?",
-				createdAt: "2024-01-15T14:00:00",
-			},
-			{
-				id: "2",
-				senderId: "me",
-				content: "네 아직 있어요! 관심 가져주셔서 감사합니다 ㅎㅎ",
-				createdAt: "2024-01-15T14:05:00",
-			},
-			{
-				id: "3",
-				senderId: "user1",
-				content: "혹시 직거래도 가능할까요? 서울이에요",
-				createdAt: "2024-01-15T14:10:00",
-			},
-			{
-				id: "4",
-				senderId: "me",
-				content: "저도 서울이라 가능해요! 어디쪽이세요?",
-				createdAt: "2024-01-15T14:12:00",
-			},
-			{
-				id: "5",
-				senderId: "user1",
-				content: "강남쪽이요! 혹시 강남역 근처 가능하실까요?",
-				createdAt: "2024-01-15T14:15:00",
-			},
-		],
-		currentUserId: "me",
+		roomId: roomData.id,
+		roomName: roomData.name,
+		members,
+		market,
+		messages,
+		currentUserId,
 	};
 }
 
-export default async function ChatRoomPage({ params }: ChatRoomPageProps) {
+export default async function ChatRoomPage({
+	params,
+}: PageProps<"/chat/[roomId]">) {
 	const { roomId } = await params;
-	const data = await getChatRoomData(roomId);
+
+	const currentUser = await getCurrentUser();
+	if (!currentUser) {
+		notFound();
+	}
+
+	const data = await getChatRoomData(roomId, currentUser.id);
+	if (!data) {
+		notFound();
+	}
 
 	return (
 		<ChatRoom
 			roomId={data.roomId}
-			partner={data.partner}
-			product={data.product}
-			messages={data.messages}
+			roomName={data.roomName}
+			members={data.members}
+			market={data.market}
+			initialMessages={data.messages}
 			currentUserId={data.currentUserId}
 		/>
 	);

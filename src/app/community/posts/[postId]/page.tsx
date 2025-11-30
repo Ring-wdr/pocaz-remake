@@ -133,7 +133,7 @@ const styles = stylex.create({
 
 async function getPost(postId: string) {
 	const { data, error } = await api.posts({ id: postId }).get();
-	if (error || !data || "error" in data) {
+	if (error || !data) {
 		return null;
 	}
 	return data;
@@ -153,9 +153,7 @@ async function getLikeStatus(postId: string) {
 
 export default async function PostDetailPage({
 	params,
-}: {
-	params: Promise<{ postId: string }>;
-}) {
+}: PageProps<"/community/posts/[postId]">) {
 	const { postId } = await params;
 
 	const [post, currentUser] = await Promise.all([

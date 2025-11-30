@@ -180,8 +180,8 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			params: t.Object({
 				id: t.String(),
 			}),
-			response: t.Union([
-				t.Object({
+			response: {
+				200: t.Object({
 					id: t.String(),
 					content: t.String(),
 					createdAt: t.String(),
@@ -191,8 +191,8 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 					commentCount: t.Number(),
 					likeCount: t.Number(),
 				}),
-				ErrorSchema,
-			]),
+				404: ErrorSchema,
+			},
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 상세 조회",
@@ -247,7 +247,10 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
 			}),
-			response: t.Union([PaginatedCommentsSchema, ErrorSchema]),
+			response: {
+				200: PaginatedCommentsSchema,
+				404: ErrorSchema,
+			},
 			detail: {
 				tags: ["Comments"],
 				summary: "댓글 목록 조회",
@@ -381,14 +384,15 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
 			}),
-			response: t.Union([
-				t.Object({
+			response: {
+				200: t.Object({
 					id: t.String(),
 					content: t.String(),
 					updatedAt: t.String(),
 				}),
-				ErrorSchema,
-			]),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 수정",
@@ -420,10 +424,11 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			params: t.Object({
 				id: t.String(),
 			}),
-			response: t.Union([
-				t.Object({ message: t.String() }),
-				ErrorSchema,
-			]),
+			response: {
+				200: t.Object({ message: t.String() }),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 삭제",
@@ -481,16 +486,17 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				content: t.String({ minLength: 1 }),
 				parentId: t.Optional(t.String()), // 대댓글인 경우 부모 댓글 ID
 			}),
-			response: t.Union([
-				t.Object({
+			response: {
+				201: t.Object({
 					id: t.String(),
 					content: t.String(),
 					createdAt: t.String(),
 					user: UserSchema,
 					parentId: t.Nullable(t.String()),
 				}),
-				ErrorSchema,
-			]),
+				400: ErrorSchema,
+				404: ErrorSchema,
+			},
 			detail: {
 				tags: ["Comments"],
 				summary: "댓글/대댓글 작성",
@@ -534,14 +540,15 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
 			}),
-			response: t.Union([
-				t.Object({
+			response: {
+				200: t.Object({
 					id: t.String(),
 					content: t.String(),
 					updatedAt: t.String(),
 				}),
-				ErrorSchema,
-			]),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
 			detail: {
 				tags: ["Comments"],
 				summary: "댓글 수정",
@@ -581,7 +588,12 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				id: t.String(),
 				commentId: t.String(),
 			}),
-			response: t.Union([t.Object({ message: t.String() }), ErrorSchema]),
+			response: {
+				200: t.Object({ message: t.String() }),
+				400: ErrorSchema,
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
 			detail: {
 				tags: ["Comments"],
 				summary: "댓글 삭제",
@@ -625,10 +637,11 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			body: t.Object({
 				imageUrls: t.Array(t.String(), { minItems: 1 }),
 			}),
-			response: t.Union([
-				t.Object({ images: t.Array(ImageSchema) }),
-				ErrorSchema,
-			]),
+			response: {
+				200: t.Object({ images: t.Array(ImageSchema) }),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 이미지 추가",
@@ -661,10 +674,11 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				id: t.String(),
 				imageId: t.String(),
 			}),
-			response: t.Union([
-				t.Object({ message: t.String() }),
-				ErrorSchema,
-			]),
+			response: {
+				200: t.Object({ message: t.String() }),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 이미지 삭제",

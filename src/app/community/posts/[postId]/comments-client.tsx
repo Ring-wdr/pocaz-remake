@@ -339,7 +339,7 @@ export function CommentsClient({
 			query: { cursor, limit: "20" },
 		});
 
-		if (error || !data || "error" in data) {
+		if (error || !data) {
 			toast.error("댓글을 불러오는데 실패했습니다");
 			return;
 		}
@@ -362,7 +362,7 @@ export function CommentsClient({
 				content: commentText.trim(),
 			});
 
-			if (error || !data || "error" in data) {
+			if (error || !data) {
 				toast.error("댓글 작성에 실패했습니다");
 				return;
 			}
@@ -382,7 +382,7 @@ export function CommentsClient({
 				parentId,
 			});
 
-			if (error || !data || "error" in data) {
+			if (error || !data) {
 				toast.error("답글 작성에 실패했습니다");
 				return;
 			}

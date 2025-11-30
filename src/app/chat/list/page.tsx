@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { ChatListSection } from "@/components/chat/sections";
 import { ChatListSkeleton } from "@/components/chat/skeletons";
 import { Footer } from "@/components/home";
+import type { MarketSummary } from "@/types/entities";
 import { api } from "@/utils/eden";
 import {
 	colors,
@@ -114,25 +115,16 @@ const styles = stylex.create({
 	},
 });
 
-interface ChatListPageProps {
-	searchParams: Promise<{ marketId?: string }>;
-}
-
 export default async function ChatListPage({
 	searchParams,
-}: ChatListPageProps) {
+}: PageProps<"/chat/list">) {
 	const { marketId } = await searchParams;
-
+	const firstMarketId = Array.isArray(marketId) ? marketId[0] : marketId;
 	// 마켓 정보 조회 (marketId가 있는 경우)
-	let marketInfo: {
-		id: string;
-		title: string;
-		price: number | null;
-		thumbnail: string | null;
-	} | null = null;
+	let marketInfo: MarketSummary | null = null;
 
-	if (marketId) {
-		const { data } = await api.markets({ id: marketId }).get();
+	if (firstMarketId) {
+		const { data } = await api.markets({ id: firstMarketId }).get();
 		if (data) {
 			marketInfo = {
 				id: data.id,
@@ -186,7 +178,7 @@ export default async function ChatListPage({
 				)}
 
 				<Suspense fallback={<ChatListSkeleton />}>
-					<ChatListSection marketId={marketId} />
+					<ChatListSection marketId={firstMarketId} />
 				</Suspense>
 			</div>
 			<Footer />

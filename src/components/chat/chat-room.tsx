@@ -5,7 +5,21 @@ import dayjs from "dayjs";
 import { ArrowLeft, MoreVertical, Plus, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { colors, fontSize, fontWeight, lineHeight, radius, size, spacing } from "@/app/global-tokens.stylex";
+
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	lineHeight,
+	radius,
+	size,
+	spacing,
+} from "@/app/global-tokens.stylex";
+import type {
+	ChatMarketInfo,
+	ChatMember,
+	ChatMessage,
+} from "@/types/entities";
 
 const styles = stylex.create({
 	container: {
@@ -59,9 +73,9 @@ const styles = stylex.create({
 		color: colors.textSecondary,
 		margin: 0,
 	},
-	onlineStatus: {
+	memberCount: {
 		fontSize: fontSize.sm,
-		color: colors.statusSuccess,
+		color: colors.textMuted,
 		margin: 0,
 	},
 	menuButton: {
@@ -258,54 +272,48 @@ const styles = stylex.create({
 	},
 });
 
-interface Message {
-	id: string;
-	senderId: string;
-	content: string;
-	createdAt: string;
-}
-
 interface ChatRoomProps {
 	roomId: string;
-	partner: {
-		id: string;
-		name: string;
-		avatar?: string;
-		isOnline: boolean;
-	};
-	product?: {
-		id: number;
-		title: string;
-		price: number;
-		image: string;
-		status: string;
-	};
-	messages: Message[];
+	roomName: string | null;
+	members: ChatMember[];
+	market: ChatMarketInfo | null;
+	initialMessages: ChatMessage[];
 	currentUserId: string;
 }
 
 export default function ChatRoom({
 	roomId,
-	partner,
-	product,
-	messages: initialMessages,
+	roomName,
+	members,
+	market,
+	initialMessages,
 	currentUserId,
 }: ChatRoomProps) {
 	const [messages, setMessages] = useState(initialMessages);
 	const [inputValue, setInputValue] = useState("");
 
+	// 상대방 찾기 (1:1 채팅 기준)
+	const partner = members.find((m) => m.id !== currentUserId) ?? members[0];
+	const displayName = roomName || partner?.nickname || "채팅방";
+
 	const handleSend = () => {
 		if (!inputValue.trim()) return;
 
-		const newMessage: Message = {
+		const newMessage: ChatMessage = {
 			id: String(Date.now()),
-			senderId: currentUserId,
 			content: inputValue.trim(),
 			createdAt: new Date().toISOString(),
+			user: {
+				id: currentUserId,
+				nickname: "나",
+				profileImage: null,
+			},
 		};
 
 		setMessages([...messages, newMessage]);
 		setInputValue("");
+
+		// TODO: API 호출로 실제 메시지 전송
 	};
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -322,19 +330,21 @@ export default function ChatRoom({
 					<ArrowLeft size={24} />
 				</Link>
 				<div {...stylex.props(styles.partnerInfo)}>
-					{partner.avatar ? (
+					{partner?.profileImage ? (
 						<img
-							src={partner.avatar}
-							alt={partner.name}
+							src={partner.profileImage}
+							alt={displayName}
 							{...stylex.props(styles.avatar)}
 						/>
 					) : (
 						<div {...stylex.props(styles.avatar)} />
 					)}
 					<div>
-						<h2 {...stylex.props(styles.partnerName)}>{partner.name}</h2>
-						{partner.isOnline && (
-							<p {...stylex.props(styles.onlineStatus)}>온라인</p>
+						<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
+						{members.length > 2 && (
+							<p {...stylex.props(styles.memberCount)}>
+								{members.length}명 참여
+							</p>
 						)}
 					</div>
 				</div>
@@ -343,23 +353,25 @@ export default function ChatRoom({
 				</button>
 			</div>
 
-			{product && (
+			{market && (
 				<Link
-					href={`/market/${product.id}`}
+					href={`/market/${market.id}`}
 					{...stylex.props(styles.productBanner)}
 				>
-					<img
-						src={product.image}
-						alt={product.title}
-						{...stylex.props(styles.productImage)}
-					/>
+					{market.thumbnail && (
+						<img
+							src={market.thumbnail}
+							alt={market.title}
+							{...stylex.props(styles.productImage)}
+						/>
+					)}
 					<div {...stylex.props(styles.productInfo)}>
-						<p {...stylex.props(styles.productTitle)}>{product.title}</p>
+						<p {...stylex.props(styles.productTitle)}>{market.title}</p>
 						<p {...stylex.props(styles.productPrice)}>
-							{product.price.toLocaleString()}원
+							{market.price ? `${market.price.toLocaleString()}원` : "가격협의"}
 						</p>
 					</div>
-					<span {...stylex.props(styles.productStatus)}>{product.status}</span>
+					<span {...stylex.props(styles.productStatus)}>{market.status}</span>
 				</Link>
 			)}
 
@@ -368,7 +380,7 @@ export default function ChatRoom({
 					<span {...stylex.props(styles.dateBadge)}>오늘</span>
 				</div>
 				{messages.map((message) => {
-					const isMine = message.senderId === currentUserId;
+					const isMine = message.user.id === currentUserId;
 					return (
 						<div key={message.id}>
 							<div

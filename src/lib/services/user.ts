@@ -8,7 +8,6 @@ export interface CreateUserDto {
 	email?: string | null;
 	nickname?: string;
 	profileImage?: string | null;
-	artistId?: string | null;
 }
 
 /**
@@ -17,7 +16,6 @@ export interface CreateUserDto {
 export interface UpdateUserDto {
 	nickname?: string;
 	profileImage?: string | null;
-	artistId?: string | null;
 }
 
 /**
@@ -64,7 +62,6 @@ export const userService = {
 	async findBySupabaseId(supabaseId: string) {
 		return prisma.user.findUnique({
 			where: { supabaseId },
-			include: { artist: true },
 		});
 	},
 
@@ -74,7 +71,6 @@ export const userService = {
 	async findById(id: string) {
 		return prisma.user.findUnique({
 			where: { id },
-			include: { artist: true },
 		});
 	},
 
@@ -84,7 +80,6 @@ export const userService = {
 	async findAll() {
 		return prisma.user.findMany({
 			where: { deletedAt: null },
-			include: { artist: true },
 			orderBy: { createdAt: "desc" },
 		});
 	},
@@ -99,9 +94,7 @@ export const userService = {
 				email: dto.email,
 				nickname: dto.nickname ?? generateNickname(),
 				profileImage: dto.profileImage,
-				artistId: dto.artistId,
 			},
-			include: { artist: true },
 		});
 	},
 
@@ -114,9 +107,7 @@ export const userService = {
 			data: {
 				nickname: dto.nickname,
 				profileImage: dto.profileImage,
-				artistId: dto.artistId,
 			},
-			include: { artist: true },
 		});
 	},
 

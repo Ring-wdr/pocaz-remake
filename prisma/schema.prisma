@@ -22,9 +22,6 @@ model User {
   updatedAt    DateTime  @updatedAt
 
   // Relations
-  artistId     String?
-  artist       Artist?   @relation(fields: [artistId], references: [id])
-
   posts        Post[]
   comments     Comment[]
   markets      Market[]
@@ -67,7 +64,6 @@ model Artist {
   groupId   String?
   group     ArtistGroup? @relation(fields: [groupId], references: [id])
 
-  users      User[]
   photocards Photocard[]
 }
 
