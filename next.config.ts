@@ -3,6 +3,7 @@ import stylexPlugin from "@stylexswc/nextjs-plugin/turbopack";
 
 export default stylexPlugin({
 	rsOptions: {
+		dev: process.env.NODE_ENV === "development",
 		aliases: {
 			"@/*": [path.join(__dirname, "src", "*")],
 		},
