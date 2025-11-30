@@ -2,17 +2,16 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getBaseUrl } from "@/utils/url";
 
 export async function signInWithGoogle(): Promise<void> {
 	const supabase = await createSupabaseServerClient();
-
-	// 현재 origin 가져오기 (서버 사이드에서는 환경변수 사용)
-	const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+	const redirectTo = `${getBaseUrl()}/auth/callback`;
 
 	const { data, error } = await supabase.auth.signInWithOAuth({
 		provider: "google",
 		options: {
-			redirectTo: `${siteUrl}/auth/callback`,
+			redirectTo,
 			queryParams: {
 				access_type: "offline",
 				prompt: "consent",
