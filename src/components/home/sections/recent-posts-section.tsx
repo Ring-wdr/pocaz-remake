@@ -3,8 +3,14 @@ import dayjs from "dayjs";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
+import { layoutStyles } from "../layout-constants.stylex";
 
 const styles = stylex.create({
 	boardWrap: {
@@ -12,6 +18,7 @@ const styles = stylex.create({
 	},
 	sectionButton: {
 		display: "flex",
+		alignItems: "center",
 		marginBottom: spacing.sm,
 		fontSize: fontSize.xl,
 		fontWeight: fontWeight.extrabold,
@@ -91,23 +98,22 @@ export default async function RecentPostsSection() {
 	const posts = await getRecentPosts();
 
 	return (
-		<div {...stylex.props(styles.boardWrap)}>
+		<div {...stylex.props(styles.boardWrap, layoutStyles.recentPostsMinHeight)}>
 			<Link href="/community" {...stylex.props(styles.sectionButton)}>
 				최근 게시물
 				<ChevronRight size={24} />
 			</Link>
 			<div {...stylex.props(styles.boardList)}>
 				{posts.length === 0 ? (
-					<div {...stylex.props(styles.emptyState)}>
-						아직 게시물이 없어요
-					</div>
+					<div {...stylex.props(styles.emptyState)}>아직 게시물이 없어요</div>
 				) : (
 					<ul {...stylex.props(styles.boardListUl)}>
 						{posts.map((post) => {
 							const days = dayjs(post.createdAt).format("YYYY-MM-DD");
-							const title = post.content.length > 30
-								? `${post.content.slice(0, 30)}...`
-								: post.content;
+							const title =
+								post.content.length > 30
+									? `${post.content.slice(0, 30)}...`
+									: post.content;
 							return (
 								<li key={post.id} {...stylex.props(styles.boardListItem)}>
 									<Link

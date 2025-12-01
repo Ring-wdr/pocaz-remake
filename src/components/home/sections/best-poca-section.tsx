@@ -1,13 +1,16 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { MainPocaItem } from "@/components/home";
-
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
-import { api } from "@/utils/eden";
 import type { MarketItem } from "@/types/entities";
-
-const MOBILE = "@media (max-width: 767px)" as const;
-const TABLET = "@media (max-width: 1023px)" as const;
+import { api } from "@/utils/eden";
+import { layoutStyles } from "../layout-constants.stylex";
 
 const styles = stylex.create({
 	bestPoca: {
@@ -33,11 +36,6 @@ const styles = stylex.create({
 		margin: 0,
 	},
 	emptyState: {
-		height: {
-			default: "350px",
-			[TABLET]: "446px",
-			[MOBILE]: "302px",
-		},
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
@@ -64,7 +62,7 @@ export default async function BestPocaSection() {
 	const items = await getBestPocaItems();
 
 	return (
-		<div {...stylex.props(styles.bestPoca)}>
+		<div {...stylex.props(styles.bestPoca, layoutStyles.pocaSectionMinHeight)}>
 			<div {...stylex.props(styles.subject)}>
 				<Link href="/market" {...stylex.props(styles.subjectButton)}>
 					BEST 포카
@@ -74,7 +72,7 @@ export default async function BestPocaSection() {
 				</h4>
 			</div>
 			{items.length === 0 ? (
-				<div {...stylex.props(styles.emptyState)}>
+				<div {...stylex.props(styles.emptyState, layoutStyles.pocaEmptyHeight)}>
 					아직 등록된 상품이 없어요
 				</div>
 			) : (

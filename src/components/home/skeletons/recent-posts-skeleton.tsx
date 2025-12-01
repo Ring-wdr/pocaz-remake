@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 
 import { colors, radius, spacing } from "@/app/global-tokens.stylex";
+import { layoutStyles } from "../layout-constants.stylex";
 
 const shimmer = stylex.keyframes({
 	"0%": { backgroundPosition: "-200% 0" },
@@ -63,7 +64,7 @@ const styles = stylex.create({
 
 export default function RecentPostsSkeleton() {
 	return (
-		<div {...stylex.props(styles.container)}>
+		<div {...stylex.props(styles.container, layoutStyles.recentPostsMinHeight)}>
 			<div {...stylex.props(styles.titleSkeleton)} />
 			<ul {...stylex.props(styles.list)}>
 				{Array.from({ length: 5 }).map((_, index) => (
