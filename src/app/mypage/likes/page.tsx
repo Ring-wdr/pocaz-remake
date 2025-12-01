@@ -3,6 +3,8 @@ import { ArrowLeft, Heart, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { formatRelativeTime } from "@/utils/date";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -131,52 +133,10 @@ const styles = stylex.create({
 	},
 });
 
-interface LikedPost {
-	id: number;
-	author: string;
-	title: string;
-	content: string;
-	time: string;
-	likes: number;
-	comments: number;
-	href: string;
-}
-
-// TODO: Replace with actual API data
-const likedPosts: LikedPost[] = [
-	{
-		id: 1,
-		author: "포카덕후",
-		title: "뉴진스 버니 포카 구해요",
-		content: "민지, 해린 버니 포카 구합니다. DM 주세요!",
-		time: "30분 전",
-		likes: 12,
-		comments: 5,
-		href: "/community/1",
-	},
-	{
-		id: 2,
-		author: "아이돌팬",
-		title: "에스파 윈터 포카 판매합니다",
-		content: "미공개 포카 정리합니다. 상태 최상급",
-		time: "2시간 전",
-		likes: 45,
-		comments: 18,
-		href: "/community/2",
-	},
-	{
-		id: 3,
-		author: "덕질러",
-		title: "오늘의 포카 득템 후기",
-		content: "드디어 최애 포카 구했어요!! 너무 행복해요",
-		time: "1일 전",
-		likes: 234,
-		comments: 67,
-		href: "/community/3",
-	},
-];
-
-export default function LikesPage() {
+export default async function LikesPage() {
+	const { data, error } = await api.likes.me.get();
+	const likedPosts = !error && data ? data.items : [];
+	const hasError = Boolean(error);
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
@@ -187,27 +147,37 @@ export default function LikesPage() {
 			</header>
 
 			<div {...stylex.props(styles.content)}>
-				{likedPosts.length > 0 ? (
+				{hasError ? (
+					<div {...stylex.props(styles.emptyState)}>
+						<Heart size={48} />
+						<p {...stylex.props(styles.emptyText)}>
+							좋아요 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+						</p>
+					</div>
+				) : likedPosts.length > 0 ? (
 					<div {...stylex.props(styles.postList)}>
 						{likedPosts.map((post) => (
 							<Link
 								key={post.id}
-								href={post.href}
+								href={`/community/posts/${post.id}`}
 								{...stylex.props(styles.postItem)}
 							>
-								<p {...stylex.props(styles.postAuthor)}>{post.author}</p>
-								<h3 {...stylex.props(styles.postTitle)}>{post.title}</h3>
-								<p {...stylex.props(styles.postContent)}>{post.content}</p>
+								<p {...stylex.props(styles.postAuthor)}>
+									{post.user.nickname}
+								</p>
+								<h3 {...stylex.props(styles.postTitle)}>{post.content}</h3>
 								<div {...stylex.props(styles.postMeta)}>
-									<span {...stylex.props(styles.postTime)}>{post.time}</span>
+									<span {...stylex.props(styles.postTime)}>
+										{formatRelativeTime(post.likedAt)}
+									</span>
 									<div {...stylex.props(styles.postStats)}>
 										<span {...stylex.props(styles.stat, styles.statLiked)}>
 											<Heart size={14} fill="currentColor" />
-											{post.likes}
+											{post.likeCount}
 										</span>
 										<span {...stylex.props(styles.stat)}>
 											<MessageCircle size={14} />
-											{post.comments}
+											{post.replyCount}
 										</span>
 									</div>
 								</div>

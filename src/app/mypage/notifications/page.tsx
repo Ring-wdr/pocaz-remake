@@ -3,7 +3,8 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
 
@@ -135,59 +136,95 @@ interface NotificationSetting {
 }
 
 export default function NotificationsPage() {
-	const [settings, setSettings] = useState<NotificationSetting[]>([
-		{
-			id: "chat",
-			label: "채팅 알림",
-			description: "새 메시지가 도착하면 알림을 받습니다",
-			enabled: true,
-		},
-		{
-			id: "like",
-			label: "좋아요 알림",
-			description: "내 게시글에 좋아요가 달리면 알림을 받습니다",
-			enabled: true,
-		},
-		{
-			id: "comment",
-			label: "댓글 알림",
-			description: "내 게시글에 댓글이 달리면 알림을 받습니다",
-			enabled: true,
-		},
-		{
-			id: "market",
-			label: "장터 알림",
-			description: "관심 상품의 상태가 변경되면 알림을 받습니다",
-			enabled: false,
-		},
-	]);
-
+	const [settings, setSettings] = useState<NotificationSetting[]>([]);
 	const [marketingSettings, setMarketingSettings] = useState<
 		NotificationSetting[]
-	>([
-		{
-			id: "event",
-			label: "이벤트 알림",
-			description: "새로운 이벤트와 프로모션 정보를 받습니다",
-			enabled: false,
-		},
-		{
-			id: "news",
-			label: "소식 알림",
-			description: "포카즈의 새로운 기능과 업데이트 소식을 받습니다",
-			enabled: true,
-		},
-	]);
+	>([]);
+
+	useEffect(() => {
+		const saved = localStorage.getItem("pocaz-notification-settings");
+		const savedMarketing = localStorage.getItem("pocaz-marketing-settings");
+
+		setSettings(
+			saved
+				? (JSON.parse(saved) as NotificationSetting[])
+				: [
+					{
+						id: "chat",
+						label: "채팅 알림",
+						description: "새 메시지가 도착하면 알림을 받습니다",
+						enabled: true,
+					},
+					{
+						id: "like",
+						label: "좋아요 알림",
+						description: "내 게시글에 좋아요가 달리면 알림을 받습니다",
+						enabled: true,
+					},
+					{
+						id: "comment",
+						label: "댓글 알림",
+						description: "내 게시글에 댓글이 달리면 알림을 받습니다",
+						enabled: true,
+					},
+					{
+						id: "market",
+						label: "장터 알림",
+						description: "관심 상품의 상태가 변경되면 알림을 받습니다",
+						enabled: false,
+					},
+				],
+		);
+
+		setMarketingSettings(
+			savedMarketing
+				? (JSON.parse(savedMarketing) as NotificationSetting[])
+				: [
+					{
+						id: "event",
+						label: "이벤트 알림",
+						description: "새로운 이벤트와 프로모션 정보를 받습니다",
+						enabled: false,
+					},
+					{
+						id: "news",
+						label: "소식 알림",
+						description: "포카즈의 새로운 기능과 업데이트 소식을 받습니다",
+						enabled: true,
+					},
+				],
+		);
+	}, []);
+
+	useEffect(() => {
+		if (settings.length > 0) {
+			localStorage.setItem(
+				"pocaz-notification-settings",
+				JSON.stringify(settings),
+			);
+		}
+	}, [settings]);
+
+	useEffect(() => {
+		if (marketingSettings.length > 0) {
+			localStorage.setItem(
+				"pocaz-marketing-settings",
+				JSON.stringify(marketingSettings),
+			);
+		}
+	}, [marketingSettings]);
 
 	const toggleSetting = (id: string, isMarketing: boolean) => {
 		if (isMarketing) {
 			setMarketingSettings((prev) =>
 				prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)),
 			);
+			toast.success("마케팅 알림 설정이 저장되었습니다.");
 		} else {
 			setSettings((prev) =>
 				prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)),
 			);
+			toast.success("활동 알림 설정이 저장되었습니다.");
 		}
 	};
 

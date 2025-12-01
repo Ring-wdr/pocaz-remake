@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import type { ComponentType } from "react";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import { signOut } from "@/lib/auth/actions";
 
 interface MenuItem {
 	id: number;
@@ -154,14 +155,13 @@ const styles = stylex.create({
 		cursor: "pointer",
 		transition: "background-color 0.2s ease",
 	},
+	logoutButtonDisabled: {
+		opacity: 0.7,
+		cursor: "not-allowed",
+	},
 });
 
 export default function MenuList() {
-	const handleLogout = () => {
-		// TODO: Implement logout
-		console.log("Logout clicked");
-	};
-
 	return (
 		<div {...stylex.props(styles.container)}>
 			{menuItems.map((section) => (
@@ -189,13 +189,14 @@ export default function MenuList() {
 				</div>
 			))}
 
+		<form action={signOut}>
 			<button
-				type="button"
-				onClick={handleLogout}
+				type="submit"
 				{...stylex.props(styles.logoutButton)}
 			>
 				로그아웃
 			</button>
+		</form>
 		</div>
 	);
 }

@@ -5,6 +5,7 @@ import { marketLikeService } from "@/lib/services/market";
 import { postService } from "@/lib/services/post";
 import { transactionService } from "@/lib/services/transaction";
 import { userService } from "@/lib/services/user";
+import { prisma } from "@/lib/prisma";
 
 // 공통 응답 스키마
 const UserResponseSchema = t.Object({
@@ -22,6 +23,13 @@ const PublicUserSchema = t.Object({
 	nickname: t.String(),
 	profileImage: t.Nullable(t.String()),
 	score: t.Number(),
+});
+
+const UserSummarySchema = t.Object({
+	posts: t.Number(),
+	likes: t.Number(),
+	trades: t.Number(),
+	activity: t.Record(t.String(), t.Number()),
 });
 
 const ErrorSchema = t.Object({
@@ -62,6 +70,49 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				tags: ["Users"],
 				summary: "현재 사용자 정보 조회",
 				description: "인증된 사용자의 Prisma User 정보를 조회합니다.",
+			},
+		},
+	)
+	// GET /api/users/me/summary - 활동 요약 (대시보드)
+	.get(
+		"/me/summary",
+		async ({ auth }) => {
+			const user = await userService.findBySupabaseId(auth.user.id);
+
+			if (!user) {
+				return {
+					posts: 0,
+					likes: 0,
+					trades: 0,
+					activity: {},
+				};
+			}
+
+			const [posts, likes, trades, activity] = await Promise.all([
+				prisma.post.count({ where: { userId: user.id } }),
+				prisma.like.count({ where: { userId: user.id } }),
+				prisma.transaction.count({
+					where: {
+						OR: [{ buyerId: user.id }, { sellerId: user.id }],
+						status: "completed",
+					},
+				}),
+				activityService.getRecentSummary(user.id),
+			]);
+
+			return {
+				posts,
+				likes,
+				trades,
+				activity,
+			};
+		},
+		{
+			response: UserSummarySchema,
+			detail: {
+				tags: ["Users"],
+				summary: "대시보드 요약",
+				description: "게시글/좋아요/거래 수와 최근 활동 요약을 반환합니다.",
 			},
 		},
 	)
@@ -432,13 +483,16 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 	// GET /api/users/me/activity - 내 활동 내역
 	.get(
 		"/me/activity",
-		async ({ auth }) => {
+		async ({ auth, query }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
 				return { items: [] };
 			}
 
-			const activities = await activityService.getByUserId(user.id);
+			const activities = await activityService.getByUserId(
+				user.id,
+				query.limit ? Number.parseInt(query.limit, 10) : 50,
+			);
 			return {
 				items: activities.map((a) => ({
 					id: a.id,
@@ -451,6 +505,9 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			};
 		},
 		{
+			query: t.Object({
+				limit: t.Optional(t.String()),
+			}),
 			response: t.Object({
 				items: t.Array(
 					t.Object({

@@ -28,7 +28,8 @@ export const STORAGE_BUCKETS = {
 	PHOTOCARDS: "photocards",
 } as const;
 
-export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS];
+export type StorageBucket =
+	(typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS];
 
 /**
  * Storage Service
@@ -77,7 +78,7 @@ export const storageService = {
 	 */
 	async uploadBuffer(
 		bucket: StorageBucket,
-		buffer: Buffer,
+		buffer: Buffer | File,
 		fileName: string,
 		contentType: string,
 	): Promise<UploadResult> {

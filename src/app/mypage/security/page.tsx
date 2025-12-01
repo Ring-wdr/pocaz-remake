@@ -3,9 +3,12 @@
 import * as stylex from "@stylexjs/stylex";
 import { AlertTriangle, ArrowLeft, LogOut, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { signOut } from "@/lib/auth/actions";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -130,6 +133,10 @@ const styles = stylex.create({
 	labelDanger: {
 		color: colors.statusError,
 	},
+	actionDisabled: {
+		opacity: 0.6,
+		cursor: "not-allowed",
+	},
 	warningBox: {
 		display: "flex",
 		gap: spacing.xs,
@@ -224,17 +231,56 @@ const styles = stylex.create({
 });
 
 export default function SecurityPage() {
+	const [loginProvider, setLoginProvider] = useState("-");
+	const [loginEmail, setLoginEmail] = useState("-");
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [isLoggingOut, startLogout] = useTransition();
+	const [isDeleting, startDelete] = useTransition();
+
+	useEffect(() => {
+		api.auth
+			.me.get()
+			.then(({ data }) => {
+				if (!data?.authenticated || !data.user) return;
+				const providerLabel = data.user.email ? "이메일" : "소셜";
+				setLoginProvider(providerLabel);
+				setLoginEmail(data.user.email ?? "-");
+			})
+			.catch(() => {
+				setLoginProvider("-");
+				setLoginEmail("-");
+			});
+	}, []);
 
 	const handleLogout = () => {
-		// TODO: Implement logout
-		console.log("Logout");
+		startLogout(async () => {
+			try {
+				await signOut();
+			} catch (error) {
+				console.error(error);
+				toast.error("로그아웃에 실패했습니다. 다시 시도해 주세요.");
+			}
+		});
 	};
 
 	const handleDeleteAccount = () => {
-		// TODO: Implement account deletion
-		console.log("Delete account");
-		setShowDeleteModal(false);
+		startDelete(async () => {
+			try {
+				const { error } = await api.users.me.delete();
+
+				if (error) {
+					throw new Error(error.error ?? "회원 탈퇴에 실패했습니다");
+				}
+
+				toast.success("회원 탈퇴가 완료되었습니다.");
+				await signOut();
+			} catch (error) {
+				console.error(error);
+				toast.error("회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+			} finally {
+				setShowDeleteModal(false);
+			}
+		});
 	};
 
 	return (
@@ -252,11 +298,11 @@ export default function SecurityPage() {
 					<div {...stylex.props(styles.infoCard)}>
 						<div {...stylex.props(styles.infoRow)}>
 							<p {...stylex.props(styles.infoLabel)}>로그인 방식</p>
-							<p {...stylex.props(styles.infoValue)}>Google</p>
+							<p {...stylex.props(styles.infoValue)}>{loginProvider}</p>
 						</div>
 						<div {...stylex.props(styles.infoRow)}>
 							<p {...stylex.props(styles.infoLabel)}>연결된 계정</p>
-							<p {...stylex.props(styles.infoValue)}>user@gmail.com</p>
+							<p {...stylex.props(styles.infoValue)}>{loginEmail}</p>
 						</div>
 					</div>
 				</div>
@@ -264,19 +310,28 @@ export default function SecurityPage() {
 				<div {...stylex.props(styles.section)}>
 					<h2 {...stylex.props(styles.sectionTitle)}>계정 관리</h2>
 					<div {...stylex.props(styles.list)}>
-						<button
-							type="button"
-							onClick={handleLogout}
-							{...stylex.props(styles.item)}
-						>
-							<LogOut size={20} {...stylex.props(styles.icon)} />
-							<span {...stylex.props(styles.label)}>로그아웃</span>
+				<button
+					type="button"
+					onClick={handleLogout}
+					disabled={isLoggingOut || isDeleting}
+					{...stylex.props(
+						styles.item,
+						(isLoggingOut || isDeleting) && styles.actionDisabled,
+					)}
+				>
+					<LogOut size={20} {...stylex.props(styles.icon)} />
+					<span {...stylex.props(styles.label)}>로그아웃</span>
 						</button>
-						<button
-							type="button"
-							onClick={() => setShowDeleteModal(true)}
-							{...stylex.props(styles.item, styles.itemLast)}
-						>
+				<button
+					type="button"
+					onClick={() => setShowDeleteModal(true)}
+					disabled={isDeleting}
+					{...stylex.props(
+						styles.item,
+						styles.itemLast,
+						isDeleting && styles.actionDisabled,
+					)}
+				>
 							<Trash2 size={20} {...stylex.props(styles.iconDanger)} />
 							<span {...stylex.props(styles.label, styles.labelDanger)}>
 								회원 탈퇴
@@ -307,19 +362,29 @@ export default function SecurityPage() {
 							</p>
 						</div>
 						<div {...stylex.props(styles.modalActions)}>
-							<button
-								type="button"
-								onClick={() => setShowDeleteModal(false)}
-								{...stylex.props(styles.modalButton, styles.modalButtonCancel)}
-							>
-								취소
-							</button>
-							<button
-								type="button"
-								onClick={handleDeleteAccount}
-								{...stylex.props(styles.modalButton, styles.modalButtonDanger)}
-							>
-								탈퇴
+					<button
+						type="button"
+						onClick={() => setShowDeleteModal(false)}
+						disabled={isDeleting}
+						{...stylex.props(
+							styles.modalButton,
+							styles.modalButtonCancel,
+							isDeleting && styles.actionDisabled,
+						)}
+					>
+						취소
+					</button>
+					<button
+						type="button"
+						onClick={handleDeleteAccount}
+						disabled={isDeleting}
+						{...stylex.props(
+							styles.modalButton,
+							styles.modalButtonDanger,
+							isDeleting && styles.actionDisabled,
+						)}
+					>
+						탈퇴
 							</button>
 						</div>
 					</div>

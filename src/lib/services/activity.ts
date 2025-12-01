@@ -74,7 +74,7 @@ export const activityService = {
 						select: { content: true },
 					});
 					target = post?.content?.slice(0, 30) ?? null;
-					targetHref = `/community/${activity.targetId}`;
+					targetHref = `/community/posts/${activity.targetId}`;
 				} else if (activity.targetType === "market") {
 					const market = await prisma.market.findUnique({
 						where: { id: activity.targetId },

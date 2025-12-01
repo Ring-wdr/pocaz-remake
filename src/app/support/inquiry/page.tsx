@@ -3,9 +3,11 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArrowLeft, Send } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -179,6 +181,7 @@ export default function InquiryPage() {
 	const [category, setCategory] = useState("");
 	const [title, setTitle] = useState("");
 	const [content, setContent] = useState("");
+	const [isSubmitting, startSubmit] = useTransition();
 
 	const isValid = category && title.trim() && content.trim().length >= 10;
 
@@ -186,9 +189,23 @@ export default function InquiryPage() {
 		e.preventDefault();
 		if (!isValid) return;
 
-		// TODO: Implement inquiry submission
-		console.log({ category, title, content });
-		alert("문의가 접수되었습니다. 빠른 시일 내에 답변 드리겠습니다.");
+		startSubmit(async () => {
+			const { error } = await api.support.inquiries.post({
+				category,
+				title: title.trim(),
+				content: content.trim(),
+			});
+
+			if (error) {
+				toast.error("문의 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+				return;
+			}
+
+			toast.success("문의가 접수되었습니다. 빠른 시일 내에 답변 드리겠습니다.");
+			setTitle("");
+			setContent("");
+			setCategory("");
+		});
 	};
 
 	return (
@@ -210,8 +227,9 @@ export default function InquiryPage() {
 							id="category"
 							value={category}
 							onChange={(e) => setCategory(e.target.value)}
-							{...stylex.props(styles.select)}
-						>
+						disabled={isSubmitting}
+						{...stylex.props(styles.select)}
+					>
 							{categories.map((cat) => (
 								<option key={cat.value} value={cat.value}>
 									{cat.label}
@@ -231,8 +249,9 @@ export default function InquiryPage() {
 							onChange={(e) => setTitle(e.target.value)}
 							placeholder="제목을 입력해 주세요"
 							maxLength={100}
-							{...stylex.props(styles.input)}
-						/>
+						disabled={isSubmitting}
+						{...stylex.props(styles.input)}
+					/>
 					</div>
 
 					<div {...stylex.props(styles.formGroup)}>
@@ -245,8 +264,9 @@ export default function InquiryPage() {
 							onChange={(e) => setContent(e.target.value)}
 							placeholder="문의 내용을 상세히 작성해 주세요 (최소 10자)"
 							maxLength={2000}
-							{...stylex.props(styles.textarea)}
-						/>
+						disabled={isSubmitting}
+						{...stylex.props(styles.textarea)}
+					/>
 						<span {...stylex.props(styles.charCount)}>
 							{content.length}/2000
 						</span>
@@ -254,14 +274,14 @@ export default function InquiryPage() {
 
 					<button
 						type="submit"
-						disabled={!isValid}
+						disabled={!isValid || isSubmitting}
 						{...stylex.props(
 							styles.submitButton,
-							!isValid && styles.submitButtonDisabled,
+							(!isValid || isSubmitting) && styles.submitButtonDisabled,
 						)}
 					>
 						<Send size={18} />
-						문의하기
+						{isSubmitting ? "문의 중..." : "문의하기"}
 					</button>
 				</form>
 
