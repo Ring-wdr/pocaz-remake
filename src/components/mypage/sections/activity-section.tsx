@@ -1,7 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
-import dayjs from "dayjs";
 import Link from "next/link";
-import { colors } from "@/app/global-tokens.stylex";
+import { colors, fontWeight } from "@/app/global-tokens.stylex";
+import { formatDateTime } from "@/utils/date";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -37,14 +38,6 @@ const styles = stylex.create({
 		textDecoration: "none",
 		color: "inherit",
 	},
-	thumbnail: {
-		width: "48px",
-		height: "48px",
-		borderRadius: "8px",
-		objectFit: "cover",
-		backgroundColor: colors.bgTertiary,
-		flexShrink: 0,
-	},
 	content: {
 		flex: 1,
 		minWidth: 0,
@@ -74,17 +67,26 @@ const styles = stylex.create({
 		borderRadius: "4px",
 		flexShrink: 0,
 	},
-	badgeSell: {
+	badgePost: {
 		color: colors.accentPrimary,
 		backgroundColor: colors.accentPrimaryBg,
 	},
-	badgeBuy: {
+	badgeLike: {
 		color: colors.statusError,
 		backgroundColor: colors.statusErrorBg,
 	},
-	badgeComplete: {
+	badgeComment: {
 		color: colors.statusSuccess,
 		backgroundColor: colors.statusSuccessBg,
+	},
+	badgeTrade: {
+		color: colors.statusWarning,
+		backgroundColor: colors.statusWarningBg,
+	},
+	badgeMarket: {
+		color: colors.textSecondary,
+		backgroundColor: colors.bgTertiary,
+		fontWeight: fontWeight.semibold,
 	},
 	emptyState: {
 		textAlign: "center",
@@ -98,66 +100,29 @@ const styles = stylex.create({
 	},
 });
 
-interface Activity {
-	id: number;
-	type: "sell" | "buy" | "complete";
-	title: string;
-	date: string;
-	thumbnail?: string;
-}
+type ActivityType = "post" | "like" | "comment" | "trade" | "market";
 
-// TODO: Replace with actual API call
-async function getRecentActivity(): Promise<Activity[]> {
-	// Simulate delay
-	await new Promise((resolve) => setTimeout(resolve, 400));
-
-	// Placeholder data
-	return [
-		{
-			id: 1,
-			type: "sell",
-			title: "르세라핌 김채원 UNFORGIVEN 포카",
-			date: "2024-01-15T10:30:00",
-			thumbnail: "https://placehold.co/96x96/fef3c7/d97706?text=1",
-		},
-		{
-			id: 2,
-			type: "complete",
-			title: "뉴진스 하니 OMG 포카",
-			date: "2024-01-14T15:20:00",
-			thumbnail: "https://placehold.co/96x96/d1fae5/059669?text=2",
-		},
-		{
-			id: 3,
-			type: "buy",
-			title: "아이브 장원영 ELEVEN 포카",
-			date: "2024-01-13T09:00:00",
-			thumbnail: "https://placehold.co/96x96/dbeafe/2563eb?text=3",
-		},
-		{
-			id: 4,
-			type: "sell",
-			title: "에스파 카리나 MY WORLD 포카",
-			date: "2024-01-12T18:45:00",
-			thumbnail: "https://placehold.co/96x96/fce7f3/db2777?text=4",
-		},
-	];
-}
-
-const typeLabels: Record<Activity["type"], string> = {
-	sell: "판매중",
-	buy: "구매중",
-	complete: "거래완료",
+const typeLabels: Record<ActivityType, string> = {
+	post: "게시글",
+	like: "좋아요",
+	comment: "댓글",
+	trade: "거래",
+	market: "마켓",
 };
 
-const typeStyles: Record<Activity["type"], keyof typeof styles> = {
-	sell: "badgeSell",
-	buy: "badgeBuy",
-	complete: "badgeComplete",
+const typeStyles: Record<ActivityType, keyof typeof styles> = {
+	post: "badgePost",
+	like: "badgeLike",
+	comment: "badgeComment",
+	trade: "badgeTrade",
+	market: "badgeMarket",
 };
 
 export default async function ActivitySection() {
-	const activities = await getRecentActivity();
+	const { data, error } = await api.users.me.activity.get({
+		query: { limit: "5" },
+	});
+	const activities = !error && data ? data.items : [];
 
 	return (
 		<div {...stylex.props(styles.container)}>
@@ -173,32 +138,44 @@ export default async function ActivitySection() {
 				</div>
 			) : (
 				<div {...stylex.props(styles.list)}>
-					{activities.map((activity) => (
-						<Link
-							key={activity.id}
-							href={`/market/${activity.id}`}
-							{...stylex.props(styles.item)}
-						>
-							{activity.thumbnail && (
-								<img
-									src={activity.thumbnail}
-									alt=""
-									{...stylex.props(styles.thumbnail)}
-								/>
-							)}
-							<div {...stylex.props(styles.content)}>
-								<h4 {...stylex.props(styles.itemTitle)}>{activity.title}</h4>
-								<p {...stylex.props(styles.meta)}>
-									{dayjs(activity.date).format("MM.DD HH:mm")}
-								</p>
+					{activities.map((activity) => {
+						const activityType = (activity.type as ActivityType) ?? "post";
+						const badgeStyle = styles[typeStyles[activityType]];
+						const content = (
+							<>
+								<div {...stylex.props(styles.content)}>
+									<h4 {...stylex.props(styles.itemTitle)}>
+										{activity.text}
+										{activity.target ? ` · ${activity.target}` : ""}
+									</h4>
+									<p {...stylex.props(styles.meta)}>
+										{formatDateTime(activity.time)}
+									</p>
+								</div>
+								<span {...stylex.props(styles.badge, badgeStyle)}>
+									{typeLabels[activityType]}
+								</span>
+							</>
+						);
+
+						if (activity.targetHref) {
+							return (
+								<Link
+									key={activity.id}
+									href={activity.targetHref}
+									{...stylex.props(styles.item)}
+								>
+									{content}
+								</Link>
+							);
+						}
+
+						return (
+							<div key={activity.id} {...stylex.props(styles.item)}>
+								{content}
 							</div>
-							<span
-								{...stylex.props(styles.badge, styles[typeStyles[activity.type]])}
-							>
-								{typeLabels[activity.type]}
-							</span>
-						</Link>
-					))}
+						);
+					})}
 				</div>
 			)}
 		</div>

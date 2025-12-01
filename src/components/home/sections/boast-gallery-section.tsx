@@ -1,8 +1,14 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 
-import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
+import { layoutStyles } from "../layout-constants.stylex";
 
 const styles = stylex.create({
 	boardBoast: {
@@ -110,7 +116,9 @@ export default async function BoastGallerySection() {
 			</div>
 			<div {...stylex.props(styles.boastGallery)}>
 				{posts.length === 0 ? (
-					<div {...stylex.props(styles.emptyState)}>
+					<div
+						{...stylex.props(styles.emptyState, layoutStyles.boastGridMinHeight)}
+					>
 						아직 자랑 게시물이 없어요
 					</div>
 				) : (

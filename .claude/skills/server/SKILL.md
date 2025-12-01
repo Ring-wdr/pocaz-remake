@@ -1,12 +1,15 @@
 ---
 name: server
 description: API 라우트, 서비스, Prisma 모델 생성/수정 시 반드시 사용. Elysia.js 패턴과 인증 통합 규칙 준수 필수.
-trigger: ["api", "route", "서비스", "service", "prisma", "모델", "model", "엔드포인트", "endpoint", "백엔드", "backend", "elysia"]
 ---
 
 # Pocaz Server Development Skill
 
 Pocaz 프로젝트의 서버 개발을 위한 스킬입니다.
+
+## Triggers (reference)
+
+api, route, 서비스, service, prisma, 모델, model, 엔드포인트, endpoint, 백엔드, backend, elysia
 
 ## When to Use
 

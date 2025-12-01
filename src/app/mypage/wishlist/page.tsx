@@ -4,6 +4,14 @@ import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
 import { api } from "@/utils/eden";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "위시리스트 | POCAZ",
+	description: "찜한 포토카드 상품을 한 번에 확인하세요.",
+	path: "/mypage/wishlist",
+	ogTitle: "Wishlist",
+});
 
 const styles = stylex.create({
 	container: {

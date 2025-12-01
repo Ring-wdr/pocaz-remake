@@ -1,12 +1,15 @@
 ---
 name: utils
 description: 날짜 포맷, URL 처리 등 유틸리티 함수 사용 시 반드시 참조. 인라인 구현 대신 기존 유틸 함수 사용 필수.
-trigger: ["날짜", "date", "시간", "time", "포맷", "format", "formatDate", "toLocaleDateString", "dayjs", "moment", "url", "baseUrl"]
 ---
 
 # Pocaz Utilities Skill
 
 Pocaz 프로젝트의 유틸리티 함수 사용을 위한 스킬입니다.
+
+## Triggers (reference)
+
+날짜, date, 시간, time, 포맷, format, formatDate, toLocaleDateString, dayjs, moment, url, baseUrl
 
 ## When to Use
 

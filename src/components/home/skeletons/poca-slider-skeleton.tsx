@@ -1,9 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 
 import { colors, radius, spacing } from "@/app/global-tokens.stylex";
-
-const MOBILE = "@media (max-width: 767px)" as const;
-const TABLET = "@media (max-width: 1023px)" as const;
+import { layoutStyles } from "../layout-constants.stylex";
 
 const shimmer = stylex.keyframes({
 	"0%": { backgroundPosition: "-200% 0" },
@@ -52,11 +50,6 @@ const styles = stylex.create({
 		width: "calc((100% - 28px) / 2.4)",
 	},
 	imageSkeleton: {
-		height: {
-			default: "288px",
-			[TABLET]: "384px",
-			[MOBILE]: "240px",
-		},
 		borderRadius: radius.md,
 		backgroundColor: colors.skeletonBase,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
@@ -124,7 +117,7 @@ const styles = stylex.create({
 
 export default function PocaSliderSkeleton() {
 	return (
-		<div {...stylex.props(styles.container)}>
+		<div {...stylex.props(styles.container, layoutStyles.pocaSectionMinHeight)}>
 			<div {...stylex.props(styles.header)}>
 				<div {...stylex.props(styles.titleSkeleton)} />
 				<div {...stylex.props(styles.descSkeleton)} />
@@ -132,7 +125,9 @@ export default function PocaSliderSkeleton() {
 			<div {...stylex.props(styles.sliderContainer)}>
 				{Array.from({ length: 3 }).map((_, index) => (
 					<div key={index} {...stylex.props(styles.card)}>
-						<div {...stylex.props(styles.imageSkeleton)} />
+						<div
+							{...stylex.props(styles.imageSkeleton, layoutStyles.sliderImageHeight)}
+						/>
 						<div {...stylex.props(styles.infoContainer)}>
 							<div {...stylex.props(styles.groupSkeleton)} />
 							<div {...stylex.props(styles.nameSkeleton)} />

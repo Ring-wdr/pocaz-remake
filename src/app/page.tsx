@@ -13,7 +13,24 @@ import {
 	PocaSliderSkeleton,
 	RecentPostsSkeleton,
 } from "@/components/home/skeletons";
+import { createMetadata } from "@/lib/metadata";
+import { headers } from "next/headers";
 import { colors } from "./global-tokens.stylex";
+
+export async function generateMetadata() {
+	const currentHeaders = await headers();
+	const host = currentHeaders.get("host");
+	const protocol = currentHeaders.get("x-forwarded-proto") ?? "http";
+	const baseUrl = host ? `${protocol}://${host}` : undefined;
+
+	return createMetadata({
+		title: "POCAZ 홈 | 포토카드 마켓 & 커뮤니티",
+		description: "베스트 포카, 최신 거래와 커뮤니티 소식을 한눈에 확인하세요.",
+		path: "/",
+		ogTitle: "POCAZ Home",
+		baseUrl,
+	});
+}
 
 const styles = stylex.create({
 	container: {

@@ -11,6 +11,7 @@ Common styling patterns for this project.
 - [Animations](#animations)
 - [Static vs Dynamic Styles](#static-vs-dynamic-styles)
 - [Using Design Tokens](#using-design-tokens)
+- [Shared Style Modules (Non-colocated)](#shared-style-modules-non-colocated)
 - [Grid Layout with Cards](#grid-layout-with-cards)
 - [Sticky Bottom Button](#sticky-bottom-button)
 
@@ -226,6 +227,62 @@ const styles = stylex.create({
 // iconSize: xs (14px) ~ xl (28px)
 // size: touchTarget, avatarSm/Md/Lg, thumbnail, bottomMenuHeight 등
 ```
+
+## Shared Style Modules (Non-colocated)
+
+여러 컴포넌트(예: 섹션 + 스켈레톤)에서 동일한 레이아웃 값을 공유해야 할 때만, 도메인 디렉터리 안에 별도 `*.stylex.ts` 파일을 둡니다. 스타일 스코프가 커지지 않도록 최소한의 값(높이, media query 상수 등)만 노출합니다.
+
+```typescript
+// src/components/home/layout-constants.stylex.ts
+import * as stylex from "@stylexjs/stylex";
+
+export const MOBILE_MEDIA = "@media (max-width: 767px)" as const;
+export const TABLET_MEDIA = "@media (max-width: 1023px)" as const;
+
+export const layoutStyles = stylex.create({
+  sectionMinHeight: {
+    minHeight: {
+      default: "456px",
+      [TABLET_MEDIA]: "552px",
+      [MOBILE_MEDIA]: "408px",
+    },
+  },
+  sliderImageHeight: {
+    height: {
+      default: "288px",
+      [TABLET_MEDIA]: "384px",
+      [MOBILE_MEDIA]: "240px",
+    },
+  },
+});
+```
+
+사용 시에는 로컬 스타일과 합쳐서 중복 없이 유지합니다.
+
+```tsx
+import * as stylex from "@stylexjs/stylex";
+import { layoutStyles } from "../layout-constants.stylex";
+
+const styles = stylex.create({
+  section: { paddingInline: "14px" },
+  emptyState: { display: "flex", alignItems: "center", justifyContent: "center" },
+});
+
+export default function Section() {
+  return (
+    <div {...stylex.props(styles.section, layoutStyles.sectionMinHeight)}>
+      <div {...stylex.props(styles.emptyState, layoutStyles.sliderImageHeight)}>
+        아직 등록된 상품이 없어요
+      </div>
+    </div>
+  );
+}
+```
+
+원칙:
+- 중복되는 레이아웃/치수를 줄이기 위한 경우에만 별도 파일을 만든다.
+- 파일 위치는 사용하는 컴포넌트와 최대한 인접(예: `components/home/layout-constants.stylex.ts`).
+- export surface는 작게 유지하고, 색/타이포 등 공통 값은 기존 토큰(`global-tokens.stylex`)을 우선 사용한다.
 
 ## Grid Layout with Cards
 

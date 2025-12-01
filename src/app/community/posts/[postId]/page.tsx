@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
 import { ArrowLeft, MessageCircle } from "lucide-react";
@@ -14,6 +15,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { getCurrentUser } from "@/lib/auth/actions";
+import { createMetadata } from "@/lib/metadata";
 import { api } from "@/utils/eden";
 
 import { CommentsSection } from "./comments-section";
@@ -149,6 +151,41 @@ async function getLikeStatus(postId: string) {
 	} catch {
 		return { liked: false, count: 0 };
 	}
+}
+
+function buildSummary(content: string) {
+	const trimmed = content.trim();
+	const maxLength = 90;
+	if (!trimmed) return "포카즈 커뮤니티 게시글 상세";
+	return trimmed.length > maxLength
+		? `${trimmed.slice(0, maxLength)}...`
+		: trimmed;
+}
+
+export async function generateMetadata({
+	params,
+}: PageProps<"/community/posts/[postId]">): Promise<Metadata> {
+	const { postId } = await params;
+	const post = await getPost(postId);
+
+	if (!post) {
+		return createMetadata({
+			title: "게시글을 찾을 수 없습니다 | POCAZ",
+			description: "요청한 커뮤니티 게시글 정보를 불러올 수 없습니다.",
+			path: `/community/posts/${postId}`,
+			ogTitle: "Community Post",
+			type: "article",
+		});
+	}
+
+	const summary = buildSummary(post.content);
+	return createMetadata({
+		title: `${post.user.nickname}의 게시글 | POCAZ 커뮤니티`,
+		description: summary,
+		path: `/community/posts/${postId}`,
+		ogTitle: summary,
+		type: "article",
+	});
 }
 
 export default async function PostDetailPage({

@@ -2,6 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
@@ -49,9 +50,12 @@ const styles = stylex.create({
 });
 
 export default function Header() {
+	const pathname = usePathname();
 	const [scrollPosition, setScrollPosition] = useState(0);
 
 	useEffect(() => {
+		if (pathname !== "/") return undefined;
+
 		const updateScroll = () => {
 			setScrollPosition(window.scrollY || document.documentElement.scrollTop);
 		};
@@ -60,7 +64,9 @@ export default function Header() {
 		return () => {
 			window.removeEventListener("scroll", updateScroll);
 		};
-	}, []);
+	}, [pathname]);
+
+	if (pathname !== "/") return null;
 
 	return (
 		<header

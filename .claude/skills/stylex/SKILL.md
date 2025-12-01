@@ -1,12 +1,15 @@
 ---
 name: stylex
 description: 컴포넌트 생성, 스타일 작성, tsx 파일 수정 시 반드시 사용. StyleX 규칙(shorthand 금지, keyframes 스코프) 준수 필수.
-trigger: ["컴포넌트", "component", "스타일", "style", "tsx", "버튼", "button", "카드", "card", "레이아웃", "layout"]
 ---
 
 # StyleX Development Skill
 
 Pocaz 프로젝트의 StyleX CSS-in-JS 스타일링 스킬입니다.
+
+## Triggers (reference)
+
+컴포넌트, component, 스타일, style, tsx, 버튼, button, 카드, card, 레이아웃, layout
 
 ## When to Use
 

@@ -8,7 +8,15 @@ import {
 } from "@/components/community/sections";
 import { PostListSkeleton } from "@/components/community/skeletons";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
 import { colors } from "../global-tokens.stylex";
+
+export const metadata = createMetadata({
+	title: "커뮤니티 | POCAZ",
+	description: "자유게시판, 포카 자랑, 정보 공유 글을 둘러보세요.",
+	path: "/community",
+	ogTitle: "Community",
+});
 
 const styles = stylex.create({
 	container: {

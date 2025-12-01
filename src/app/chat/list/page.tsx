@@ -8,6 +8,7 @@ import { ChatListSkeleton } from "@/components/chat/skeletons";
 import { Footer } from "@/components/home";
 import type { MarketSummary } from "@/types/entities";
 import { api } from "@/utils/eden";
+import { createMetadata } from "@/lib/metadata";
 import {
 	colors,
 	fontSize,
@@ -15,6 +16,13 @@ import {
 	radius,
 	spacing,
 } from "../../global-tokens.stylex";
+
+export const metadata = createMetadata({
+	title: "채팅 목록 | POCAZ",
+	description: "거래 중인 포토카드와 대화를 한곳에서 확인하세요.",
+	path: "/chat/list",
+	ogTitle: "Chat List",
+});
 
 const styles = stylex.create({
 	container: {

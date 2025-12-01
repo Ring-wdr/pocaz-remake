@@ -24,19 +24,15 @@ const ALLOWED_IMAGE_TYPES = [
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 // 공통 스키마
-const UploadResultSchema = t.Object({
+const UploadedFileSchema = t.Object({
 	path: t.String(),
 	publicUrl: t.String(),
+	fileName: t.Optional(t.String()),
+	index: t.Optional(t.Number()),
 });
 
-const MultipleUploadResultSchema = t.Object({
-	uploaded: t.Array(
-		t.Object({
-			index: t.Number(),
-			path: t.String(),
-			publicUrl: t.String(),
-		}),
-	),
+const UploadResponseSchema = t.Object({
+	uploaded: t.Array(UploadedFileSchema),
 	errors: t.Optional(
 		t.Array(
 			t.Object({
@@ -109,10 +105,15 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 					file.type,
 				);
 
-				set.status = 201;
+				set.status = 200;
 				return {
-					path: result.path,
-					publicUrl: result.publicUrl,
+					uploaded: [
+						{
+							path: result.path,
+							publicUrl: result.publicUrl,
+							fileName: file.name,
+						},
+					],
 				};
 			} catch (error) {
 				set.status = 500;
@@ -127,7 +128,7 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				file: t.File(),
 			}),
 			response: {
-				201: UploadResultSchema,
+				200: UploadResponseSchema,
 				400: ErrorSchema,
 				500: ErrorSchema,
 			},
@@ -154,7 +155,12 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				};
 			}
 
-			const results: { index: number; path: string; publicUrl: string }[] = [];
+			const results: {
+				index: number;
+				path: string;
+				publicUrl: string;
+				fileName: string;
+			}[] = [];
 			const errors: { index: number; fileName: string; error: string }[] = [];
 
 			for (let i = 0; i < files.length; i++) {
@@ -192,6 +198,7 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 						index: i,
 						path: result.path,
 						publicUrl: result.publicUrl,
+						fileName: file.name,
 					});
 				} catch (error) {
 					errors.push({
@@ -202,7 +209,7 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				}
 			}
 
-			set.status = 201;
+			set.status = 200;
 			return {
 				uploaded: results,
 				errors: errors.length > 0 ? errors : undefined,
@@ -214,7 +221,7 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				files: t.Files(),
 			}),
 			response: {
-				201: MultipleUploadResultSchema,
+				200: UploadResponseSchema,
 				400: ErrorSchema,
 			},
 			detail: {
@@ -261,10 +268,15 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 					body.contentType,
 				);
 
-				set.status = 201;
+				set.status = 200;
 				return {
-					path: result.path,
-					publicUrl: result.publicUrl,
+					uploaded: [
+						{
+							path: result.path,
+							publicUrl: result.publicUrl,
+							fileName: body.fileName,
+						},
+					],
 				};
 			} catch (error) {
 				set.status = 500;
@@ -281,7 +293,7 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				contentType: t.String(),
 			}),
 			response: {
-				201: UploadResultSchema,
+				200: UploadResponseSchema,
 				400: ErrorSchema,
 				500: ErrorSchema,
 			},
@@ -341,6 +353,7 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 						index: i,
 						path: result.path,
 						publicUrl: result.publicUrl,
+						fileName: file.fileName,
 					});
 				} catch (error) {
 					errors.push({
@@ -351,7 +364,7 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				}
 			}
 
-			set.status = 201;
+			set.status = 200;
 			return {
 				uploaded: results,
 				errors: errors.length > 0 ? errors : undefined,
@@ -370,7 +383,7 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 				),
 			}),
 			response: {
-				201: MultipleUploadResultSchema,
+				200: UploadResponseSchema,
 				400: ErrorSchema,
 			},
 			detail: {

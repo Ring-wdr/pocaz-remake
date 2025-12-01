@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -33,27 +34,9 @@ const styles = stylex.create({
 	},
 });
 
-interface UserStats {
-	posts: number;
-	likes: number;
-	trades: number;
-}
-
-// TODO: Replace with actual API call
-async function getUserStats(): Promise<UserStats> {
-	// Simulate delay
-	await new Promise((resolve) => setTimeout(resolve, 200));
-
-	// Placeholder data
-	return {
-		posts: 24,
-		likes: 156,
-		trades: 8,
-	};
-}
-
 export default async function StatsSection() {
-	const stats = await getUserStats();
+	const { data } = await api.users.me.summary.get();
+	const stats = data ?? { posts: 0, likes: 0, trades: 0 };
 
 	return (
 		<div {...stylex.props(styles.container)}>

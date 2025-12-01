@@ -2,7 +2,15 @@ import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { Footer } from "@/components/home";
 import { signInWithGoogle } from "@/lib/auth/actions";
+import { createMetadata } from "@/lib/metadata";
 import { colors } from "../global-tokens.stylex";
+
+export const metadata = createMetadata({
+	title: "로그인 | POCAZ",
+	description: "Google 계정으로 포카즈 마켓과 커뮤니티를 이용해 보세요.",
+	path: "/login",
+	ogTitle: "Login",
+});
 
 const styles = stylex.create({
 	container: {

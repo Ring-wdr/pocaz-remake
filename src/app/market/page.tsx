@@ -7,7 +7,15 @@ import {
 	ProductGridSection,
 } from "@/components/market/sections";
 import { ProductGridSkeleton } from "@/components/market/skeletons";
+import { createMetadata } from "@/lib/metadata";
 import { colors } from "../global-tokens.stylex";
+
+export const metadata = createMetadata({
+	title: "마켓 | POCAZ",
+	description: "최신 포토카드 거래를 검색하고 필터링해 보세요.",
+	path: "/market",
+	ogTitle: "Market",
+});
 
 const styles = stylex.create({
 	container: {

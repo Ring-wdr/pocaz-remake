@@ -5,6 +5,14 @@ import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-toke
 import { Footer } from "@/components/home";
 import { formatDate } from "@/utils/date";
 import { api } from "@/utils/eden";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "거래 내역 | POCAZ",
+	description: "진행 중이거나 완료된 포토카드 거래 내역을 확인하세요.",
+	path: "/mypage/trades",
+	ogTitle: "Trades",
+});
 
 const styles = stylex.create({
 	container: {

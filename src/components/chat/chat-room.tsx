@@ -4,7 +4,9 @@ import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
 import { ArrowLeft, MoreVertical, Plus, Send } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import {
 	colors,
@@ -15,11 +17,12 @@ import {
 	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
-import type {
-	ChatMarketInfo,
-	ChatMember,
-	ChatMessage,
-} from "@/types/entities";
+import {
+	useChatPresence,
+	useChatRealtime,
+} from "@/lib/hooks/use-chat-realtime";
+import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
+import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -77,6 +80,19 @@ const styles = stylex.create({
 		fontSize: fontSize.sm,
 		color: colors.textMuted,
 		margin: 0,
+	},
+	onlineBadge: {
+		display: "inline-flex",
+		alignItems: "center",
+		gap: spacing.xxxs,
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		fontSize: fontSize.sm,
+		color: colors.statusSuccess,
+		backgroundColor: colors.statusSuccessBg,
+		borderRadius: radius.sm,
 	},
 	menuButton: {
 		display: "flex",
@@ -291,29 +307,68 @@ export default function ChatRoom({
 }: ChatRoomProps) {
 	const [messages, setMessages] = useState(initialMessages);
 	const [inputValue, setInputValue] = useState("");
+	const [isSending, setIsSending] = useState(false);
+	const messagesRef = useRef<HTMLDivElement | null>(null);
+
+	const currentUser = useMemo(
+		() => members.find((m) => m.id === currentUserId) ?? members[0],
+		[currentUserId, members],
+	);
 
 	// 상대방 찾기 (1:1 채팅 기준)
 	const partner = members.find((m) => m.id !== currentUserId) ?? members[0];
 	const displayName = roomName || partner?.nickname || "채팅방";
 
-	const handleSend = () => {
-		if (!inputValue.trim()) return;
+	const scrollToBottom = useCallback(() => {
+		const el = messagesRef.current;
+		if (!el) return;
+		requestAnimationFrame(() => {
+			el.scrollTop = el.scrollHeight;
+		});
+	}, []);
 
-		const newMessage: ChatMessage = {
-			id: String(Date.now()),
-			content: inputValue.trim(),
+	const handleSend = () => {
+		const content = inputValue.trim();
+		if (!content || isSending) return;
+
+		const tempId = `temp-${Date.now()}`;
+		const optimisticMessage: ChatMessage = {
+			id: tempId,
+			content,
 			createdAt: new Date().toISOString(),
 			user: {
 				id: currentUserId,
-				nickname: "나",
-				profileImage: null,
+				nickname: currentUser?.nickname ?? "나",
+				profileImage: currentUser?.profileImage ?? null,
 			},
 		};
 
-		setMessages([...messages, newMessage]);
+		setMessages((prev) => [...prev, optimisticMessage]);
 		setInputValue("");
+		setIsSending(true);
 
-		// TODO: API 호출로 실제 메시지 전송
+		api.chat
+			.rooms({ id: roomId })
+			.messages.post({ content })
+			.then(({ data, error }) => {
+				if (error || !data) {
+					setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
+					toast.error("메시지 전송에 실패했습니다.");
+					return;
+				}
+
+				setMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === tempId && "id" in data ? (data as ChatMessage) : msg,
+					),
+				);
+			})
+			.catch((error) => {
+				console.error(error);
+				setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
+				toast.error("메시지 전송에 실패했습니다.");
+			})
+			.finally(() => setIsSending(false));
 	};
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -322,6 +377,30 @@ export default function ChatRoom({
 			handleSend();
 		}
 	};
+
+	const handleIncomingMessage = (message: ChatMessage) => {
+		setMessages((prev) => {
+			const exists = prev.some((m) => m.id === message.id);
+			if (exists) return prev;
+			return [...prev, message];
+		});
+	};
+
+	const { onlineUsers } = useChatPresence(roomId, currentUserId, {
+		nickname: currentUser?.nickname ?? "나",
+		profileImage: currentUser?.profileImage ?? null,
+	});
+
+	useChatRealtime(roomId, handleIncomingMessage);
+
+	useEffect(() => {
+		setMessages(initialMessages);
+	}, [initialMessages]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: message change by realtime api
+	useEffect(() => {
+		scrollToBottom();
+	}, [scrollToBottom, messages.length]);
 
 	return (
 		<div {...stylex.props(styles.container)}>
@@ -341,11 +420,14 @@ export default function ChatRoom({
 					)}
 					<div>
 						<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
-						{members.length > 2 && (
-							<p {...stylex.props(styles.memberCount)}>
-								{members.length}명 참여
-							</p>
-						)}
+						<div {...stylex.props(styles.memberCount)}>
+							{members.length > 2 && `${members.length}명 참여`}
+							{onlineUsers.length > 0 && (
+								<span {...stylex.props(styles.onlineBadge)}>
+									• 온라인 {onlineUsers.length}
+								</span>
+							)}
+						</div>
 					</div>
 				</div>
 				<button type="button" {...stylex.props(styles.menuButton)}>
@@ -375,7 +457,7 @@ export default function ChatRoom({
 				</Link>
 			)}
 
-			<div {...stylex.props(styles.messages)}>
+			<div ref={messagesRef} {...stylex.props(styles.messages)}>
 				<div {...stylex.props(styles.dateGroup)}>
 					<span {...stylex.props(styles.dateBadge)}>오늘</span>
 				</div>
@@ -428,9 +510,10 @@ export default function ChatRoom({
 				<button
 					type="button"
 					onClick={handleSend}
+					disabled={!inputValue.trim() || isSending}
 					{...stylex.props(
 						styles.sendButton,
-						!inputValue.trim() && styles.sendButtonDisabled,
+						(!inputValue.trim() || isSending) && styles.sendButtonDisabled,
 					)}
 				>
 					<Send size={18} />
