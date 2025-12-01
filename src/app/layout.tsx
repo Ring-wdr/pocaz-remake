@@ -1,14 +1,23 @@
 import * as stylex from "@stylexjs/stylex";
+import type { Metadata } from "next";
 import { Toaster } from "sonner";
 
 import { Layout } from "@/components/home";
 import { pretendard } from "@/fonts/pretendard";
+import { createMetadata } from "@/lib/metadata";
+import { getBaseUrl } from "@/utils/url";
 import { colors } from "./global-tokens.stylex";
 import "./app.css";
 
-export const metadata = {
-	title: "Pocaz",
-	description: "Build something amazing",
+export const metadata: Metadata = {
+	...createMetadata({
+		title: "POCAZ | 포토카드 마켓 & 커뮤니티",
+		description:
+			"최애 포토카드를 찾고 거래하고 자랑하는 포토카드 거래 커뮤니티",
+		path: "/",
+		ogTitle: "Home",
+	}),
+	metadataBase: new URL(getBaseUrl()),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

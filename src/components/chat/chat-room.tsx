@@ -4,7 +4,8 @@ import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
 import { ArrowLeft, MoreVertical, Plus, Send } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -16,13 +17,12 @@ import {
 	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
-import type {
-	ChatMarketInfo,
-	ChatMember,
-	ChatMessage,
-} from "@/types/entities";
+import {
+	useChatPresence,
+	useChatRealtime,
+} from "@/lib/hooks/use-chat-realtime";
+import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
 import { api } from "@/utils/eden";
-import { useChatPresence, useChatRealtime } from "@/lib/hooks/use-chat-realtime";
 
 const styles = stylex.create({
 	container: {
@@ -319,13 +319,13 @@ export default function ChatRoom({
 	const partner = members.find((m) => m.id !== currentUserId) ?? members[0];
 	const displayName = roomName || partner?.nickname || "채팅방";
 
-	const scrollToBottom = () => {
+	const scrollToBottom = useCallback(() => {
 		const el = messagesRef.current;
 		if (!el) return;
 		requestAnimationFrame(() => {
 			el.scrollTop = el.scrollHeight;
 		});
-	};
+	}, []);
 
 	const handleSend = () => {
 		const content = inputValue.trim();
@@ -358,7 +358,9 @@ export default function ChatRoom({
 				}
 
 				setMessages((prev) =>
-					prev.map((msg) => (msg.id === tempId ? data : msg)),
+					prev.map((msg) =>
+						msg.id === tempId && "id" in data ? (data as ChatMessage) : msg,
+					),
 				);
 			})
 			.catch((error) => {
@@ -395,9 +397,10 @@ export default function ChatRoom({
 		setMessages(initialMessages);
 	}, [initialMessages]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: message change by realtime api
 	useEffect(() => {
 		scrollToBottom();
-	}, [messages.length]);
+	}, [scrollToBottom, messages.length]);
 
 	return (
 		<div {...stylex.props(styles.container)}>
@@ -405,28 +408,28 @@ export default function ChatRoom({
 				<Link href="/chat/list" {...stylex.props(styles.backButton)}>
 					<ArrowLeft size={24} />
 				</Link>
-		<div {...stylex.props(styles.partnerInfo)}>
-			{partner?.profileImage ? (
-				<img
-					src={partner.profileImage}
-					alt={displayName}
-					{...stylex.props(styles.avatar)}
-				/>
-			) : (
-				<div {...stylex.props(styles.avatar)} />
-			)}
-			<div>
-				<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
-				<div {...stylex.props(styles.memberCount)}>
-					{members.length > 2 && `${members.length}명 참여`}
-					{onlineUsers.length > 0 && (
-						<span {...stylex.props(styles.onlineBadge)}>
-							• 온라인 {onlineUsers.length}
-						</span>
+				<div {...stylex.props(styles.partnerInfo)}>
+					{partner?.profileImage ? (
+						<img
+							src={partner.profileImage}
+							alt={displayName}
+							{...stylex.props(styles.avatar)}
+						/>
+					) : (
+						<div {...stylex.props(styles.avatar)} />
 					)}
+					<div>
+						<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
+						<div {...stylex.props(styles.memberCount)}>
+							{members.length > 2 && `${members.length}명 참여`}
+							{onlineUsers.length > 0 && (
+								<span {...stylex.props(styles.onlineBadge)}>
+									• 온라인 {onlineUsers.length}
+								</span>
+							)}
+						</div>
+					</div>
 				</div>
-			</div>
-		</div>
 				<button type="button" {...stylex.props(styles.menuButton)}>
 					<MoreVertical size={20} />
 				</button>
@@ -454,7 +457,7 @@ export default function ChatRoom({
 				</Link>
 			)}
 
-		<div ref={messagesRef} {...stylex.props(styles.messages)}>
+			<div ref={messagesRef} {...stylex.props(styles.messages)}>
 				<div {...stylex.props(styles.dateGroup)}>
 					<span {...stylex.props(styles.dateBadge)}>오늘</span>
 				</div>
@@ -494,27 +497,27 @@ export default function ChatRoom({
 				<button type="button" {...stylex.props(styles.attachButton)}>
 					<Plus size={20} />
 				</button>
-		<div {...stylex.props(styles.inputWrap)}>
-			<input
-				type="text"
-				placeholder="메시지를 입력하세요"
-				value={inputValue}
-				onChange={(e) => setInputValue(e.target.value)}
-				onKeyPress={handleKeyPress}
-				{...stylex.props(styles.input)}
-			/>
-		</div>
-		<button
-			type="button"
-			onClick={handleSend}
-			disabled={!inputValue.trim() || isSending}
-			{...stylex.props(
-				styles.sendButton,
-				(!inputValue.trim() || isSending) && styles.sendButtonDisabled,
-			)}
-		>
-			<Send size={18} />
-		</button>
+				<div {...stylex.props(styles.inputWrap)}>
+					<input
+						type="text"
+						placeholder="메시지를 입력하세요"
+						value={inputValue}
+						onChange={(e) => setInputValue(e.target.value)}
+						onKeyPress={handleKeyPress}
+						{...stylex.props(styles.input)}
+					/>
+				</div>
+				<button
+					type="button"
+					onClick={handleSend}
+					disabled={!inputValue.trim() || isSending}
+					{...stylex.props(
+						styles.sendButton,
+						(!inputValue.trim() || isSending) && styles.sendButtonDisabled,
+					)}
+				>
+					<Send size={18} />
+				</button>
 			</div>
 		</div>
 	);

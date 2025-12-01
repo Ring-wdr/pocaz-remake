@@ -7,6 +7,14 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "알림 설정 | POCAZ",
+	description: "푸시 알림과 마케팅 수신 여부를 관리하세요.",
+	path: "/mypage/notifications",
+	ogTitle: "Notifications",
+});
 
 const styles = stylex.create({
 	container: {

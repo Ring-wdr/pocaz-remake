@@ -11,8 +11,16 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
 import { api } from "@/utils/eden";
 import EditProfileForm from "./profile-form";
+
+export const metadata = createMetadata({
+	title: "프로필 수정 | POCAZ",
+	description: "닉네임과 프로필 이미지를 변경하세요.",
+	path: "/mypage/edit",
+	ogTitle: "Edit Profile",
+});
 
 const styles = stylex.create({
 	container: {

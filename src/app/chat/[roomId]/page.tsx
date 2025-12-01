@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ChatRoom } from "@/components/chat";
 import { getCurrentUser } from "@/lib/auth/actions";
+import { createMetadata } from "@/lib/metadata";
 import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
 import { api } from "@/utils/eden";
 
@@ -61,6 +63,31 @@ async function getChatRoomData(roomId: string, currentUserId: string) {
 		messages,
 		currentUserId,
 	};
+}
+
+export async function generateMetadata({
+	params,
+}: PageProps<"/chat/[roomId]">): Promise<Metadata> {
+	const { roomId } = await params;
+	const { data } = await api.chat.rooms({ id: roomId }).get();
+	const roomName = data?.name ?? "채팅";
+	const participant =
+		data?.members
+			?.map((member) => member.nickname)
+			.filter(Boolean)
+			.slice(0, 2)
+			.join(", ") ?? null;
+
+	const description = participant
+		? `${participant}과 나눈 채팅을 이어가세요.`
+		: "거래와 소통을 이어가는 채팅방입니다.";
+
+	return createMetadata({
+		title: `${roomName} | POCAZ 채팅`,
+		description,
+		path: `/chat/${roomId}`,
+		ogTitle: roomName,
+	});
 }
 
 export default async function ChatRoomPage({

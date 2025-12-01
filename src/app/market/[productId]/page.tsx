@@ -1,13 +1,67 @@
+import type { Metadata } from "next";
 import * as stylex from "@stylexjs/stylex";
 import { ChevronLeft, ChevronRight, Store, User } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/home";
 import { getCurrentUser } from "@/lib/auth/actions";
+import { createMetadata } from "@/lib/metadata";
 import { formatKoreanDate } from "@/utils/date";
 import { api } from "@/utils/eden";
 import { ActionBar } from "./action-bar";
 import { Header, type MarketStatus, styles } from "./components";
 import StatusBadge from "./status-badge";
+
+function buildProductDescription({
+	description,
+	price,
+	seller,
+}: {
+	description?: string | null;
+	price?: number | null;
+	seller?: string;
+}) {
+	const fallback = [
+		price ? `${price.toLocaleString()}원` : "가격협의",
+		seller ? `${seller} 판매자` : null,
+	]
+		.filter(Boolean)
+		.join(" · ");
+
+	if (!description) {
+		return fallback || "포토카드 상품 상세 정보";
+	}
+
+	return description.length > 120
+		? `${description.slice(0, 117)}...`
+		: description;
+}
+
+export async function generateMetadata({
+	params,
+}: PageProps<"/market/[productId]">): Promise<Metadata> {
+	const { productId } = await params;
+	const { data } = await api.markets({ id: productId }).get();
+
+	if (!data) {
+		return createMetadata({
+			title: "상품을 찾을 수 없습니다 | POCAZ",
+			description: "요청한 포토카드 상품 정보를 불러올 수 없습니다.",
+			path: `/market/${productId}`,
+			ogTitle: "Market Item",
+		});
+	}
+
+	return createMetadata({
+		title: `${data.title} | POCAZ 마켓`,
+		description: buildProductDescription({
+			description: data.description,
+			price: data.price ?? null,
+			seller: data.user.nickname,
+		}),
+		path: `/market/${productId}`,
+		ogTitle: data.title,
+	});
+}
 
 export default async function MarketDetailPage({
 	params,

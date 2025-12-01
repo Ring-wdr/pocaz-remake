@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 
 import { colors, size } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
+import { createMetadata } from "@/lib/metadata";
 
 const conditions = [
 	{ id: "new", name: "새 상품" },
@@ -14,6 +15,13 @@ const conditions = [
 	{ id: "good", name: "사용감 적음" },
 	{ id: "used", name: "사용감 있음" },
 ];
+
+export const metadata = createMetadata({
+	title: "상품 등록 | POCAZ 마켓",
+	description: "포카 사진, 가격, 설명을 입력해 새 거래를 등록하세요.",
+	path: "/market/register",
+	ogTitle: "Register Photocard",
+});
 
 interface ImageFile {
 	file: File;

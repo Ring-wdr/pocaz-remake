@@ -9,6 +9,14 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "이용약관 | POCAZ",
+	description: "포카즈 서비스 이용약관을 확인하세요.",
+	path: "/support/terms",
+	ogTitle: "Terms of Service",
+});
 
 const styles = stylex.create({
 	container: {

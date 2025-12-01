@@ -2,7 +2,15 @@ import * as stylex from "@stylexjs/stylex";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
 import { colors } from "../../global-tokens.stylex";
+
+export const metadata = createMetadata({
+	title: "로그인 오류 | POCAZ",
+	description: "로그인 도중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+	path: "/auth/auth-error",
+	ogTitle: "Auth Error",
+});
 
 const styles = stylex.create({
 	container: {

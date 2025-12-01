@@ -8,6 +8,14 @@ import { toast } from "sonner";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
 import { api } from "@/utils/eden";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "1:1 문의 | POCAZ",
+	description: "포카즈 서비스 이용 중 궁금한 점과 신고를 남겨주세요.",
+	path: "/support/inquiry",
+	ogTitle: "Inquiry",
+});
 
 const styles = stylex.create({
 	container: {

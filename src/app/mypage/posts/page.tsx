@@ -11,6 +11,14 @@ import {
 import { Footer } from "@/components/home";
 import { formatRelativeTime } from "@/utils/date";
 import { api } from "@/utils/eden";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "내 게시글 | POCAZ",
+	description: "작성한 커뮤니티 글과 반응을 확인하세요.",
+	path: "/mypage/posts",
+	ogTitle: "My Posts",
+});
 
 const styles = stylex.create({
 	container: {

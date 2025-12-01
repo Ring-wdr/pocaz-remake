@@ -10,6 +10,14 @@ import {
 import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "설정 | POCAZ",
+	description: "알림, 테마, 보안 설정을 관리하세요.",
+	path: "/mypage/settings",
+	ogTitle: "Settings",
+});
 
 const styles = stylex.create({
 	container: {

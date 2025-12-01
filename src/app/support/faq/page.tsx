@@ -6,6 +6,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "FAQ | POCAZ",
+	description: "계정, 거래, 서비스 이용과 관련한 자주 묻는 질문을 확인하세요.",
+	path: "/support/faq",
+	ogTitle: "FAQ",
+});
 
 const styles = stylex.create({
 	container: {

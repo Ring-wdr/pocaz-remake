@@ -5,6 +5,14 @@ import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-toke
 import { Footer } from "@/components/home";
 import { formatRelativeTime } from "@/utils/date";
 import { api } from "@/utils/eden";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "활동 내역 | POCAZ",
+	description: "게시글, 좋아요, 거래 활동을 시간순으로 확인하세요.",
+	path: "/mypage/activity",
+	ogTitle: "Activity",
+});
 
 const styles = stylex.create({
 	container: {

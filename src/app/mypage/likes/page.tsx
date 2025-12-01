@@ -5,6 +5,14 @@ import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-toke
 import { Footer } from "@/components/home";
 import { formatRelativeTime } from "@/utils/date";
 import { api } from "@/utils/eden";
+import { createMetadata } from "@/lib/metadata";
+
+export const metadata = createMetadata({
+	title: "좋아요한 글 | POCAZ",
+	description: "좋아요한 커뮤니티 게시글을 다시 찾아보세요.",
+	path: "/mypage/likes",
+	ogTitle: "Liked Posts",
+});
 
 const styles = stylex.create({
 	container: {
