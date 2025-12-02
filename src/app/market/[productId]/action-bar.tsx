@@ -2,9 +2,9 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useActionState, useState } from "react";
+import { toast } from "sonner";
 import {
 	colors,
 	fontSize,
@@ -13,6 +13,8 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
+import type { MarketLikeState } from "./toggle-market-like";
+import { toggleMarketLike } from "./toggle-market-like";
 
 const styles = stylex.create({
 	actionBar: {
@@ -63,6 +65,16 @@ const styles = stylex.create({
 		opacity: 0.6,
 		cursor: "not-allowed",
 	},
+	actionButtonActive: {
+		color: colors.statusErrorLight,
+		borderColor: colors.statusErrorLight,
+	},
+	likeError: {
+		width: "100%",
+		marginTop: spacing.xxxs,
+		fontSize: fontSize.sm,
+		color: colors.statusError,
+	},
 });
 
 interface ActionBarProps {
@@ -70,6 +82,8 @@ interface ActionBarProps {
 	sellerId: string;
 	currentUserId: string | null;
 	isOwner: boolean;
+	marketTitle: string;
+	initialLikeState: MarketLikeState;
 }
 
 export function ActionBar({
@@ -77,9 +91,55 @@ export function ActionBar({
 	sellerId,
 	currentUserId,
 	isOwner,
+	marketTitle,
+	initialLikeState,
 }: ActionBarProps) {
 	const router = useRouter();
 	const [isLoading, setIsLoading] = useState(false);
+	const [likeState, formAction, pending] = useActionState<
+		MarketLikeState,
+		FormData
+	>(toggleMarketLike, initialLikeState);
+
+	const handleLikeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		if (!currentUserId) {
+			event.preventDefault();
+			router.push("/login");
+			return;
+		}
+
+		if (isOwner) {
+			event.preventDefault();
+			toast.info("내 상품은 찜할 수 없어요.");
+			return;
+		}
+	};
+
+	const handleShare = async () => {
+		const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+
+		try {
+			if (navigator.share) {
+				await navigator.share({
+					title: marketTitle,
+					url: shareUrl,
+				});
+				toast.success("공유 링크를 보냈습니다.");
+				return;
+			}
+
+			if (navigator.clipboard?.writeText) {
+				await navigator.clipboard.writeText(shareUrl);
+				toast.success("링크를 복사했습니다.");
+				return;
+			}
+
+			toast.error("공유를 지원하지 않는 환경입니다.");
+		} catch (err) {
+			console.error("Share failed", err);
+			toast.error("공유에 실패했습니다.");
+		}
+	};
 
 	const handleChatClick = async () => {
 		if (!currentUserId) {
@@ -116,10 +176,27 @@ export function ActionBar({
 
 	return (
 		<div {...stylex.props(styles.actionBar)}>
-			<button type="button" {...stylex.props(styles.actionButton)}>
-				<Heart size={20} />
-			</button>
-			<button type="button" {...stylex.props(styles.actionButton)}>
+			<form action={formAction}>
+				<input type="hidden" name="marketId" value={marketId} />
+				<button
+					type="submit"
+					onClick={handleLikeClick}
+					disabled={pending}
+					aria-pressed={likeState.liked}
+					aria-label={`찜 ${likeState.count}회`}
+					{...stylex.props(
+						styles.actionButton,
+						likeState.liked && styles.actionButtonActive,
+					)}
+				>
+					<Heart size={20} fill={likeState.liked ? "currentColor" : "none"} />
+				</button>
+			</form>
+			<button
+				type="button"
+				onClick={handleShare}
+				{...stylex.props(styles.actionButton)}
+			>
 				<Share2 size={20} />
 			</button>
 			<button
@@ -134,6 +211,11 @@ export function ActionBar({
 				<MessageCircle size={18} />
 				{isLoading ? "로딩..." : isOwner ? "채팅 목록" : "채팅하기"}
 			</button>
+			{likeState.error && (
+				<span {...stylex.props(styles.likeError)} aria-live="polite">
+					{likeState.error}
+				</span>
+			)}
 		</div>
 	);
 }

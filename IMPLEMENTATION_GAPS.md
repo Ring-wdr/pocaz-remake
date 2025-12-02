@@ -14,9 +14,9 @@
 - [ ] 글쓰기: 제목/본문 분리, 업로드 실패·용량 제한, 로그인 체크 (`community/write/page.client.tsx`)
 
 ## 마켓
-- [ ] 검색바/필터 탭을 API 파라미터와 연동, 페이지네이션·정렬 추가 (`market/page.tsx`, `components/market/sections`)
-- [ ] 상세: 이미지 슬라이더 동작, 좋아요/공유 핸들러, 상태 배지 토스트·낙관적 처리 (`market/[productId]/*`)
-- [ ] 등록: 스토리지 업로드 사용, 상태/협상 가능 여부를 구조화해 전송, 검증·로그인 가드·에러 UX 강화 (`market/register/page.client.tsx`)
+- [v] 검색바/필터 탭을 API 파라미터와 연동, 페이지네이션·정렬 추가 (`market/page.tsx`, `components/market/sections`)
+- [v] 상세: 이미지 슬라이더 동작, 좋아요/공유 핸들러, 상태 배지 토스트·낙관적 처리 (`market/[productId]/*`)
+- [v] 등록: 스토리지 업로드 사용, 상태/협상 가능 여부를 구조화해 전송, 검증·로그인 가드·에러 UX 강화 (`market/register/page.client.tsx`)
 
 ## 채팅
 - [ ] 전송 실패 재시도/알림, 첨부·이미지 전송 옵션 검토 (`components/chat/chat-room.tsx`)

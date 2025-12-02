@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
 import { likeService } from "@/lib/services/like";
+import { marketLikeService } from "@/lib/services/market";
 import { userService } from "@/lib/services/user";
 
 // 공통 스키마
@@ -173,6 +174,57 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 				tags: ["Likes"],
 				summary: "여러 게시글 좋아요 여부 확인",
 				description: "여러 게시글의 좋아요 여부를 일괄 확인합니다.",
+			},
+		},
+	)
+	// POST /api/likes/markets/:marketId - 마켓 찜 토글
+	.post(
+		"/markets/:marketId",
+		async ({ auth, params }) => {
+			const user = await userService.findOrCreate(
+				auth.user.id,
+				auth.user.email,
+				auth.user.user_metadata?.full_name,
+				auth.user.user_metadata?.avatar_url,
+			);
+
+			const result = await marketLikeService.toggle(user.id, params.marketId);
+			const count = await marketLikeService.getCount(params.marketId);
+
+			return {
+				liked: result.liked,
+				count,
+			};
+		},
+		{
+			params: t.Object({ marketId: t.String() }),
+			response: LikeStatusSchema,
+			detail: {
+				tags: ["Likes"],
+				summary: "마켓 찜 토글",
+				description: "마켓 상품의 찜 상태를 토글합니다.",
+			},
+		},
+	)
+	// GET /api/likes/markets/:marketId - 마켓 찜 여부 확인
+	.get(
+		"/markets/:marketId",
+		async ({ auth, params }) => {
+			const user = await userService.findBySupabaseId(auth.user.id);
+			const liked = user
+				? await marketLikeService.isLiked(user.id, params.marketId)
+				: false;
+			const count = await marketLikeService.getCount(params.marketId);
+
+			return { liked, count };
+		},
+		{
+			params: t.Object({ marketId: t.String() }),
+			response: LikeStatusSchema,
+			detail: {
+				tags: ["Likes"],
+				summary: "마켓 찜 여부 확인",
+				description: "마켓 상품의 찜 여부와 개수를 확인합니다.",
 			},
 		},
 	);

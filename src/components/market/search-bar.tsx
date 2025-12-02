@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { Search, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 
 import { colors, fontSize, iconSize, lineHeight, radius, spacing } from "@/app/global-tokens.stylex";
 
@@ -48,13 +48,18 @@ const styles = stylex.create({
 });
 
 interface SearchBarProps {
+	initialValue?: string;
 	onSearch?: (query: string) => void;
 }
 
-export default function SearchBar({ onSearch }: SearchBarProps) {
-	const [query, setQuery] = useState("");
+export default function SearchBar({ initialValue = "", onSearch }: SearchBarProps) {
+	const [query, setQuery] = useState(initialValue);
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	useEffect(() => {
+		setQuery(initialValue);
+	}, [initialValue]);
+
+	const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setQuery(value);
 		onSearch?.(value);

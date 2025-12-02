@@ -5,6 +5,25 @@ import { prisma } from "@/lib/prisma";
  */
 export type MarketStatus = "available" | "sold" | "reserved";
 
+export type MarketSort = "latest" | "priceAsc" | "priceDesc";
+
+function buildOrderBy(sort: MarketSort | undefined) {
+	switch (sort) {
+		case "priceAsc":
+			return [
+				{ price: "asc" as const },
+				{ createdAt: "desc" as const },
+			];
+		case "priceDesc":
+			return [
+				{ price: "desc" as const },
+				{ createdAt: "desc" as const },
+			];
+		default:
+			return [{ createdAt: "desc" as const }];
+	}
+}
+
 /**
  * Market 생성 DTO
  */
@@ -32,6 +51,7 @@ export interface UpdateMarketDto {
 export interface PaginationOptions {
 	cursor?: string;
 	limit?: number;
+	sort?: MarketSort;
 }
 
 /**
@@ -42,7 +62,7 @@ export const marketService = {
 	 * Market 목록 조회 (커서 기반 페이지네이션)
 	 */
 	async findAll(options: PaginationOptions = {}) {
-		const { cursor, limit = 20 } = options;
+		const { cursor, limit = 20, sort } = options;
 
 		const markets = await prisma.market.findMany({
 			take: limit + 1,
@@ -50,7 +70,7 @@ export const marketService = {
 				cursor: { id: cursor },
 				skip: 1,
 			}),
-			orderBy: { createdAt: "desc" },
+			orderBy: buildOrderBy(sort),
 			include: {
 				user: {
 					select: {
@@ -78,7 +98,7 @@ export const marketService = {
 	 * 특정 사용자의 Market 목록 조회
 	 */
 	async findByUserId(userId: string, options: PaginationOptions = {}) {
-		const { cursor, limit = 20 } = options;
+		const { cursor, limit = 20, sort } = options;
 
 		const markets = await prisma.market.findMany({
 			where: { userId },
@@ -87,7 +107,7 @@ export const marketService = {
 				cursor: { id: cursor },
 				skip: 1,
 			}),
-			orderBy: { createdAt: "desc" },
+			orderBy: buildOrderBy(sort),
 			include: {
 				user: {
 					select: {
@@ -209,7 +229,7 @@ export const marketService = {
 	 * 검색
 	 */
 	async search(keyword: string, options: PaginationOptions = {}) {
-		const { cursor, limit = 20 } = options;
+		const { cursor, limit = 20, sort } = options;
 
 		const markets = await prisma.market.findMany({
 			where: {
@@ -223,7 +243,7 @@ export const marketService = {
 				cursor: { id: cursor },
 				skip: 1,
 			}),
-			orderBy: { createdAt: "desc" },
+			orderBy: buildOrderBy(sort),
 			include: {
 				user: {
 					select: {
@@ -251,7 +271,7 @@ export const marketService = {
 	 * 상태별 조회
 	 */
 	async findByStatus(status: MarketStatus, options: PaginationOptions = {}) {
-		const { cursor, limit = 20 } = options;
+		const { cursor, limit = 20, sort } = options;
 
 		const markets = await prisma.market.findMany({
 			where: { status },
@@ -260,7 +280,7 @@ export const marketService = {
 				cursor: { id: cursor },
 				skip: 1,
 			}),
-			orderBy: { createdAt: "desc" },
+			orderBy: buildOrderBy(sort),
 			include: {
 				user: {
 					select: {

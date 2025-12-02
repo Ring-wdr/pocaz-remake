@@ -3,7 +3,8 @@
 import * as stylex from "@stylexjs/stylex";
 import { Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 import {
 	colors,
 	fontSize,
@@ -112,21 +113,31 @@ export default function StatusChanger({
 	const router = useRouter();
 	const [isOpen, setIsOpen] = useState(false);
 	const [isPending, startTransition] = useTransition();
+	const [selectedStatus, setSelectedStatus] =
+		useState<MarketStatus>(currentStatus);
+
+	useEffect(() => {
+		setSelectedStatus(currentStatus);
+	}, [currentStatus]);
 
 	const handleStatusChange = (newStatus: MarketStatus) => {
-		if (newStatus === currentStatus || isPending) return;
+		if (newStatus === selectedStatus || isPending) return;
 
+		const previousStatus = selectedStatus;
+		setSelectedStatus(newStatus);
 		startTransition(async () => {
 			const { error } = await api.markets({ id: marketId }).put({
 				status: newStatus,
 			});
 
 			if (error) {
-				alert("상태 변경에 실패했습니다.");
+				setSelectedStatus(previousStatus);
+				toast.error("상태 변경에 실패했습니다. 다시 시도해 주세요.");
 				return;
 			}
 
 			setIsOpen(false);
+			toast.success(`${statusLabels.get(newStatus)} 상태로 변경되었습니다.`);
 			router.refresh();
 		});
 	};
@@ -137,9 +148,9 @@ export default function StatusChanger({
 				type="button"
 				onClick={() => setIsOpen(!isOpen)}
 				disabled={isPending}
-				{...stylex.props(styles.trigger, styles[statusStyles[currentStatus]])}
+				{...stylex.props(styles.trigger, styles[statusStyles[selectedStatus]])}
 			>
-				{statusLabels.get(currentStatus)}
+				{statusLabels.get(selectedStatus)}
 				<ChevronDown size={14} />
 			</button>
 
@@ -153,12 +164,12 @@ export default function StatusChanger({
 							disabled={isPending}
 							{...stylex.props(
 								styles.option,
-								status === currentStatus && styles.optionActive,
+								status === selectedStatus && styles.optionActive,
 								isPending && styles.optionDisabled,
 							)}
 						>
 							{statusLabels.get(status)}
-							{status === currentStatus && <Check size={16} />}
+							{status === selectedStatus && <Check size={16} />}
 						</button>
 					))}
 				</div>
