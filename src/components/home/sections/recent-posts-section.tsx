@@ -85,6 +85,7 @@ interface Post {
 async function getRecentPosts(): Promise<Post[]> {
 	const { data, error } = await api.posts.get({
 		query: { limit: "5" },
+		fetch: { next: { revalidate: 120 } },
 	});
 
 	if (error || !data) {

@@ -4,7 +4,7 @@
 
 ## 홈/로그인
 - [ ] 홈 슬라이더 컨트롤·오토플레이/접근성 강화, 추천/검색 UX 보강 (`src/app/page.tsx`, `src/components/home`)
-- [ ] 로그인 로딩/에러 상태 및 추가 로그인 옵션 검토 (`src/app/login/page.tsx`)
+- [v] 로그인 로딩/에러 상태 및 추가 로그인 옵션 검토 (`src/app/login/page.tsx`)
 
 ## 커뮤니티
 - [ ] 게시글 수정 페이지 구현 또는 메뉴 제거 (`community/posts/[postId]/components.tsx` → `/community/posts/[id]/edit`)
