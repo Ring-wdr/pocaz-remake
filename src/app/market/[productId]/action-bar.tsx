@@ -85,6 +85,7 @@ const styles = stylex.create({
 });
 
 const LIKE_THROTTLE_MS = 600;
+const SYNC_DEBOUNCE_MS = LIKE_THROTTLE_MS;
 
 interface ActionBarProps {
 	marketId: string;
@@ -105,8 +106,11 @@ export function ActionBar({
 }: ActionBarProps) {
 	const router = useRouter();
 	const [isLoading, setIsLoading] = useState(false);
-	const lastLikeAtRef = useRef(0);
 	const [, startTransition] = useTransition();
+	const lastLikeAtRef = useRef(0);
+	const formRef = useRef<HTMLFormElement | null>(null);
+	const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const pendingSyncRef = useRef(false);
 	const [likeState, formAction] = useActionState<MarketLikeState, FormData>(
 		toggleMarketLike,
 		initialLikeState,
@@ -127,12 +131,6 @@ export function ActionBar({
 	}, [likeState.error]);
 
 	const handleLikeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-		const now = Date.now();
-		if (now - lastLikeAtRef.current < LIKE_THROTTLE_MS) {
-			event.preventDefault();
-			return;
-		}
-
 		if (!currentUserId) {
 			event.preventDefault();
 			router.push("/login");
@@ -145,8 +143,28 @@ export function ActionBar({
 			return;
 		}
 
-		lastLikeAtRef.current = now;
 		startTransition(() => addOptimisticLike("toggle"));
+
+		const now = Date.now();
+		const delta = now - lastLikeAtRef.current;
+		if (delta < LIKE_THROTTLE_MS) {
+			event.preventDefault();
+			if (!pendingSyncRef.current) {
+				pendingSyncRef.current = true;
+				const wait = Math.max(LIKE_THROTTLE_MS - delta, SYNC_DEBOUNCE_MS);
+				if (syncTimeoutRef.current) {
+					clearTimeout(syncTimeoutRef.current);
+				}
+				syncTimeoutRef.current = setTimeout(() => {
+					formRef.current?.requestSubmit();
+					lastLikeAtRef.current = Date.now();
+					pendingSyncRef.current = false;
+				}, wait);
+			}
+			return;
+		}
+
+		lastLikeAtRef.current = now;
 	};
 
 	const handleShare = async () => {
@@ -210,7 +228,7 @@ export function ActionBar({
 
 	return (
 		<div {...stylex.props(styles.actionBar)}>
-			<form action={formAction}>
+			<form ref={formRef} action={formAction}>
 				<input type="hidden" name="marketId" value={marketId} />
 				<button
 					type="submit"
