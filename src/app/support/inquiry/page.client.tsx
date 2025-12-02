@@ -10,7 +10,7 @@ import {
 	Send,
 } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState, useTransition } from "react";
+import { useReducer, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
 	colors,
@@ -20,6 +20,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { normalizeEdenError } from "@/lib/elysia/client/error";
 import { api } from "@/utils/eden";
 
 interface InquiryPageClientProps {
@@ -36,6 +37,90 @@ type SubmissionResult = {
 	status: string;
 	createdAt?: string;
 };
+
+type FormState = {
+	category: string;
+	title: string;
+	content: string;
+	contactEmail: string;
+	contactPhone: string;
+	attachments: AttachmentFile[];
+};
+
+type FormAction =
+	| {
+			type: "setField";
+			field: keyof Omit<FormState, "attachments">;
+			value: string;
+	  }
+	| { type: "addAttachments"; attachments: AttachmentFile[] }
+	| { type: "removeAttachment"; index: number }
+	| { type: "reset" };
+
+const createInitialFormState = (defaultEmail?: string): FormState => ({
+	category: "",
+	title: "",
+	content: "",
+	contactEmail: defaultEmail ?? "",
+	contactPhone: "",
+	attachments: [],
+});
+
+const formReducer = (state: FormState, action: FormAction): FormState => {
+	switch (action.type) {
+		case "setField": {
+			return { ...state, [action.field]: action.value };
+		}
+		case "addAttachments": {
+			return {
+				...state,
+				attachments: [...state.attachments, ...action.attachments],
+			};
+		}
+		case "removeAttachment": {
+			return {
+				...state,
+				attachments: state.attachments.filter((_, i) => i !== action.index),
+			};
+		}
+		case "reset": {
+			return { ...createInitialFormState(state.contactEmail) };
+		}
+		default:
+			return state;
+	}
+};
+
+type UseInquiryFormResult = {
+	formState: FormState;
+	attachments: AttachmentFile[];
+	dispatch: React.Dispatch<FormAction>;
+	isEmailValid: boolean;
+	isValid: boolean;
+};
+
+function useInquiryForm(defaultEmail?: string): UseInquiryFormResult {
+	const [formState, dispatch] = useReducer(formReducer, defaultEmail, (email) =>
+		createInitialFormState(email),
+	);
+
+	const { category, title, content, contactEmail, attachments } = formState;
+
+	const isEmailValid =
+		contactEmail.trim().length > 0 &&
+		/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim());
+
+	const isValid =
+		!!category && !!title.trim() && content.trim().length >= 10 && isEmailValid;
+
+	return {
+		formState,
+		attachments,
+		dispatch,
+		isEmailValid,
+		isValid,
+	};
+}
 
 const styles = stylex.create({
 	container: {
@@ -412,24 +497,15 @@ const MAX_FILE_SIZE_MB = 20;
 export default function InquiryPageClient({
 	defaultEmail,
 }: InquiryPageClientProps) {
-	const [category, setCategory] = useState("");
-	const [title, setTitle] = useState("");
-	const [content, setContent] = useState("");
-	const [contactEmail, setContactEmail] = useState(defaultEmail ?? "");
-	const [contactPhone, setContactPhone] = useState("");
-	const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
+	const { formState, attachments, dispatch, isEmailValid, isValid } =
+		useInquiryForm(defaultEmail);
 	const [lastSubmission, setLastSubmission] = useState<SubmissionResult | null>(
 		null,
 	);
 	const [isSubmitting, startSubmit] = useTransition();
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-	const isEmailValid =
-		contactEmail.trim().length > 0 &&
-		/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim());
-
-	const isValid =
-		category && title.trim() && content.trim().length >= 10 && isEmailValid;
+	const { category, title, content, contactEmail, contactPhone } = formState;
 
 	const handleFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const files = Array.from(event.target.files ?? []);
@@ -458,7 +534,7 @@ export default function InquiryPageClient({
 			preview: URL.createObjectURL(file),
 		}));
 
-		setAttachments((prev) => [...prev, ...mapped]);
+		dispatch({ type: "addAttachments", attachments: mapped });
 
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
@@ -466,13 +542,11 @@ export default function InquiryPageClient({
 	};
 
 	const removeAttachment = (index: number) => {
-		setAttachments((prev) => {
-			const target = prev[index];
-			if (target) {
-				URL.revokeObjectURL(target.preview);
-			}
-			return prev.filter((_, i) => i !== index);
-		});
+		const target = attachments[index];
+		if (target) {
+			URL.revokeObjectURL(target.preview);
+		}
+		dispatch({ type: "removeAttachment", index });
 	};
 
 	const uploadAttachments = async () => {
@@ -484,12 +558,12 @@ export default function InquiryPageClient({
 		});
 
 		if (error || !data || !("uploaded" in data) || !data.uploaded) {
-			console.error("Failed to upload attachments:", error);
+			const normalizedError = normalizeEdenError(error);
+			console.error("Failed to upload attachments:", normalizedError.message);
 			return null;
 		}
 
-		const failedCount =
-			"errors" in data && Array.isArray(data.errors) ? data.errors.length : 0;
+		const failedCount = Array.isArray(data.errors) ? data.errors.length : 0;
 		if (failedCount > 0) {
 			toast.error("일부 첨부 파일 업로드에 실패했어요. 다시 시도해 주세요.");
 			return null;
@@ -540,14 +614,10 @@ export default function InquiryPageClient({
 			}
 
 			toast.success(`문의가 접수되었습니다. 접수 번호: ${data.id}`);
-			setTitle("");
-			setContent("");
-			setCategory("");
-			setContactPhone("");
 			attachments.forEach((item) => {
 				URL.revokeObjectURL(item.preview);
 			});
-			setAttachments([]);
+			dispatch({ type: "reset" });
 			setLastSubmission({
 				id: data.id,
 				status: data.status,
@@ -584,7 +654,13 @@ export default function InquiryPageClient({
 						<select
 							id="category"
 							value={category}
-							onChange={(e) => setCategory(e.target.value)}
+							onChange={(e) =>
+								dispatch({
+									type: "setField",
+									field: "category",
+									value: e.target.value,
+								})
+							}
 							disabled={isSubmitting}
 							{...stylex.props(styles.select)}
 						>
@@ -604,7 +680,13 @@ export default function InquiryPageClient({
 							id="title"
 							type="text"
 							value={title}
-							onChange={(e) => setTitle(e.target.value)}
+							onChange={(e) =>
+								dispatch({
+									type: "setField",
+									field: "title",
+									value: e.target.value,
+								})
+							}
 							placeholder="제목을 입력해 주세요"
 							maxLength={100}
 							disabled={isSubmitting}
@@ -619,7 +701,13 @@ export default function InquiryPageClient({
 						<textarea
 							id="content"
 							value={content}
-							onChange={(e) => setContent(e.target.value)}
+							onChange={(e) =>
+								dispatch({
+									type: "setField",
+									field: "content",
+									value: e.target.value,
+								})
+							}
 							placeholder="문의 내용을 상세히 작성해 주세요 (최소 10자)"
 							maxLength={2000}
 							disabled={isSubmitting}
@@ -638,7 +726,13 @@ export default function InquiryPageClient({
 							id="contactEmail"
 							type="email"
 							value={contactEmail}
-							onChange={(e) => setContactEmail(e.target.value)}
+							onChange={(e) =>
+								dispatch({
+									type: "setField",
+									field: "contactEmail",
+									value: e.target.value,
+								})
+							}
 							placeholder="답변을 받을 이메일을 입력해 주세요"
 							disabled={isSubmitting}
 							{...stylex.props(
@@ -660,7 +754,13 @@ export default function InquiryPageClient({
 								id="contactPhone"
 								type="tel"
 								value={contactPhone}
-								onChange={(e) => setContactPhone(e.target.value)}
+								onChange={(e) =>
+									dispatch({
+										type: "setField",
+										field: "contactPhone",
+										value: e.target.value,
+									})
+								}
 								placeholder="전화번호 또는 메신저 ID를 남겨주세요"
 								disabled={isSubmitting}
 								{...stylex.props(styles.input)}
