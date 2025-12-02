@@ -1,7 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { colors } from "./global-tokens.stylex";
 
 const styles = stylex.create({
@@ -98,6 +98,32 @@ const styles = stylex.create({
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",
 	},
+	supportGroup: {
+		marginTop: "16px",
+		display: "flex",
+		gap: "8px",
+		flexWrap: "wrap",
+		justifyContent: "center",
+	},
+	secondaryButton: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: "6px",
+		paddingTop: "12px",
+		paddingBottom: "12px",
+		paddingLeft: "18px",
+		paddingRight: "18px",
+		fontSize: "14px",
+		fontWeight: 600,
+		color: colors.textSecondary,
+		backgroundColor: colors.bgSecondary,
+		borderRadius: "10px",
+		borderWidth: 1,
+		borderStyle: "solid",
+		borderColor: colors.borderPrimary,
+		textDecoration: "none",
+	},
 });
 
 interface GlobalErrorProps {
@@ -106,9 +132,27 @@ interface GlobalErrorProps {
 }
 
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
+	const [copied, setCopied] = useState(false);
+
 	useEffect(() => {
 		console.error("Global Error:", error);
 	}, [error]);
+
+	const copyDiagnostics = async () => {
+		const payload = [
+			`message: ${error.message}`,
+			`digest: ${error.digest ?? "n/a"}`,
+			`time: ${new Date().toISOString()}`,
+		].join("\n");
+
+		try {
+			await navigator.clipboard.writeText(payload);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch (err) {
+			console.error("Failed to copy diagnostics", err);
+		}
+	};
 
 	return (
 		<html lang="ko" {...stylex.props(styles.html)}>
@@ -131,6 +175,18 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 						</button>
 						<a href="/" {...stylex.props(styles.homeButton)}>
 							홈으로
+						</a>
+					</div>
+					<div {...stylex.props(styles.supportGroup)}>
+						<button
+							type="button"
+							onClick={copyDiagnostics}
+							{...stylex.props(styles.secondaryButton)}
+						>
+							{copied ? "진단 정보 복사됨" : "진단 정보 복사"}
+						</button>
+						<a href="/support/inquiry" {...stylex.props(styles.secondaryButton)}>
+							지원 문의하기
 						</a>
 					</div>
 				</div>

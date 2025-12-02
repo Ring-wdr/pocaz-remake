@@ -290,7 +290,7 @@ export default function InquiryPage() {
 					<p {...stylex.props(styles.noticeContent)}>
 						- 문의는 평일 기준 1-2일 내 답변됩니다.
 						{"\n"}- 주말 및 공휴일에는 답변이 지연될 수 있습니다.
-						{"\n"}- 긴급한 문의는 이메일(support@pocaz.com)로 연락해 주세요.
+						{"\n"}- 긴급한 문의는 이메일(akswnd55@gmail.com)로 연락해 주세요.
 					</p>
 				</div>
 			</div>

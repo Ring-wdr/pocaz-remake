@@ -1,3 +1,5 @@
+import { unauthorized } from "next/navigation";
+import { getSession } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
 import InquiryPageClient from "./page.client";
 
@@ -8,6 +10,12 @@ export const metadata = createMetadata({
 	ogTitle: "Inquiry",
 });
 
-export default function InquiryPage() {
-	return <InquiryPageClient />;
+export default async function InquiryPage() {
+	const session = await getSession();
+
+	if (!session) {
+		unauthorized();
+	}
+
+	return <InquiryPageClient defaultEmail={session.user.email ?? ""} />;
 }

@@ -22,7 +22,7 @@ export const supportRoutes = new Elysia({ prefix: "/support" })
 	// POST /api/support/inquiries - 문의 등록
 	.post(
 		"/inquiries",
-		async ({ auth, body, set }) => {
+		async ({ auth, body, status }) => {
 			const user = await userService.findOrCreate(
 				auth.user.id,
 				auth.user.email,
@@ -37,15 +37,14 @@ export const supportRoutes = new Elysia({ prefix: "/support" })
 				content: body.content,
 			});
 
-			set.status = 201;
-			return {
+			return status(200, {
 				id: inquiry.id,
 				category: inquiry.category,
 				title: inquiry.title,
 				content: inquiry.content,
 				status: inquiry.status,
 				createdAt: inquiry.createdAt.toISOString(),
-			};
+			});
 		},
 		{
 			body: t.Object({
@@ -54,7 +53,7 @@ export const supportRoutes = new Elysia({ prefix: "/support" })
 				content: t.String({ minLength: 10, maxLength: 2000 }),
 			}),
 			response: {
-				201: InquirySchema,
+				200: InquirySchema,
 				401: ErrorSchema,
 			},
 			detail: {
@@ -67,7 +66,7 @@ export const supportRoutes = new Elysia({ prefix: "/support" })
 	// GET /api/support/inquiries - 내 문의 목록
 	.get(
 		"/inquiries",
-		async ({ auth, query, set }) => {
+		async ({ auth, query }) => {
 			const user = await userService.findOrCreate(
 				auth.user.id,
 				auth.user.email,
