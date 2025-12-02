@@ -20,6 +20,13 @@ export async function toggleMarketLike(
 	try {
 		const { data, error } = await api.likes.markets({ marketId }).post();
 
+		if (error && error.status === 429) {
+			return {
+				...prevState,
+				error: "Too many requests. Please try again shortly.",
+			};
+		}
+
 		if (data) {
 			return {
 				liked: data.liked,

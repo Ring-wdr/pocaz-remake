@@ -1,29 +1,21 @@
 import { Elysia, t } from "elysia";
-import { authGuard } from "@/lib/elysia/auth";
+import { type Generator, rateLimit } from "elysia-rate-limit";
+import { type AuthenticatedContext, authGuard } from "@/lib/elysia/auth";
 import { likeService } from "@/lib/services/like";
 import { marketLikeService } from "@/lib/services/market";
 import { userService } from "@/lib/services/user";
 
-const LIKE_WINDOW_MS = 2_000;
-const LIKE_MAX_REQUESTS = 5;
-const likeThrottle = new Map<string, { count: number; windowStart: number }>();
+type DerivedAuth = {
+	auth?: AuthenticatedContext;
+};
 
-function isThrottled(userId: string) {
-	const now = Date.now();
-	const entry = likeThrottle.get(userId);
-	if (!entry || now - entry.windowStart > LIKE_WINDOW_MS) {
-		likeThrottle.set(userId, { count: 1, windowStart: now });
-		return false;
+const userGenerator: Generator<DerivedAuth> = (req, server, { auth }) => {
+	if (!auth?.user) {
+		return server?.requestIP(req)?.address ?? "anonymous";
 	}
 
-	if (entry.count + 1 > LIKE_MAX_REQUESTS) {
-		return true;
-	}
-
-	entry.count += 1;
-	likeThrottle.set(userId, entry);
-	return false;
-}
+	return `user:${auth.user.id}`;
+};
 
 // 공통 스키마
 const LikeStatusSchema = t.Object({
@@ -37,6 +29,11 @@ const UserSchema = t.Object({
 	profileImage: t.Nullable(t.String()),
 });
 
+const RateLimitErrorSchema = t.Object({
+	error: t.String(),
+	message: t.Optional(t.String()),
+});
+
 const ImageSchema = t.Object({
 	id: t.String(),
 	imageUrl: t.String(),
@@ -47,6 +44,27 @@ const ImageSchema = t.Object({
  */
 export const likeRoutes = new Elysia({ prefix: "/likes" })
 	.use(authGuard)
+	.use(
+		rateLimit({
+			duration: 5000,
+			max: 10,
+			scoping: "scoped",
+			generator: userGenerator,
+			skip: (req) => {
+				return req.method === "GET";
+			},
+			errorResponse: new Response(
+				JSON.stringify({
+					error: "rate_limit",
+					message: "Too many requests. Please try again shortly.",
+				}),
+				{
+					status: 429,
+					headers: { "content-type": "application/json" },
+				},
+			),
+		}),
+	)
 	// POST /api/likes/posts/:postId - 좋아요 토글
 	.post(
 		"/posts/:postId",
@@ -68,7 +86,10 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 		},
 		{
 			params: t.Object({ postId: t.String() }),
-			response: LikeStatusSchema,
+			response: {
+				200: LikeStatusSchema,
+				429: RateLimitErrorSchema,
+			},
 			detail: {
 				tags: ["Likes"],
 				summary: "좋아요 토글",
@@ -188,9 +209,12 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			body: t.Object({
 				postIds: t.Array(t.String(), { minItems: 1 }),
 			}),
-			response: t.Object({
-				likes: t.Record(t.String(), t.Boolean()),
-			}),
+			response: {
+				200: t.Object({
+					likes: t.Record(t.String(), t.Boolean()),
+				}),
+				429: RateLimitErrorSchema,
+			},
 			detail: {
 				tags: ["Likes"],
 				summary: "여러 게시글 좋아요 여부 확인",
@@ -201,20 +225,13 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 	// POST /api/likes/markets/:marketId - 마켓 찜 토글
 	.post(
 		"/markets/:marketId",
-		async ({ auth, params, set }) => {
+		async ({ auth, params }) => {
 			const user = await userService.findOrCreate(
 				auth.user.id,
 				auth.user.email,
 				auth.user.user_metadata?.full_name,
 				auth.user.user_metadata?.avatar_url,
 			);
-
-			if (isThrottled(user.id)) {
-				const liked = await marketLikeService.isLiked(user.id, params.marketId);
-				const count = await marketLikeService.getCount(params.marketId);
-				set.status = 429;
-				return { liked, count };
-			}
 
 			const result = await marketLikeService.toggle(user.id, params.marketId);
 			const count = await marketLikeService.getCount(params.marketId);
@@ -226,7 +243,10 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 		},
 		{
 			params: t.Object({ marketId: t.String() }),
-			response: LikeStatusSchema,
+			response: {
+				200: LikeStatusSchema,
+				429: RateLimitErrorSchema,
+			},
 			detail: {
 				tags: ["Likes"],
 				summary: "마켓 찜 토글",
