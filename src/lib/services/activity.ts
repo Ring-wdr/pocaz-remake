@@ -26,7 +26,7 @@ export interface CreateActivityDto {
  */
 export interface ActivityItem {
 	id: string;
-	type: string;
+	type: ActivityType;
 	description: string;
 	target: string | null;
 	targetHref: string | null;
@@ -104,13 +104,13 @@ export const activityService = {
 						where: { id: { in: postIds } },
 						select: { id: true, content: true },
 					})
-				: Promise.resolve([] as { id: string; content: string }[]),
+				: [],
 			marketIds.length
 				? prisma.market.findMany({
 						where: { id: { in: marketIds } },
 						select: { id: true, title: true },
 					})
-				: Promise.resolve([] as { id: string; title: string }[]),
+				: [],
 			transactionIds.length
 				? prisma.transaction.findMany({
 						where: { id: { in: transactionIds } },
@@ -120,7 +120,7 @@ export const activityService = {
 							market: { select: { title: true } },
 						},
 					})
-				: Promise.resolve([]),
+				: [],
 		]);
 
 		const postMap = new Map(posts.map((post) => [post.id, post]));
@@ -129,6 +129,7 @@ export const activityService = {
 
 		// 각 활동에 대한 대상 정보를 가져옴 (batch fetch to avoid N+1)
 		const enrichedActivities = itemsForPage.map((activity) => {
+			const activityType = activity.type as ActivityType;
 			let target: string | null = null;
 			let targetHref: string | null = null;
 
@@ -150,7 +151,7 @@ export const activityService = {
 
 			return {
 				id: activity.id,
-				type: activity.type,
+				type: activityType,
 				description: activity.description,
 				target,
 				targetHref,
