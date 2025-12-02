@@ -3,7 +3,14 @@
 import * as stylex from "@stylexjs/stylex";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useState } from "react";
+import {
+	useActionState,
+	useEffect,
+	useOptimistic,
+	useRef,
+	useState,
+	useTransition,
+} from "react";
 import { toast } from "sonner";
 import {
 	colors,
@@ -77,6 +84,8 @@ const styles = stylex.create({
 	},
 });
 
+const LIKE_THROTTLE_MS = 600;
+
 interface ActionBarProps {
 	marketId: string;
 	sellerId: string;
@@ -96,12 +105,34 @@ export function ActionBar({
 }: ActionBarProps) {
 	const router = useRouter();
 	const [isLoading, setIsLoading] = useState(false);
-	const [likeState, formAction, pending] = useActionState<
+	const lastLikeAtRef = useRef(0);
+	const [, startTransition] = useTransition();
+	const [likeState, formAction] = useActionState<MarketLikeState, FormData>(
+		toggleMarketLike,
+		initialLikeState,
+	);
+	const [optimisticLike, addOptimisticLike] = useOptimistic<
 		MarketLikeState,
-		FormData
-	>(toggleMarketLike, initialLikeState);
+		"toggle"
+	>(likeState, (state) => ({
+		...state,
+		liked: !state.liked,
+		count: state.liked ? Math.max(state.count - 1, 0) : state.count + 1,
+		error: null,
+	}));
+
+	useEffect(() => {
+		if (!likeState.error) return;
+		toast.error(likeState.error);
+	}, [likeState.error]);
 
 	const handleLikeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		const now = Date.now();
+		if (now - lastLikeAtRef.current < LIKE_THROTTLE_MS) {
+			event.preventDefault();
+			return;
+		}
+
 		if (!currentUserId) {
 			event.preventDefault();
 			router.push("/login");
@@ -113,6 +144,9 @@ export function ActionBar({
 			toast.info("내 상품은 찜할 수 없어요.");
 			return;
 		}
+
+		lastLikeAtRef.current = now;
+		startTransition(() => addOptimisticLike("toggle"));
 	};
 
 	const handleShare = async () => {
@@ -181,15 +215,17 @@ export function ActionBar({
 				<button
 					type="submit"
 					onClick={handleLikeClick}
-					disabled={pending}
-					aria-pressed={likeState.liked}
-					aria-label={`찜 ${likeState.count}회`}
+					aria-pressed={optimisticLike.liked}
+					aria-label={`찜 ${optimisticLike.count}회`}
 					{...stylex.props(
 						styles.actionButton,
-						likeState.liked && styles.actionButtonActive,
+						optimisticLike.liked && styles.actionButtonActive,
 					)}
 				>
-					<Heart size={20} fill={likeState.liked ? "currentColor" : "none"} />
+					<Heart
+						size={20}
+						fill={optimisticLike.liked ? "currentColor" : "none"}
+					/>
 				</button>
 			</form>
 			<button
@@ -211,11 +247,6 @@ export function ActionBar({
 				<MessageCircle size={18} />
 				{isLoading ? "로딩..." : isOwner ? "채팅 목록" : "채팅하기"}
 			</button>
-			{likeState.error && (
-				<span {...stylex.props(styles.likeError)} aria-live="polite">
-					{likeState.error}
-				</span>
-			)}
 		</div>
 	);
 }

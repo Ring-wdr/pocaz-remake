@@ -20,17 +20,17 @@ export async function toggleMarketLike(
 	try {
 		const { data, error } = await api.likes.markets({ marketId }).post();
 
-		if (error || !data) {
+		if (data) {
 			return {
-				...prevState,
-				error: "찜 처리에 실패했습니다. 다시 시도해 주세요.",
+				liked: data.liked,
+				count: data.count,
+				error: null,
 			};
 		}
 
 		return {
-			liked: data.liked,
-			count: data.count,
-			error: null,
+			...prevState,
+			error: "찜 처리에 실패했습니다. 다시 시도해 주세요.",
 		};
 	} catch (err) {
 		console.error("toggleMarketLike failed", err);

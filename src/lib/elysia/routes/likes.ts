@@ -4,6 +4,27 @@ import { likeService } from "@/lib/services/like";
 import { marketLikeService } from "@/lib/services/market";
 import { userService } from "@/lib/services/user";
 
+const LIKE_WINDOW_MS = 2_000;
+const LIKE_MAX_REQUESTS = 5;
+const likeThrottle = new Map<string, { count: number; windowStart: number }>();
+
+function isThrottled(userId: string) {
+	const now = Date.now();
+	const entry = likeThrottle.get(userId);
+	if (!entry || now - entry.windowStart > LIKE_WINDOW_MS) {
+		likeThrottle.set(userId, { count: 1, windowStart: now });
+		return false;
+	}
+
+	if (entry.count + 1 > LIKE_MAX_REQUESTS) {
+		return true;
+	}
+
+	entry.count += 1;
+	likeThrottle.set(userId, entry);
+	return false;
+}
+
 // 공통 스키마
 const LikeStatusSchema = t.Object({
 	liked: t.Boolean(),
@@ -180,13 +201,20 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 	// POST /api/likes/markets/:marketId - 마켓 찜 토글
 	.post(
 		"/markets/:marketId",
-		async ({ auth, params }) => {
+		async ({ auth, params, set }) => {
 			const user = await userService.findOrCreate(
 				auth.user.id,
 				auth.user.email,
 				auth.user.user_metadata?.full_name,
 				auth.user.user_metadata?.avatar_url,
 			);
+
+			if (isThrottled(user.id)) {
+				const liked = await marketLikeService.isLiked(user.id, params.marketId);
+				const count = await marketLikeService.getCount(params.marketId);
+				set.status = 429;
+				return { liked, count };
+			}
 
 			const result = await marketLikeService.toggle(user.id, params.marketId);
 			const count = await marketLikeService.getCount(params.marketId);
