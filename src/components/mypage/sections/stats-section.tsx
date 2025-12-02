@@ -32,11 +32,47 @@ const styles = stylex.create({
 		color: colors.textMuted,
 		margin: 0,
 	},
+	errorBox: {
+		gridColumn: "1 / -1",
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
+		backgroundColor: colors.bgSecondary,
+		borderRadius: radius.md,
+		textAlign: "center",
+	},
+	errorTitle: {
+		margin: 0,
+		marginBottom: spacing.xxxs,
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.semibold,
+		color: colors.textSecondary,
+	},
+	errorDesc: {
+		margin: 0,
+		fontSize: fontSize.sm,
+		color: colors.textMuted,
+	},
 });
 
 export default async function StatsSection() {
-	const { data } = await api.users.me.summary.get();
-	const stats = data ?? { posts: 0, likes: 0, trades: 0 };
+	const { data, error } = await api.users.me.summary.get();
+
+	if (error || !data) {
+		return (
+			<div {...stylex.props(styles.container)}>
+				<div {...stylex.props(styles.errorBox)}>
+					<p {...stylex.props(styles.errorTitle)}>통계를 불러오지 못했습니다</p>
+					<p {...stylex.props(styles.errorDesc)}>잠시 후 다시 시도해주세요</p>
+				</div>
+			</div>
+		);
+	}
+
+	const stats = {
+		posts: data.posts ?? 0,
+		likes: data.likes ?? 0,
+		trades: data.trades ?? 0,
+	};
 
 	return (
 		<div {...stylex.props(styles.container)}>
