@@ -5,13 +5,13 @@ import { A11y, Autoplay, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
-import "swiper/css/navigation";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { ComponentProps } from "react";
 import {
 	colors,
 	fontSize,
 	fontWeight,
-	iconSize,
 	spacing,
 } from "@/app/global-tokens.stylex";
 
@@ -88,7 +88,13 @@ const styles = stylex.create({
 		paddingRight: "12px",
 		paddingBottom: "12px",
 		paddingLeft: "12px",
-		cursor: "pointer",
+		cursor: {
+			":disabled": "not-allowed",
+			":not(:disabled)": "pointer",
+		},
+		opacity: {
+			":disabled": 0.5,
+		},
 	},
 	navButtonPrev: {
 		left: 0,
@@ -97,7 +103,6 @@ const styles = stylex.create({
 		right: 0,
 	},
 	navIcon: {
-		fontSize: 72,
 		lineHeight: 1,
 	},
 });
@@ -128,9 +133,17 @@ const slides = [
 const prevClassName = "mainSlidePrev";
 const nextClassName = "mainSlideNext";
 
-const navigationOptions = {
-	prevEl: `.${prevClassName}`,
-	nextEl: `.${nextClassName}`,
+const swiperProps: ComponentProps<typeof Swiper> = {
+	modules: [Navigation, Pagination, A11y, Autoplay],
+	navigation: {
+		prevEl: `.${prevClassName}`,
+		nextEl: `.${nextClassName}`,
+	},
+	pagination: { clickable: true, type: "fraction" },
+	autoplay: {
+		delay: 6000,
+		disableOnInteraction: false,
+	},
 };
 
 export default function MainSlider() {
@@ -141,18 +154,9 @@ export default function MainSlider() {
 
 	return (
 		<div {...stylex.props(styles.mainSlide)}>
-			<Swiper
-				modules={[Navigation, Pagination, A11y, Autoplay]}
-				navigation={navigationOptions}
-				pagination={{ clickable: true, type: "fraction" }}
-				autoplay={{
-					delay: 6000,
-					disableOnInteraction: false,
-				}}
-				{...stylex.props(styles.swiper)}
-			>
+			<Swiper {...swiperProps} {...stylex.props(styles.swiper)}>
 				{slides.map((slide) => (
-					<SwiperSlide key={slide.id} className="mainSlideItem">
+					<SwiperSlide key={slide.id}>
 						{({ isActive }) => (
 							<div {...stylex.props(styles.slide)}>
 								<img
@@ -176,19 +180,23 @@ export default function MainSlider() {
 			</Swiper>
 			<button
 				type="button"
-				className={`${prevClassName} ${prevStyleClassName ?? ""}`.trim()}
+				className={`${prevClassName} ${prevStyleClassName}`.trim()}
 				aria-label="이전 슬라이드"
 				{...prevButtonStyleProps}
 			>
-				<span {...stylex.props(styles.navIcon)}>‹</span>
+				<span {...stylex.props(styles.navIcon)}>
+					<ChevronLeft size={48} />
+				</span>
 			</button>
 			<button
 				type="button"
-				className={`${nextClassName} ${nextStyleClassName ?? ""}`.trim()}
+				className={`${nextClassName} ${nextStyleClassName}`.trim()}
 				aria-label="다음 슬라이드"
 				{...nextButtonStyleProps}
 			>
-				<span {...stylex.props(styles.navIcon)}>›</span>
+				<span {...stylex.props(styles.navIcon)}>
+					<ChevronRight size={48} />
+				</span>
 			</button>
 		</div>
 	);
