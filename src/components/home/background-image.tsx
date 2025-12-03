@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const MOBILE = "@media (max-width: 767px)" as const;
 const DESKTOP_BREAKPOINT = 768;
@@ -28,11 +28,7 @@ const styles = stylex.create({
 });
 
 export default function BackgroundImage() {
-	const [showBg, setShowBg] = useState(false);
-
-	useEffect(() => {
-		setShowBg(window.innerWidth >= DESKTOP_BREAKPOINT);
-	}, []);
+	const showBg = useMediaQuery(`(min-width: ${DESKTOP_BREAKPOINT}px)`);
 
 	if (!showBg) return null;
 
