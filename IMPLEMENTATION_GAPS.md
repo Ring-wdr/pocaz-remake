@@ -25,8 +25,8 @@
 - [ ] 채팅 목록 필터/검색·페이지네이션 및 필터 버튼 동작 구현 (`chat/list/page.tsx`, `components/chat/sections`)
 
 ## 마이페이지 (공통)
-- [ ] `users.me.summary` 엔드포인트 유효성/구현 후 실제 통계 연결 (`components/mypage/sections/stats-section.tsx`)
-- [ ] 활동·리스트 페이지 페이지네이션/필터 및 오류 UX 보완
+- [v] `users.me.summary` 엔드포인트 유효성/구현 후 실제 통계 연결 (`components/mypage/sections/stats-section.tsx`)
+- [v] 활동·리스트 페이지 페이지네이션/필터 및 오류 UX 보완
 
 ## 마이페이지 (개별)
 - [ ] 내 글 링크 버그: `/community/posts/${id}`로 수정 (`mypage/posts/page.tsx`)

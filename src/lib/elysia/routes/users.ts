@@ -10,7 +10,6 @@ import { prisma } from "@/lib/prisma";
 // 공통 응답 스키마
 const UserResponseSchema = t.Object({
 	id: t.String(),
-	supabaseId: t.String(),
 	email: t.Nullable(t.String()),
 	nickname: t.String(),
 	profileImage: t.Nullable(t.String()),
@@ -64,7 +63,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 
 			return {
 				id: user.id,
-				supabaseId: user.supabaseId,
 				email: user.email,
 				nickname: user.nickname,
 				profileImage: user.profileImage,
@@ -77,7 +75,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			detail: {
 				tags: ["Users"],
 				summary: "현재 사용자 정보 조회",
-				description: "인증된 사용자의 Prisma User 정보를 조회합니다.",
+				description: "인증된 사용자의 정보를 조회합니다 (supabaseId 제외).",
 			},
 		},
 	)
@@ -150,7 +148,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 
 			return {
 				id: user.id,
-				supabaseId: user.supabaseId,
 				email: user.email,
 				nickname: user.nickname,
 				profileImage: user.profileImage,
@@ -166,7 +163,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			response: {
 				200: t.Object({
 					id: t.String(),
-					supabaseId: t.String(),
 					email: t.Nullable(t.String()),
 					nickname: t.String(),
 					profileImage: t.Nullable(t.String()),

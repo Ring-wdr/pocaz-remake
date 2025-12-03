@@ -140,18 +140,23 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			},
 		},
 	)
-	// GET /api/likes/me - 내가 좋아요한 게시글 목록
+	// GET /api/likes/me - 내가 좋아요한 게시글 목록 (페이지네이션 지원)
 	.get(
 		"/me",
-		async ({ auth }) => {
+		async ({ auth, query }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
-				return { items: [] };
+				return { items: [], nextCursor: null, hasMore: false };
 			}
 
-			const posts = await likeService.getLikedPosts(user.id);
+			const parsedLimit = query.limit ? Number.parseInt(query.limit, 10) : 20;
+			const result = await likeService.getLikedPosts(user.id, {
+				cursor: query.cursor,
+				limit: Number.isFinite(parsedLimit) ? parsedLimit : 20,
+			});
+
 			return {
-				items: posts.map((post) => ({
+				items: result.items.map((post) => ({
 					id: post.id,
 					content: post.content,
 					createdAt: post.createdAt.toISOString(),
@@ -161,9 +166,15 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 					likeCount: post.likeCount,
 					likedAt: post.likedAt.toISOString(),
 				})),
+				nextCursor: result.nextCursor,
+				hasMore: result.hasMore,
 			};
 		},
 		{
+			query: t.Object({
+				cursor: t.Optional(t.String()),
+				limit: t.Optional(t.String()),
+			}),
 			response: t.Object({
 				items: t.Array(
 					t.Object({
@@ -177,11 +188,13 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 						likedAt: t.String(),
 					}),
 				),
+				nextCursor: t.Nullable(t.String()),
+				hasMore: t.Boolean(),
 			}),
 			detail: {
 				tags: ["Likes"],
 				summary: "내가 좋아요한 게시글 목록",
-				description: "현재 사용자가 좋아요한 게시글 목록을 조회합니다.",
+				description: "현재 사용자가 좋아요한 게시글 목록을 조회합니다 (페이지네이션 지원).",
 			},
 		},
 	)

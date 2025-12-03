@@ -80,9 +80,15 @@ export const likeService = {
 	},
 
 	/**
-	 * 사용자가 좋아요한 Post 목록
+	 * 사용자가 좋아요한 Post 목록 (페이지네이션 지원)
 	 */
-	async getLikedPosts(userId: string) {
+	async getLikedPosts(
+		userId: string,
+		options?: { cursor?: string; limit?: number },
+	) {
+		const limit = options?.limit ?? 20;
+		const cursor = options?.cursor;
+
 		const likes = await prisma.like.findMany({
 			where: { userId },
 			include: {
@@ -106,18 +112,31 @@ export const likeService = {
 				},
 			},
 			orderBy: { createdAt: "desc" },
+			take: limit + 1,
+			...(cursor && {
+				cursor: { id: cursor },
+				skip: 1,
+			}),
 		});
 
-		return likes.map((like) => ({
-			id: like.post.id,
-			content: like.post.content,
-			createdAt: like.post.createdAt,
-			user: like.post.user,
-			images: like.post.images,
-			replyCount: like.post._count.comments,
-			likeCount: like.post._count.likes,
-			likedAt: like.createdAt,
-		}));
+		const hasMore = likes.length > limit;
+		const items = hasMore ? likes.slice(0, limit) : likes;
+		const nextCursor = hasMore ? items[items.length - 1]?.id : null;
+
+		return {
+			items: items.map((like) => ({
+				id: like.post.id,
+				content: like.post.content,
+				createdAt: like.post.createdAt,
+				user: like.post.user,
+				images: like.post.images,
+				replyCount: like.post._count.comments,
+				likeCount: like.post._count.likes,
+				likedAt: like.createdAt,
+			})),
+			nextCursor,
+			hasMore,
+		};
 	},
 
 	/**
