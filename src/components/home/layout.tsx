@@ -26,7 +26,6 @@ const styles = stylex.create({
 		zIndex: 1,
 		minHeight: "100vh",
 		isolation: "isolate",
-		backgroundColor: colors.accentPrimary,
 	},
 	txtBox: {
 		position: "fixed",
