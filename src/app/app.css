@@ -110,30 +110,4 @@
  */
 @stylex;
 
-/* Main Swiper Slider Styles */
-.mainSlideSwiper {
-	height: 288px;
-}
-
-.mainSlideSwiper .swiper-button-prev {
-	left: 0;
-}
-.mainSlideSwiper .swiper-button-next {
-	right: 0;
-}
-.mainSlideSwiper .swiper-button-next,
-.mainSlideSwiper .swiper-button-prev {
-	color: #fff;
-}
-.mainSlideSwiper .swiper-button-next::after,
-.mainSlideSwiper .swiper-button-prev::after {
-	padding: 14px;
-	font-size: 14px;
-	background: rgba(255, 255, 255, 0.5);
-}
-.mainSlideSwiper .swiper-pagination {
-	color: #fff;
-	font-size: 12px;
-}
-
 /* Font Family */

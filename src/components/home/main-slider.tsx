@@ -11,6 +11,7 @@ import {
 	colors,
 	fontSize,
 	fontWeight,
+	iconSize,
 	spacing,
 } from "@/app/global-tokens.stylex";
 
@@ -26,9 +27,12 @@ const VisualMotion = stylex.keyframes({
 });
 
 const styles = stylex.create({
-	mainSlide: {},
+	mainSlide: {
+		position: "relative",
+	},
 	swiper: {
 		height: "288px",
+		"--swiper-pagination-color": colors.textInverse,
 	},
 	slide: {
 		position: "relative",
@@ -69,6 +73,33 @@ const styles = stylex.create({
 		fontSize: fontSize.xl,
 		fontWeight: fontWeight.bold,
 	},
+	navigationButton: {
+		position: "absolute",
+		top: "50%",
+		transform: "translateY(-50%)",
+		zIndex: 1,
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		color: "#fff",
+		borderWidth: 0,
+		borderStyle: "none",
+		paddingTop: "12px",
+		paddingRight: "12px",
+		paddingBottom: "12px",
+		paddingLeft: "12px",
+		cursor: "pointer",
+	},
+	navButtonPrev: {
+		left: 0,
+	},
+	navButtonNext: {
+		right: 0,
+	},
+	navIcon: {
+		fontSize: 72,
+		lineHeight: 1,
+	},
 });
 
 const slides = [
@@ -94,19 +125,31 @@ const slides = [
 		subtitle: "뉴진스 본격 분석 💙",
 	},
 ];
+const prevClassName = "mainSlidePrev";
+const nextClassName = "mainSlideNext";
+
+const navigationOptions = {
+	prevEl: `.${prevClassName}`,
+	nextEl: `.${nextClassName}`,
+};
 
 export default function MainSlider() {
+	const { className: prevStyleClassName, ...prevButtonStyleProps } =
+		stylex.props(styles.navigationButton, styles.navButtonPrev);
+	const { className: nextStyleClassName, ...nextButtonStyleProps } =
+		stylex.props(styles.navigationButton, styles.navButtonNext);
+
 	return (
 		<div {...stylex.props(styles.mainSlide)}>
 			<Swiper
 				modules={[Navigation, Pagination, A11y, Autoplay]}
-				navigation
+				navigation={navigationOptions}
 				pagination={{ clickable: true, type: "fraction" }}
 				autoplay={{
 					delay: 6000,
 					disableOnInteraction: false,
 				}}
-				className="mainSlideSwiper"
+				{...stylex.props(styles.swiper)}
 			>
 				{slides.map((slide) => (
 					<SwiperSlide key={slide.id} className="mainSlideItem">
@@ -131,6 +174,22 @@ export default function MainSlider() {
 					</SwiperSlide>
 				))}
 			</Swiper>
+			<button
+				type="button"
+				className={`${prevClassName} ${prevStyleClassName ?? ""}`.trim()}
+				aria-label="이전 슬라이드"
+				{...prevButtonStyleProps}
+			>
+				<span {...stylex.props(styles.navIcon)}>‹</span>
+			</button>
+			<button
+				type="button"
+				className={`${nextClassName} ${nextStyleClassName ?? ""}`.trim()}
+				aria-label="다음 슬라이드"
+				{...nextButtonStyleProps}
+			>
+				<span {...stylex.props(styles.navIcon)}>›</span>
+			</button>
 		</div>
 	);
 }
