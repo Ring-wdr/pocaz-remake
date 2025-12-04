@@ -24,7 +24,8 @@ How to give the coding agent clear, low-ambiguity instructions for this project.
 ## Preferences & conventions
 - Favor server components and server-side data fetching when possible.
 - On client component, use `useActionState` or `useTransition` for client-side data mutation.
-- Keep StyleX tokens (`colors`, `spacing`, etc.) and component patterns consistent.
+- Build combined initial state objects on the server before passing to client components, and prefer `useActionState` over prop-sync `useEffect` for mutations (form + hidden inputs).
+- StyleX: follow `claude/skills/stylex` rules every time (no shorthands, no unsupported props, keep tokens). If a command touches StyleX, assume these rules apply without extra prompting.
 - Use Eden client for API calls; align with Elysia route contracts.
 - Prisma changes: mirror service/route updates and regen if needed (but don’t auto-run without being asked).
 - Avoid destructive git commands; keep changes minimal and purposeful.

@@ -1,20 +1,43 @@
-# Implementation Gaps
+# Implementation Gaps & To‑Dos
 
-Repository scan of unfinished or stubbed features to help plan follow-up sessions. Items are grouped by area with source pointers and suggested next steps.
+이 문서는 에이전트가 후속 작업을 잡을 때 체크할 수 있는 TODO 리스트입니다. 각 항목은 파일/경로 단서와 함께 제공됩니다.
 
-## My Page
-- Logout not wired: `src/components/mypage/menu-list.tsx`, `src/app/mypage/security/page.tsx` handlers just log/console. Hook to the existing `signOut()` server action (or `/auth/sign-out` flow) and redirect; ensure session cookies are cleared client-side.
-- Account deletion missing: `src/app/mypage/security/page.tsx` only logs. Call `DELETE /api/users/me` (see userRoutes) and handle success/error UI from the confirmation modal.
-- Profile edit stub: `src/app/mypage/edit/page.tsx` hardcodes nickname/email, has no avatar upload, and `handleSave` just alerts. Load current user via `api.users.me.get()`, add file input + upload to Supabase Storage (`avatars` bucket) and update via `PUT /api/users/me`.
-- Stats/Activity widgets use fake data: `src/components/mypage/sections/stats-section.tsx` and `src/components/mypage/sections/activity-section.tsx` simulate delays with placeholder arrays. Replace with real endpoints (e.g., expose a `users/me/summary` and reuse `users/me/activity` with a limit) and remove hardcoded thumbnails/badges.
-- Likes page uses static seed data: `src/app/mypage/likes/page.tsx` renders `likedPosts` constant. Wire to `GET /api/likes/me`, handle empty/error states, and support pagination if needed.
-- Notification/theme settings are local-only: `src/app/mypage/notifications/page.tsx` and `src/app/mypage/settings/page.tsx` store toggles in component state without persistence or actual dark-mode/theme switching. Decide persistence layer (API or localStorage) and implement real theme toggling.
+## 홈/로그인
+- [ ] 홈 슬라이더 컨트롤·오토플레이/접근성 강화, 추천/검색 UX 보강 (`src/app/page.tsx`, `src/components/home`)
+- [v] 로그인 로딩/에러 상태 및 추가 로그인 옵션 검토 (`src/app/login/page.tsx`)
 
-## Chat
-- Message send and realtime are stubbed: `src/components/chat/chat-room.tsx` only pushes to local state and leaves a TODO for API send. It also ignores realtime hooks in `src/lib/hooks/use-chat-realtime.ts` / `useChatBroadcast` / `useChatPresence`. Wire `POST /api/chat/rooms/:id/messages`, add optimistic UI with rollback, and subscribe to realtime/presence so inbound messages/online users sync across clients.
+## 커뮤니티
+- [ ] 게시글 수정 페이지 구현 또는 메뉴 제거 (`community/posts/[postId]/components.tsx` → `/community/posts/[id]/edit`)
+- [ ] 목록 검색/정렬/페이지네이션 및 오류·빈 상태 개선 (`components/community/sections/post-list-section.tsx`)
+- [ ] 비로그인 좋아요·댓글 가드 및 로그인 유도
+- [ ] 댓글/답글 낙관적 업데이트·재시도 UX 추가 (`comments-client.tsx`)
+- [ ] 글쓰기: 제목/본문 분리, 업로드 실패·용량 제한, 로그인 체크 (`community/write/page.client.tsx`)
 
-## Support
-- Inquiry submission not implemented: `src/app/support/inquiry/page.tsx` just logs and alerts. Add an API (e.g., `POST /api/support/inquiries` or email webhook), show pending/error states, and confirm with a toast/redirect after success.
+## 마켓
+- [v] 검색바/필터 탭을 API 파라미터와 연동, 페이지네이션·정렬 추가 (`market/page.tsx`, `components/market/sections`)
+- [v] 상세: 이미지 슬라이더 동작, 좋아요/공유 핸들러, 상태 배지 토스트·낙관적 처리 (`market/[productId]/*`)
+- [v] 등록: 스토리지 업로드 사용, 상태/협상 가능 여부를 구조화해 전송, 검증·로그인 가드·에러 UX 강화 (`market/register/page.client.tsx`)
 
-## Possible Backend additions
-- There is no exposed endpoint for dashboard stats consumed by My Page tiles; `activityService.getRecentSummary` exists but isn’t routed. Consider a `GET /api/users/me/summary` (posts/likes/trades counts) to feed the stats widget.
+## 채팅
+- [ ] 전송 실패 재시도/알림, 첨부·이미지 전송 옵션 검토 (`components/chat/chat-room.tsx`)
+- [ ] Supabase realtime 시 사용자 정보 반복 fetch 제거(페이로드 포함 or 캐시) (`use-chat-realtime.ts`)
+- [ ] 타이핑/읽음/차단·나가기 등 관리 액션 검토
+- [ ] 채팅 목록 필터/검색·페이지네이션 및 필터 버튼 동작 구현 (`chat/list/page.tsx`, `components/chat/sections`)
+
+## 마이페이지 (공통)
+- [v] `users.me.summary` 엔드포인트 유효성/구현 후 실제 통계 연결 (`components/mypage/sections/stats-section.tsx`)
+- [v] 활동·리스트 페이지 페이지네이션/필터 및 오류 UX 보완
+
+## 마이페이지 (개별)
+- [ ] 내 글 링크 버그: `/community/posts/${id}`로 수정 (`mypage/posts/page.tsx`)
+- [ ] 프로필 수정: 닉네임 중복 검증, 파일 제한, 저장 중 로딩 표시 (`mypage/edit/profile-form.tsx`)
+- [ ] 설정: 다크모드/테마 토글 실제 동작 및 영속화 (`mypage/settings/page.tsx`)
+- [ ] 알림 설정: 서버/푸시 권한 연동, 토글 영속화 (`mypage/notifications/page.client.tsx`)
+- [ ] 보안: 탈퇴/로그아웃 피드백·재인증/2차 확인 강화 (`mypage/security/page.client.tsx`)
+- [ ] 판매/구매/거래/찜: 필터·정렬/탭 동작, 위시 해제·상태 변경 액션 추가 (`mypage/wishlist|sales|purchases|trades/page.tsx`)
+- [ ] 좋아요한 글: 페이지네이션·정렬 및 오류/빈 상태 개선 (`mypage/likes/page.tsx`)
+
+## 고객지원/공통
+- [v] 문의: 첨부/연락처 필드, 접수 번호·상태 표시, 로그인 가드 (`support/inquiry/page.client.tsx`)
+- [v] FAQ/약관/오류 페이지에 지원 채널·재시도 링크 강화 (`support/*`, `error.tsx` 등)
+- [v] 전역 에러/권한 페이지에 재시도·피드백/로그 수집 연결

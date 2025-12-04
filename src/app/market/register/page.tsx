@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { createMetadata } from "@/lib/metadata";
+import { api } from "@/utils/eden";
 import MarketRegisterPageClient from "./page.client";
 
 export const metadata = createMetadata({
@@ -8,6 +10,12 @@ export const metadata = createMetadata({
 	ogTitle: "Register Photocard",
 });
 
-export default function MarketRegisterPage() {
+export default async function MarketRegisterPage() {
+	const { data } = await api.auth.me.get();
+	if (!data?.authenticated) {
+		const redirectUrl = encodeURIComponent("/market/register");
+		redirect(`/login?redirect=${redirectUrl}`);
+	}
+
 	return <MarketRegisterPageClient />;
 }

@@ -1,11 +1,18 @@
 "use server";
 
-import { cache } from "react";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getBaseUrl } from "@/utils/url";
 
-export async function signInWithGoogle(): Promise<void> {
+export type SignInState = {
+	error?: string;
+};
+
+export async function signInWithGoogle(
+	_prevState: SignInState | undefined,
+	_formData?: FormData,
+): Promise<SignInState | undefined> {
 	const supabase = await createSupabaseServerClient();
 	const redirectTo = `${getBaseUrl()}/auth/callback`;
 
@@ -22,12 +29,18 @@ export async function signInWithGoogle(): Promise<void> {
 
 	if (error) {
 		console.error("Google sign in error:", error);
-		redirect("/auth/auth-error");
+		return {
+			error: "Google 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.",
+		};
 	}
 
 	if (data.url) {
 		redirect(data.url);
 	}
+
+	return {
+		error: "로그인 링크를 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+	};
 }
 
 export async function signOut() {

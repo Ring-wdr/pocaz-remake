@@ -5,8 +5,9 @@ import { A11y, Autoplay, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
-import "swiper/css/navigation";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { ComponentProps } from "react";
 import {
 	colors,
 	fontSize,
@@ -26,9 +27,12 @@ const VisualMotion = stylex.keyframes({
 });
 
 const styles = stylex.create({
-	mainSlide: {},
+	mainSlide: {
+		position: "relative",
+	},
 	swiper: {
 		height: "288px",
+		"--swiper-pagination-color": colors.textInverse,
 	},
 	slide: {
 		position: "relative",
@@ -69,6 +73,38 @@ const styles = stylex.create({
 		fontSize: fontSize.xl,
 		fontWeight: fontWeight.bold,
 	},
+	navigationButton: {
+		position: "absolute",
+		top: "50%",
+		transform: "translateY(-50%)",
+		zIndex: 1,
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		color: "#fff",
+		borderWidth: 0,
+		borderStyle: "none",
+		paddingTop: "12px",
+		paddingRight: "12px",
+		paddingBottom: "12px",
+		paddingLeft: "12px",
+		cursor: {
+			":disabled": "not-allowed",
+			":not(:disabled)": "pointer",
+		},
+		opacity: {
+			":disabled": 0.5,
+		},
+	},
+	navButtonPrev: {
+		left: 0,
+	},
+	navButtonNext: {
+		right: 0,
+	},
+	navIcon: {
+		lineHeight: 1,
+	},
 });
 
 const slides = [
@@ -94,22 +130,33 @@ const slides = [
 		subtitle: "뉴진스 본격 분석 💙",
 	},
 ];
+const prevClassName = "mainSlidePrev";
+const nextClassName = "mainSlideNext";
+
+const swiperProps: ComponentProps<typeof Swiper> = {
+	modules: [Navigation, Pagination, A11y, Autoplay],
+	navigation: {
+		prevEl: `.${prevClassName}`,
+		nextEl: `.${nextClassName}`,
+	},
+	pagination: { clickable: true, type: "fraction" },
+	autoplay: {
+		delay: 6000,
+		disableOnInteraction: false,
+	},
+};
 
 export default function MainSlider() {
+	const { className: prevStyleClassName, ...prevButtonStyleProps } =
+		stylex.props(styles.navigationButton, styles.navButtonPrev);
+	const { className: nextStyleClassName, ...nextButtonStyleProps } =
+		stylex.props(styles.navigationButton, styles.navButtonNext);
+
 	return (
 		<div {...stylex.props(styles.mainSlide)}>
-			<Swiper
-				modules={[Navigation, Pagination, A11y, Autoplay]}
-				navigation
-				pagination={{ clickable: true, type: "fraction" }}
-				autoplay={{
-					delay: 6000,
-					disableOnInteraction: false,
-				}}
-				className="mainSlideSwiper"
-			>
+			<Swiper {...swiperProps} {...stylex.props(styles.swiper)}>
 				{slides.map((slide) => (
-					<SwiperSlide key={slide.id} className="mainSlideItem">
+					<SwiperSlide key={slide.id}>
 						{({ isActive }) => (
 							<div {...stylex.props(styles.slide)}>
 								<img
@@ -131,6 +178,26 @@ export default function MainSlider() {
 					</SwiperSlide>
 				))}
 			</Swiper>
+			<button
+				type="button"
+				className={`${prevClassName} ${prevStyleClassName}`.trim()}
+				aria-label="이전 슬라이드"
+				{...prevButtonStyleProps}
+			>
+				<span {...stylex.props(styles.navIcon)}>
+					<ChevronLeft size={48} />
+				</span>
+			</button>
+			<button
+				type="button"
+				className={`${nextClassName} ${nextStyleClassName}`.trim()}
+				aria-label="다음 슬라이드"
+				{...nextButtonStyleProps}
+			>
+				<span {...stylex.props(styles.navIcon)}>
+					<ChevronRight size={48} />
+				</span>
+			</button>
 		</div>
 	);
 }

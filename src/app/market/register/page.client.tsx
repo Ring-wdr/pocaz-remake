@@ -3,7 +3,8 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArrowLeft, Camera, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { type ChangeEvent, useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { colors, size } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
@@ -14,6 +15,14 @@ const conditions = [
 	{ id: "good", name: "사용감 적음" },
 	{ id: "used", name: "사용감 있음" },
 ];
+
+const MAX_IMAGE_COUNT = 10;
+const MAX_FILE_SIZE_MB = 20;
+
+type SelectedImage = {
+	file: File;
+	preview: string;
+};
 
 const styles = stylex.create({
 	container: {
@@ -333,41 +342,82 @@ const styles = stylex.create({
 export default function MarketRegisterPage() {
 	const router = useRouter();
 	const [isPending, startTransition] = useTransition();
-	const [images, setImages] = useState<string[]>([]);
+	const [images, setImages] = useState<SelectedImage[]>([]);
 	const [title, setTitle] = useState("");
 	const [price, setPrice] = useState("");
 	const [condition, setCondition] = useState<string | null>(null);
 	const [description, setDescription] = useState("");
 	const [isNegotiable, setIsNegotiable] = useState(false);
+	const [isUploading, setIsUploading] = useState(false);
+
+	const hasImages = images.length > 0;
+	const hasTitle = title.trim().length > 0;
+	const hasDescription = description.trim().length > 0;
+	const hasCondition = condition !== null;
+	const hasPrice = price.trim().length > 0;
 
 	const isFormValid =
-		images.length > 0 &&
-		title.trim() &&
-		price.trim() &&
-		condition !== null &&
-		description.trim();
-	const isDisabled = !isFormValid || isPending;
+		hasImages &&
+		hasTitle &&
+		hasCondition &&
+		hasDescription &&
+		(hasPrice || isNegotiable);
+	const isDisabled = !isFormValid || isPending || isUploading;
 
-	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const files = e.target.files;
+	const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+		const files = event.target.files;
 		if (!files) return;
 
-		Array.from(files).forEach((file) => {
-			const reader = new FileReader();
-			reader.onload = () => {
-				if (typeof reader.result === "string") {
-					setImages((prev) => [...prev, reader.result as string]);
-				}
-			};
-			reader.readAsDataURL(file);
+		const remainingSlots = MAX_IMAGE_COUNT - images.length;
+		if (remainingSlots <= 0) {
+			toast.error(`이미지는 최대 ${MAX_IMAGE_COUNT}개까지 업로드할 수 있어요.`);
+			event.target.value = "";
+			return;
+		}
+
+		const selectedFiles = Array.from(files).slice(0, remainingSlots);
+		const validImages: SelectedImage[] = [];
+		const errors: string[] = [];
+
+		selectedFiles.forEach((file) => {
+			if (!file.type.startsWith("image/")) {
+				errors.push("이미지 파일만 업로드할 수 있어요.");
+				return;
+			}
+
+			if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+				errors.push(
+					`${file.name} 파일이 너무 큽니다. 최대 ${MAX_FILE_SIZE_MB}MB까지 업로드할 수 있어요.`,
+				);
+				return;
+			}
+
+			validImages.push({
+				file,
+				preview: URL.createObjectURL(file),
+			});
 		});
+
+		if (errors.length > 0) {
+			toast.error(errors[0]);
+		}
+
+		if (validImages.length > 0) {
+			setImages((prev) => [...prev, ...validImages]);
+		}
+
+		event.target.value = "";
 	};
 
 	const handleRemoveImage = (index: number) => {
+		const target = images[index];
+		if (target) {
+			URL.revokeObjectURL(target.preview);
+		}
 		setImages((prev) => prev.filter((_, i) => i !== index));
 	};
 
-	const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handlePriceChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value.replace(/[^0-9]/g, "");
 		if (value === "") {
 			setPrice("");
@@ -381,21 +431,80 @@ export default function MarketRegisterPage() {
 		if (isDisabled) return;
 
 		startTransition(async () => {
-			const priceNumber = parseInt(price.replace(/,/g, ""), 10);
-			const fullDescription = `[${conditions.find((c) => c.id === condition)?.name}] ${description}${isNegotiable ? "\n\n(가격 협상 가능)" : ""}`;
+			let uploadedUrls: string[] = [];
+			setIsUploading(true);
+
+			try {
+				const uploadResult = await api.storage.upload.files.post({
+					bucket: "markets",
+					files: images.map((image) => image.file),
+				});
+
+				if (
+					uploadResult.error ||
+					!uploadResult.data ||
+					!("uploaded" in uploadResult.data) ||
+					!uploadResult.data.uploaded
+				) {
+					toast.error("이미지 업로드에 실패했습니다. 다시 시도해 주세요.");
+					return;
+				}
+
+				const hasErrors =
+					Array.isArray(uploadResult.data.errors) &&
+					uploadResult.data.errors.length > 0;
+
+				if (hasErrors) {
+					toast.error(
+						"일부 이미지 업로드에 실패했습니다. 파일을 확인해 주세요.",
+					);
+					return;
+				}
+
+				uploadedUrls = uploadResult.data.uploaded
+					.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+					.map((item) => item.publicUrl);
+			} catch (error) {
+				console.error("Image upload failed", error);
+				toast.error("이미지 업로드 중 오류가 발생했습니다.");
+				return;
+			} finally {
+				setIsUploading(false);
+			}
+
+			if (uploadedUrls.length === 0) {
+				toast.error("업로드된 이미지가 없습니다.");
+				return;
+			}
+
+			const priceNumber = price.trim()
+				? Number.parseInt(price.replace(/,/g, ""), 10)
+				: undefined;
+			const conditionLabel =
+				conditions.find((c) => c.id === condition)?.name ?? "상태 미입력";
+			const metaLines = [
+				`상태: ${conditionLabel}`,
+				`가격 협상: ${isNegotiable ? "가능" : "불가"}`,
+			];
+			const fullDescription = `${description.trim()}\n\n---\n${metaLines.join(" · ")}`;
 
 			const { error } = await api.markets.post({
-				title,
+				title: title.trim(),
 				description: fullDescription,
 				price: priceNumber,
-				imageUrls: images.length > 0 ? images : undefined,
+				imageUrls: uploadedUrls,
 			});
 
 			if (error) {
 				console.error("Failed to create market item:", error);
+				toast.error("상품 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.");
 				return;
 			}
 
+			toast.success("상품을 등록했습니다.");
+			images.forEach((image) => {
+				URL.revokeObjectURL(image.preview);
+			});
 			router.push("/market");
 		});
 	};
@@ -424,7 +533,7 @@ export default function MarketRegisterPage() {
 						<label {...stylex.props(styles.imageUploadButton)}>
 							<Camera size={28} {...stylex.props(styles.uploadIcon)} />
 							<span {...stylex.props(styles.uploadText)}>
-								{images.length}/10
+								{images.length}/{MAX_IMAGE_COUNT}
 							</span>
 							<input
 								type="file"
@@ -436,9 +545,12 @@ export default function MarketRegisterPage() {
 							/>
 						</label>
 						{images.map((image, index) => (
-							<div key={index} {...stylex.props(styles.imagePreviewContainer)}>
+							<div
+								key={image.preview}
+								{...stylex.props(styles.imagePreviewContainer)}
+							>
 								<img
-									src={image}
+									src={image.preview}
 									alt={`상품 이미지 ${index + 1}`}
 									{...stylex.props(styles.imagePreview)}
 								/>
@@ -558,7 +670,7 @@ export default function MarketRegisterPage() {
 						isDisabled && styles.bottomButtonDisabled,
 					)}
 				>
-					{isPending ? (
+					{isPending || isUploading ? (
 						<Loader2 size={20} className="animate-spin" />
 					) : (
 						"등록하기"

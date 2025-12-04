@@ -1,14 +1,15 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { colors, fontWeight, spacing } from "@/app/global-tokens.stylex";
+import type { MarketFilterValue } from "./types";
 
-const filters = [
-	{ id: 0, name: "전체", value: "all" },
-	{ id: 1, name: "양도", value: "sell" },
-	{ id: 2, name: "구해요", value: "buy" },
-	{ id: 3, name: "교환", value: "trade" },
+const filters: { id: MarketFilterValue; name: string }[] = [
+	{ id: "all", name: "전체" },
+	{ id: "available", name: "판매중" },
+	{ id: "reserved", name: "예약중" },
+	{ id: "sold", name: "판매완료" },
 ];
 
 const styles = stylex.create({
@@ -40,17 +41,23 @@ const styles = stylex.create({
 });
 
 interface FilterTabsSectionProps {
-	onFilterChange?: (filter: string) => void;
+	value?: MarketFilterValue;
+	onFilterChange?: (filter: MarketFilterValue) => void;
 }
 
 export default function FilterTabsSection({
+	value = "all",
 	onFilterChange,
 }: FilterTabsSectionProps) {
-	const [activeFilter, setActiveFilter] = useState("all");
+	const [activeFilter, setActiveFilter] = useState<MarketFilterValue>(value);
 
-	const handleClick = (value: string) => {
+	useEffect(() => {
 		setActiveFilter(value);
-		onFilterChange?.(value);
+	}, [value]);
+
+	const handleClick = (nextValue: MarketFilterValue) => {
+		setActiveFilter(nextValue);
+		onFilterChange?.(nextValue);
 	};
 
 	return (
@@ -59,10 +66,10 @@ export default function FilterTabsSection({
 				<button
 					key={filter.id}
 					type="button"
-					onClick={() => handleClick(filter.value)}
+					onClick={() => handleClick(filter.id)}
 					{...stylex.props(
 						styles.tab,
-						activeFilter === filter.value && styles.tabActive,
+						activeFilter === filter.id && styles.tabActive,
 					)}
 				>
 					{filter.name}

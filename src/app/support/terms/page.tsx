@@ -9,6 +9,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { SupportHelpCard } from "@/components/support/help-card";
 import { createMetadata } from "@/lib/metadata";
 
 export const metadata = createMetadata({
@@ -86,6 +87,9 @@ const styles = stylex.create({
 		margin: 0,
 		marginBottom: spacing.md,
 	},
+	supportSection: {
+		marginTop: spacing.lg,
+	},
 });
 
 export default function TermsPage() {
@@ -157,6 +161,10 @@ export default function TermsPage() {
 						못하거나 서비스 자료에 대한 취사선택 또는 이용으로 발생하는 손해에
 						대해 책임을 지지 않습니다.
 					</p>
+				</div>
+
+				<div {...stylex.props(styles.supportSection)}>
+					<SupportHelpCard description="약관 관련 문의나 분쟁 신고는 1:1 문의로 접수해 주세요. 접수 번호를 함께 전달해 드립니다." />
 				</div>
 			</div>
 

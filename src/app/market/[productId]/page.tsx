@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
 import * as stylex from "@stylexjs/stylex";
-import { ChevronLeft, ChevronRight, Store, User } from "lucide-react";
+import { User } from "lucide-react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/home";
 import { getCurrentUser } from "@/lib/auth/actions";
@@ -9,7 +9,9 @@ import { formatKoreanDate } from "@/utils/date";
 import { api } from "@/utils/eden";
 import { ActionBar } from "./action-bar";
 import { Header, type MarketStatus, styles } from "./components";
+import MarketImageCarousel from "./image-carousel";
 import StatusBadge from "./status-badge";
+import type { MarketLikeState } from "./toggle-market-like";
 
 function buildProductDescription({
 	description,
@@ -63,13 +65,26 @@ export async function generateMetadata({
 	});
 }
 
+async function getMarketLikeStatus(marketId: string) {
+	try {
+		const { data, error } = await api.likes.markets({ marketId }).get();
+		if (error || !data) {
+			return { liked: false, count: 0 };
+		}
+		return data;
+	} catch {
+		return { liked: false, count: 0 };
+	}
+}
+
 export default async function MarketDetailPage({
 	params,
 }: PageProps<"/market/[productId]">) {
 	const { productId } = await params;
-	const [marketResult, currentUser] = await Promise.all([
+	const [marketResult, currentUser, likeStatus] = await Promise.all([
 		api.markets({ id: productId }).get(),
 		getCurrentUser(),
+		getMarketLikeStatus(productId),
 	]);
 
 	const { data, error } = marketResult;
@@ -81,6 +96,11 @@ export default async function MarketDetailPage({
 	const status = data.status as MarketStatus;
 	const formattedDate = formatKoreanDate(data.createdAt);
 	const isOwner = currentUser?.id === data.user.id;
+	const initialLikeState: MarketLikeState = {
+		liked: likeStatus.liked,
+		count: likeStatus.count,
+		error: null,
+	};
 
 	return (
 		<div {...stylex.props(styles.container)}>
@@ -88,50 +108,8 @@ export default async function MarketDetailPage({
 
 			<div {...stylex.props(styles.content)}>
 				<div {...stylex.props(styles.imageSection)}>
-					{data.images.length > 0 ? (
-						<img
-							src={data.images[0].imageUrl}
-							alt={data.title}
-							{...stylex.props(styles.image)}
-						/>
-					) : (
-						<div {...stylex.props(styles.emptyState)}>
-							<Store size={48} />
-							<span {...stylex.props(styles.emptyText)}>이미지 없음</span>
-						</div>
-					)}
-					<StatusBadge
-						marketId={productId}
-						status={status}
-						isOwner={isOwner}
-					/>
-					{data.images.length > 1 && (
-						<>
-							<button
-								type="button"
-								{...stylex.props(styles.imageNav, styles.imageNavLeft)}
-							>
-								<ChevronLeft size={20} />
-							</button>
-							<button
-								type="button"
-								{...stylex.props(styles.imageNav, styles.imageNavRight)}
-							>
-								<ChevronRight size={20} />
-							</button>
-							<div {...stylex.props(styles.imageIndicator)}>
-								{data.images.map((_, index) => (
-									<span
-										key={data.images[index].id}
-										{...stylex.props(
-											styles.indicatorDot,
-											index === 0 && styles.indicatorDotActive,
-										)}
-									/>
-								))}
-							</div>
-						</>
-					)}
+					<MarketImageCarousel images={data.images} title={data.title} />
+					<StatusBadge marketId={productId} status={status} isOwner={isOwner} />
 				</div>
 
 				<div {...stylex.props(styles.infoSection)}>
@@ -169,6 +147,8 @@ export default async function MarketDetailPage({
 				sellerId={data.user.id}
 				currentUserId={currentUser?.id ?? null}
 				isOwner={isOwner}
+				marketTitle={data.title}
+				initialLikeState={initialLikeState}
 			/>
 			<Footer />
 		</div>

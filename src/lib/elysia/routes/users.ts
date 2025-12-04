@@ -10,7 +10,6 @@ import { prisma } from "@/lib/prisma";
 // 공통 응답 스키마
 const UserResponseSchema = t.Object({
 	id: t.String(),
-	supabaseId: t.String(),
 	email: t.Nullable(t.String()),
 	nickname: t.String(),
 	profileImage: t.Nullable(t.String()),
@@ -31,6 +30,14 @@ const UserSummarySchema = t.Object({
 	trades: t.Number(),
 	activity: t.Record(t.String(), t.Number()),
 });
+
+const ActivityTypeEnum = t.Union([
+	t.Literal("post"),
+	t.Literal("like"),
+	t.Literal("comment"),
+	t.Literal("trade"),
+	t.Literal("market"),
+]);
 
 const ErrorSchema = t.Object({
 	error: t.String(),
@@ -56,7 +63,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 
 			return {
 				id: user.id,
-				supabaseId: user.supabaseId,
 				email: user.email,
 				nickname: user.nickname,
 				profileImage: user.profileImage,
@@ -69,7 +75,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			detail: {
 				tags: ["Users"],
 				summary: "현재 사용자 정보 조회",
-				description: "인증된 사용자의 Prisma User 정보를 조회합니다.",
+				description: "인증된 사용자의 정보를 조회합니다 (supabaseId 제외).",
 			},
 		},
 	)
@@ -77,16 +83,12 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 	.get(
 		"/me/summary",
 		async ({ auth }) => {
-			const user = await userService.findBySupabaseId(auth.user.id);
-
-			if (!user) {
-				return {
-					posts: 0,
-					likes: 0,
-					trades: 0,
-					activity: {},
-				};
-			}
+			const user = await userService.findOrCreate(
+				auth.user.id,
+				auth.user.email,
+				auth.user.user_metadata?.full_name,
+				auth.user.user_metadata?.avatar_url,
+			);
 
 			const [posts, likes, trades, activity] = await Promise.all([
 				prisma.post.count({ where: { userId: user.id } }),
@@ -100,11 +102,20 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				activityService.getRecentSummary(user.id),
 			]);
 
+			const activitySummary = {
+				post: 0,
+				like: 0,
+				comment: 0,
+				trade: 0,
+				market: 0,
+				...activity,
+			};
+
 			return {
 				posts,
 				likes,
 				trades,
-				activity,
+				activity: activitySummary,
 			};
 		},
 		{
@@ -137,7 +148,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 
 			return {
 				id: user.id,
-				supabaseId: user.supabaseId,
 				email: user.email,
 				nickname: user.nickname,
 				profileImage: user.profileImage,
@@ -153,7 +163,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			response: {
 				200: t.Object({
 					id: t.String(),
-					supabaseId: t.String(),
 					email: t.Nullable(t.String()),
 					nickname: t.String(),
 					profileImage: t.Nullable(t.String()),
@@ -486,15 +495,16 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 		async ({ auth, query }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
-				return { items: [] };
+				return { items: [], nextCursor: null, hasMore: false };
 			}
-
-			const activities = await activityService.getByUserId(
-				user.id,
-				query.limit ? Number.parseInt(query.limit, 10) : 50,
-			);
+			const parsedLimit = query.limit ? Number.parseInt(query.limit, 10) : 50;
+			const activities = await activityService.getByUserId(user.id, {
+				limit: Number.isFinite(parsedLimit) ? parsedLimit : 50,
+				cursor: query.cursor,
+				type: query.type,
+			});
 			return {
-				items: activities.map((a) => ({
+				items: activities.items.map((a) => ({
 					id: a.id,
 					type: a.type,
 					text: a.description,
@@ -502,23 +512,29 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 					targetHref: a.targetHref,
 					time: a.createdAt.toISOString(),
 				})),
+				nextCursor: activities.nextCursor,
+				hasMore: activities.hasMore,
 			};
 		},
 		{
 			query: t.Object({
 				limit: t.Optional(t.String()),
+				cursor: t.Optional(t.String()),
+				type: t.Optional(ActivityTypeEnum),
 			}),
 			response: t.Object({
 				items: t.Array(
 					t.Object({
 						id: t.String(),
-						type: t.String(),
+						type: ActivityTypeEnum,
 						text: t.String(),
 						target: t.Nullable(t.String()),
 						targetHref: t.Nullable(t.String()),
 						time: t.String(),
 					}),
 				),
+				nextCursor: t.Nullable(t.String()),
+				hasMore: t.Boolean(),
 			}),
 			detail: {
 				tags: ["Users"],

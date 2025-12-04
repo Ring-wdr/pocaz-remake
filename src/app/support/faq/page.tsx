@@ -10,6 +10,7 @@ import {
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
 import { FAQItem } from "@/components/support/faq/item";
+import { SupportHelpCard } from "@/components/support/help-card";
 import { createMetadata } from "@/lib/metadata";
 
 export const metadata = createMetadata({
@@ -80,6 +81,9 @@ const styles = stylex.create({
 		display: "flex",
 		flexDirection: "column",
 		gap: spacing.xxs,
+	},
+	supportSection: {
+		marginTop: spacing.lg,
 	},
 });
 
@@ -192,6 +196,10 @@ export default function FAQPage() {
 						</div>
 					</div>
 				))}
+
+				<div {...stylex.props(styles.supportSection)}>
+					<SupportHelpCard description="FAQ에 없는 질문이나 계정/거래 관련 문제는 1:1 문의를 남겨주세요." />
+				</div>
 			</div>
 
 			<Footer />

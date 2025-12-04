@@ -1,6 +1,9 @@
+"use client";
+
 import * as stylex from "@stylexjs/stylex";
-import { Lock, LogIn } from "lucide-react";
+import { Copy, Lock, LogIn, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { colors } from "./global-tokens.stylex";
 
 const styles = stylex.create({
@@ -71,9 +74,54 @@ const styles = stylex.create({
 		color: colors.textMuted,
 		textDecoration: "none",
 	},
+	supportGroup: {
+		marginTop: "20px",
+		display: "flex",
+		gap: "10px",
+		flexWrap: "wrap",
+		justifyContent: "center",
+	},
+	secondaryButton: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: "6px",
+		paddingTop: "12px",
+		paddingBottom: "12px",
+		paddingLeft: "18px",
+		paddingRight: "18px",
+		fontSize: "14px",
+		fontWeight: 600,
+		color: colors.textSecondary,
+		backgroundColor: colors.bgSecondary,
+		borderRadius: "10px",
+		borderWidth: 1,
+		borderStyle: "solid",
+		borderColor: colors.borderPrimary,
+		textDecoration: "none",
+		cursor: "pointer",
+	},
 });
 
 export default function Unauthorized() {
+	const [copied, setCopied] = useState(false);
+
+	const copyDiagnostics = async () => {
+		const payload = [
+			"context: unauthorized",
+			`url: ${typeof window !== "undefined" ? window.location.href : "n/a"}`,
+			`time: ${new Date().toISOString()}`,
+		].join("\n");
+
+		try {
+			await navigator.clipboard.writeText(payload);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch (err) {
+			console.error("Failed to copy diagnostics", err);
+		}
+	};
+
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.iconWrap)}>
@@ -92,6 +140,20 @@ export default function Unauthorized() {
 			<Link href="/" {...stylex.props(styles.homeLink)}>
 				홈으로 돌아가기
 			</Link>
+			<div {...stylex.props(styles.supportGroup)}>
+				<button
+					type="button"
+					onClick={copyDiagnostics}
+					{...stylex.props(styles.secondaryButton)}
+				>
+					<Copy size={16} />
+					{copied ? "복사 완료" : "상세 정보 복사"}
+				</button>
+				<Link href="/support/inquiry" {...stylex.props(styles.secondaryButton)}>
+					<MessageCircle size={16} />
+					지원 문의
+				</Link>
+			</div>
 		</div>
 	);
 }

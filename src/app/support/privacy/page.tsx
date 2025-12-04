@@ -9,6 +9,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { SupportHelpCard } from "@/components/support/help-card";
 import { createMetadata } from "@/lib/metadata";
 
 export const metadata = createMetadata({
@@ -85,6 +86,9 @@ const styles = stylex.create({
 		color: colors.textMuted,
 		margin: 0,
 		marginBottom: spacing.md,
+	},
+	supportSection: {
+		marginTop: spacing.lg,
 	},
 });
 
@@ -168,6 +172,10 @@ export default function PrivacyPage() {
 						{"\n"}- 이메일: akswnd55@gmail.com
 						{"\n"}- 고객센터: 1:1 문의
 					</p>
+				</div>
+
+				<div {...stylex.props(styles.supportSection)}>
+					<SupportHelpCard description="개인정보 열람·삭제·수정 요청은 1:1 문의 또는 이메일로 접수해 주세요." />
 				</div>
 			</div>
 

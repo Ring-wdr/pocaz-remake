@@ -26,11 +26,17 @@ export interface CreateActivityDto {
  */
 export interface ActivityItem {
 	id: string;
-	type: string;
+	type: ActivityType;
 	description: string;
 	target: string | null;
 	targetHref: string | null;
 	createdAt: Date;
+}
+
+export interface ActivityQueryOptions {
+	limit?: number;
+	cursor?: string;
+	type?: ActivityType;
 }
 
 /**
@@ -55,54 +61,109 @@ export const activityService = {
 	/**
 	 * 사용자의 활동 내역 조회
 	 */
-	async getByUserId(userId: string, limit = 50): Promise<ActivityItem[]> {
+	async getByUserId(
+		userId: string,
+		options: ActivityQueryOptions = {},
+	): Promise<{
+		items: ActivityItem[];
+		nextCursor: string | null;
+		hasMore: boolean;
+	}> {
+		const limit = options.limit ?? 50;
 		const activities = await prisma.activity.findMany({
-			where: { userId },
-			orderBy: { createdAt: "desc" },
-			take: limit,
+			where: {
+				userId,
+				...(options.type ? { type: options.type } : null),
+			},
+			orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+			take: limit + 1,
+			...(options.cursor
+				? {
+						cursor: { id: options.cursor },
+						skip: 1,
+					}
+				: null),
 		});
 
-		// 각 활동에 대한 대상 정보를 가져옴
-		const enrichedActivities = await Promise.all(
-			activities.map(async (activity) => {
-				let target: string | null = null;
-				let targetHref: string | null = null;
+		const itemsForPage = activities.slice(0, limit);
+		const nextCursor = activities.length > limit ? activities[limit].id : null;
 
-				if (activity.targetType === "post") {
-					const post = await prisma.post.findUnique({
-						where: { id: activity.targetId },
-						select: { content: true },
-					});
-					target = post?.content?.slice(0, 30) ?? null;
-					targetHref = `/community/posts/${activity.targetId}`;
-				} else if (activity.targetType === "market") {
-					const market = await prisma.market.findUnique({
-						where: { id: activity.targetId },
-						select: { title: true },
-					});
-					target = market?.title ?? null;
-					targetHref = `/market/${activity.targetId}`;
-				} else if (activity.targetType === "transaction") {
-					const transaction = await prisma.transaction.findUnique({
-						where: { id: activity.targetId },
-						include: { market: { select: { title: true } } },
-					});
-					target = transaction?.market?.title ?? null;
-					targetHref = `/market/${transaction?.marketId}`;
-				}
+		const postIds = itemsForPage
+			.filter((activity) => activity.targetType === "post")
+			.map((activity) => activity.targetId);
+		const marketIds = itemsForPage
+			.filter((activity) => activity.targetType === "market")
+			.map((activity) => activity.targetId);
+		const transactionIds = itemsForPage
+			.filter((activity) => activity.targetType === "transaction")
+			.map((activity) => activity.targetId);
 
-				return {
-					id: activity.id,
-					type: activity.type,
-					description: activity.description,
-					target,
-					targetHref,
-					createdAt: activity.createdAt,
-				};
-			}),
-		);
+		const [posts, markets, transactions] = await Promise.all([
+			postIds.length
+				? prisma.post.findMany({
+						where: { id: { in: postIds } },
+						select: { id: true, content: true },
+					})
+				: [],
+			marketIds.length
+				? prisma.market.findMany({
+						where: { id: { in: marketIds } },
+						select: { id: true, title: true },
+					})
+				: [],
+			transactionIds.length
+				? prisma.transaction.findMany({
+						where: { id: { in: transactionIds } },
+						select: {
+							id: true,
+							marketId: true,
+							market: { select: { title: true } },
+						},
+					})
+				: [],
+		]);
 
-		return enrichedActivities;
+		const postMap = new Map(posts.map((post) => [post.id, post]));
+		const marketMap = new Map(markets.map((market) => [market.id, market]));
+		const transactionMap = new Map(transactions.map((tx) => [tx.id, tx]));
+
+		// 각 활동에 대한 대상 정보를 가져옴 (batch fetch to avoid N+1)
+		const enrichedActivities = itemsForPage.map((activity) => {
+			const activityType = activity.type as ActivityType;
+			let target: string | null = null;
+			let targetHref: string | null = null;
+
+			if (activity.targetType === "post") {
+				const post = postMap.get(activity.targetId);
+				target = post?.content?.slice(0, 30) ?? null;
+				targetHref = `/community/posts/${activity.targetId}`;
+			} else if (activity.targetType === "market") {
+				const market = marketMap.get(activity.targetId);
+				target = market?.title ?? null;
+				targetHref = `/market/${activity.targetId}`;
+			} else if (activity.targetType === "transaction") {
+				const transaction = transactionMap.get(activity.targetId);
+				target = transaction?.market?.title ?? null;
+				targetHref = transaction?.marketId
+					? `/market/${transaction.marketId}`
+					: null;
+			}
+
+			return {
+				id: activity.id,
+				type: activityType,
+				description: activity.description,
+				target,
+				targetHref,
+				createdAt: activity.createdAt,
+			};
+		});
+
+		return {
+			items: enrichedActivities,
+			nextCursor,
+			hasMore: Boolean(nextCursor),
+		};
 	},
 
 	/**
