@@ -5,7 +5,6 @@ import dayjs from "dayjs";
 import {
 	AlertCircle,
 	ArrowLeft,
-	DoorOpen,
 	MoreVertical,
 	Plus,
 	RefreshCw,
@@ -27,6 +26,7 @@ import {
 	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { confirmAction } from "@/components/confirm-modal";
 import {
 	preCacheUsers,
 	useChatPresence,
@@ -34,7 +34,8 @@ import {
 } from "@/lib/hooks/use-chat-realtime";
 import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
 import { api } from "@/utils/eden";
-import { confirmAction } from "@/components/confirm-modal";
+import { OnlineStatusBadge } from "./online-status-badge";
+import { openChatRoomMenu } from "./open-chat-room-menu";
 
 /** 실패한 메시지 추적을 위한 확장 타입 */
 interface ChatMessageWithStatus extends ChatMessage {
@@ -101,25 +102,6 @@ const styles = stylex.create({
 		fontSize: fontSize.sm,
 		color: colors.textMuted,
 		margin: 0,
-	},
-	statusBadge: {
-		display: "inline-flex",
-		alignItems: "center",
-		gap: spacing.xxxs,
-		paddingTop: spacing.xxxs,
-		paddingBottom: spacing.xxxs,
-		paddingLeft: spacing.xs,
-		paddingRight: spacing.xs,
-		fontSize: fontSize.sm,
-		borderRadius: radius.sm,
-	},
-	statusOnline: {
-		color: colors.statusSuccess,
-		backgroundColor: colors.statusSuccessBg,
-	},
-	statusOffline: {
-		color: colors.textMuted,
-		backgroundColor: colors.bgTertiary,
 	},
 	menuButton: {
 		display: "flex",
@@ -357,55 +339,6 @@ const styles = stylex.create({
 		borderWidth: 0,
 		cursor: "pointer",
 	},
-	// 메뉴 관련 스타일
-	menuOverlay: {
-		position: "fixed",
-		top: 0,
-		left: 0,
-		right: 0,
-		bottom: 0,
-		backgroundColor: "rgba(0, 0, 0, 0.5)",
-		display: "flex",
-		alignItems: "flex-end",
-		justifyContent: "center",
-		zIndex: 100,
-	},
-	menuSheet: {
-		width: "100%",
-		maxWidth: "500px",
-		backgroundColor: colors.bgPrimary,
-		borderTopLeftRadius: radius.lg,
-		borderTopRightRadius: radius.lg,
-		paddingTop: spacing.sm,
-		paddingBottom: spacing.lg,
-	},
-	menuHandle: {
-		width: "40px",
-		height: "4px",
-		backgroundColor: colors.borderSecondary,
-		borderRadius: radius.sm,
-		margin: "0 auto",
-		marginBottom: spacing.sm,
-	},
-	menuItem: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.sm,
-		width: "100%",
-		paddingTop: spacing.sm,
-		paddingBottom: spacing.sm,
-		paddingLeft: spacing.md,
-		paddingRight: spacing.md,
-		fontSize: fontSize.base,
-		color: colors.textSecondary,
-		backgroundColor: "transparent",
-		borderWidth: 0,
-		cursor: "pointer",
-		textAlign: "left",
-	},
-	menuItemDanger: {
-		color: colors.statusError,
-	},
 	// 전송중 상태 스타일
 	sendingIndicator: {
 		fontSize: "11px",
@@ -438,7 +371,6 @@ export default function ChatRoom({
 		useState<ChatMessageWithStatus[]>(initialMessages);
 	const [inputValue, setInputValue] = useState("");
 	const [isSending, setIsSending] = useState(false);
-	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isLeaving, setIsLeaving] = useState(false);
 	const messagesRef = useRef<HTMLDivElement | null>(null);
 
@@ -569,9 +501,18 @@ export default function ChatRoom({
 		setMessages((prev) => {
 			const exists = prev.some((m) => m.id === message.id);
 			if (exists) return prev;
-			return [...prev, { ...message, status: "sent" as const }];
+			return [...prev, { ...message, status: "sent" }];
 		});
 	}, []);
+
+	/** 메뉴 열기 */
+	const handleOpenMenu = async () => {
+		const action = await openChatRoomMenu();
+
+		if (action === "leave") {
+			await handleLeaveRoom();
+		}
+	};
 
 	/** 채팅방 나가기 */
 	const handleLeaveRoom = async () => {
@@ -579,7 +520,8 @@ export default function ChatRoom({
 
 		const confirmed = await confirmAction({
 			title: "채팅방 나가기",
-			description: "정말 채팅방을 나가시겠습니까? 대화 내용은 복구할 수 없습니다.",
+			description:
+				"정말 채팅방을 나가시겠습니까? 대화 내용은 복구할 수 없습니다.",
 			confirmText: "나가기",
 			cancelText: "취소",
 		});
@@ -600,7 +542,6 @@ export default function ChatRoom({
 			toast.error("채팅방 나가기에 실패했습니다.");
 		} finally {
 			setIsLeaving(false);
-			setIsMenuOpen(false);
 		}
 	};
 
@@ -647,24 +588,13 @@ export default function ChatRoom({
 						<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
 						<div {...stylex.props(styles.memberCount)}>
 							{members.length > 2 && `${members.length}명 참여`}
-							<span
-								{...stylex.props(
-									styles.statusBadge,
-									onlineUsers.length > 0
-										? styles.statusOnline
-										: styles.statusOffline,
-								)}
-							>
-								{onlineUsers.length > 0
-									? `온라인 ${onlineUsers.length}`
-									: "오프라인"}
-							</span>
+							<OnlineStatusBadge onlineCount={onlineUsers.length} />
 						</div>
 					</div>
 				</div>
 				<button
 					type="button"
-					onClick={() => setIsMenuOpen(true)}
+					onClick={handleOpenMenu}
 					{...stylex.props(styles.menuButton)}
 				>
 					<MoreVertical size={20} />
@@ -801,36 +731,6 @@ export default function ChatRoom({
 					<Send size={18} />
 				</button>
 			</div>
-
-			{/* 메뉴 바텀 시트 */}
-			{isMenuOpen && (
-				<div
-					role="dialog"
-					aria-modal="true"
-					aria-label="채팅방 메뉴"
-					{...stylex.props(styles.menuOverlay)}
-					onClick={() => setIsMenuOpen(false)}
-					onKeyDown={(e) => e.key === "Escape" && setIsMenuOpen(false)}
-				>
-					<div
-						role="menu"
-						{...stylex.props(styles.menuSheet)}
-						onClick={(e) => e.stopPropagation()}
-						onKeyDown={(e) => e.stopPropagation()}
-					>
-						<div {...stylex.props(styles.menuHandle)} />
-						<button
-							type="button"
-							onClick={handleLeaveRoom}
-							disabled={isLeaving}
-							{...stylex.props(styles.menuItem, styles.menuItemDanger)}
-						>
-							<DoorOpen size={20} />
-							{isLeaving ? "나가는 중..." : "채팅방 나가기"}
-						</button>
-					</div>
-				</div>
-			)}
 		</div>
 	);
 }
