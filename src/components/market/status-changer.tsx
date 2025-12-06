@@ -4,6 +4,14 @@ import * as stylex from "@stylexjs/stylex";
 import { Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import {
+	Button,
+	ListBox,
+	ListBoxItem,
+	Popover,
+	Select,
+	SelectValue,
+} from "react-aria-components";
 import { toast } from "sonner";
 import {
 	colors,
@@ -42,6 +50,13 @@ const styles = stylex.create({
 		color: colors.textInverse,
 		borderWidth: 0,
 		cursor: "pointer",
+		outlineWidth: 0,
+	},
+	triggerFocusVisible: {
+		outlineWidth: 2,
+		outlineStyle: "solid",
+		outlineColor: colors.accentPrimary,
+		outlineOffset: "2px",
 	},
 	statusAvailable: {
 		backgroundColor: colors.accentPrimary,
@@ -52,10 +67,7 @@ const styles = stylex.create({
 	statusSold: {
 		backgroundColor: colors.textMuted,
 	},
-	dropdown: {
-		position: "absolute",
-		top: "calc(100% + 4px)",
-		left: 0,
+	popover: {
 		minWidth: "120px",
 		backgroundColor: colors.bgSecondary,
 		borderWidth: 1,
@@ -63,35 +75,43 @@ const styles = stylex.create({
 		borderColor: colors.borderPrimary,
 		borderRadius: radius.sm,
 		boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-		zIndex: 100,
 		overflow: "hidden",
+		outlineWidth: 0,
+	},
+	listBox: {
+		outlineWidth: 0,
 	},
 	option: {
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "space-between",
-		width: "100%",
 		paddingTop: spacing.xs,
 		paddingBottom: spacing.xs,
 		paddingLeft: spacing.sm,
 		paddingRight: spacing.sm,
 		fontSize: fontSize.sm,
 		color: colors.textSecondary,
-		backgroundColor: "transparent",
-		borderWidth: 0,
 		cursor: "pointer",
-		textAlign: "left",
-		":hover": {
-			backgroundColor: colors.bgTertiary,
-		},
+		outlineWidth: 0,
 	},
-	optionActive: {
+	optionHovered: {
+		backgroundColor: colors.bgTertiary,
+	},
+	optionFocused: {
+		backgroundColor: colors.bgTertiary,
+	},
+	optionSelected: {
 		color: colors.accentPrimary,
 		fontWeight: fontWeight.semibold,
 	},
 	optionDisabled: {
 		opacity: 0.5,
 		cursor: "not-allowed",
+	},
+	selectValue: {
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.xxxs,
 	},
 });
 
@@ -111,7 +131,6 @@ export default function StatusChanger({
 	currentStatus,
 }: StatusChangerProps) {
 	const router = useRouter();
-	const [isOpen, setIsOpen] = useState(false);
 	const [isPending, startTransition] = useTransition();
 	const [selectedStatus, setSelectedStatus] =
 		useState<MarketStatus>(currentStatus);
@@ -136,44 +155,69 @@ export default function StatusChanger({
 				return;
 			}
 
-			setIsOpen(false);
 			toast.success(`${statusLabels.get(newStatus)} 상태로 변경되었습니다.`);
 			router.refresh();
 		});
 	};
 
+	const statusOptions = Array.from(statusLabels.entries());
+
 	return (
 		<div {...stylex.props(styles.container)}>
-			<button
-				type="button"
-				onClick={() => setIsOpen(!isOpen)}
-				disabled={isPending}
-				{...stylex.props(styles.trigger, styles[statusStyles[selectedStatus]])}
+			<Select
+				selectedKey={selectedStatus}
+				onSelectionChange={(key) => handleStatusChange(key as MarketStatus)}
+				isDisabled={isPending}
+				aria-label="판매 상태 변경"
 			>
-				{statusLabels.get(selectedStatus)}
-				<ChevronDown size={14} />
-			</button>
-
-			{isOpen && (
-				<div {...stylex.props(styles.dropdown)}>
-					{Array.from(statusLabels.keys()).map((status) => (
-						<button
-							key={status}
-							type="button"
-							onClick={() => handleStatusChange(status)}
-							disabled={isPending}
+				<Button
+					{...stylex.props(styles.trigger, styles[statusStyles[selectedStatus]])}
+					data-focus-visible-added=""
+					style={{
+						outlineWidth: undefined,
+					}}
+				>
+					{({ isFocusVisible }) => (
+						<span
 							{...stylex.props(
-								styles.option,
-								status === selectedStatus && styles.optionActive,
-								isPending && styles.optionDisabled,
+								styles.selectValue,
+								isFocusVisible && styles.triggerFocusVisible,
 							)}
 						>
-							{statusLabels.get(status)}
-							{status === selectedStatus && <Check size={16} />}
-						</button>
-					))}
-				</div>
-			)}
+							<SelectValue>
+								{statusLabels.get(selectedStatus)}
+							</SelectValue>
+							<ChevronDown size={14} />
+						</span>
+					)}
+				</Button>
+				<Popover {...stylex.props(styles.popover)}>
+					<ListBox {...stylex.props(styles.listBox)}>
+						{statusOptions.map(([status, label]) => (
+							<ListBoxItem
+								key={status}
+								id={status}
+								textValue={label}
+							>
+								{({ isSelected, isFocused, isHovered, isDisabled }) => (
+									<div
+										{...stylex.props(
+											styles.option,
+											isHovered && styles.optionHovered,
+											isFocused && styles.optionFocused,
+											isSelected && styles.optionSelected,
+											isDisabled && styles.optionDisabled,
+										)}
+									>
+										{label}
+										{isSelected && <Check size={16} />}
+									</div>
+								)}
+							</ListBoxItem>
+						))}
+					</ListBox>
+				</Popover>
+			</Select>
 		</div>
 	);
 }

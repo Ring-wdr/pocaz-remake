@@ -25,6 +25,7 @@ import {
 	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { confirmAction } from "@/components/confirm-modal";
 import { formatRelativeTime } from "@/utils/date";
 import { api } from "@/utils/eden";
 
@@ -592,8 +593,14 @@ export function CommentsClient({
 		});
 	};
 
-	const handleDelete = (commentId: string) => {
-		if (!confirm("댓글을 삭제하시겠습니까?")) return;
+	const handleDelete = async (commentId: string) => {
+		const confirmed = await confirmAction({
+			title: "댓글 삭제",
+			description: "댓글을 삭제하시겠습니까?",
+			confirmText: "삭제",
+			cancelText: "취소",
+		});
+		if (!confirmed) return;
 
 		// 이전 상태 저장 (롤백용)
 		const previousComments = [...comments];

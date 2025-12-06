@@ -216,6 +216,7 @@ export function useChatBroadcast(
  * Presence 기반 온라인 상태 훅
  *
  * 채팅방에 누가 접속해 있는지 확인합니다.
+ * 디바운싱을 적용하여 빠른 상태 변화로 인한 깜빡임을 방지합니다.
  */
 export function useChatPresence(
 	roomId: string | null,
@@ -223,6 +224,10 @@ export function useChatPresence(
 	userInfo: { nickname: string; profileImage: string | null },
 ) {
 	const channelRef = useRef<RealtimeChannel | null>(null);
+	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+	const userInfoRef = useRef(userInfo);
+	userInfoRef.current = userInfo;
+
 	const [onlineUsers, setOnlineUsers] = useState<
 		Array<{
 			id: string;
@@ -258,14 +263,22 @@ export function useChatPresence(
 						profileImage: p.profile_image,
 					})),
 				);
-				setOnlineUsers(users);
+
+				// 본인을 제외한 온라인 사용자만 필터링
+				const otherUsers = users.filter((u) => u.id !== userId);
+
+				// 디바운싱: 빠른 상태 변화 시 깜빡임 방지 (1초 대기)
+				if (debounceTimerRef.current) {
+					clearTimeout(debounceTimerRef.current);
+				}
+				debounceTimerRef.current = setTimeout(setOnlineUsers, 1000, otherUsers);
 			})
 			.subscribe(async (status) => {
 				if (status === "SUBSCRIBED") {
 					await channel.track({
 						user_id: userId,
-						nickname: userInfo.nickname,
-						profile_image: userInfo.profileImage,
+						nickname: userInfoRef.current.nickname,
+						profile_image: userInfoRef.current.profileImage,
 						online_at: new Date().toISOString(),
 					});
 				}
@@ -274,9 +287,12 @@ export function useChatPresence(
 		channelRef.current = channel;
 
 		return () => {
+			if (debounceTimerRef.current) {
+				clearTimeout(debounceTimerRef.current);
+			}
 			supabase.removeChannel(channel);
 		};
-	}, [roomId, userId, userInfo]);
+	}, [roomId, userId]); // userInfo를 dependency에서 제거
 
 	return { onlineUsers };
 }
