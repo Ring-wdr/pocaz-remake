@@ -125,14 +125,6 @@ const styles = stylex.create({
 		borderWidth: 0,
 		cursor: "pointer",
 		color: colors.textPrimary,
-		outlineWidth: 0,
-	},
-	moreButtonFocusVisible: {
-		outlineWidth: 2,
-		outlineStyle: "solid",
-		outlineColor: colors.accentPrimary,
-		outlineOffset: "2px",
-		borderRadius: radius.sm,
 	},
 });
 
@@ -254,17 +246,12 @@ export function PostActions({ postId, isOwner }: PostActionsProps) {
 	return (
 		<div {...stylex.props(styles.moreButton)}>
 			<MenuTrigger>
-				<Button aria-label="게시글 메뉴" isDisabled={isPending}>
-					{({ isFocusVisible }) => (
-						<span
-							{...stylex.props(
-								styles.moreButtonInner,
-								isFocusVisible && styles.moreButtonFocusVisible,
-							)}
-						>
-							<MoreHorizontal size={24} />
-						</span>
-					)}
+				<Button
+					aria-label="게시글 메뉴"
+					isDisabled={isPending}
+					{...stylex.props(styles.moreButtonInner)}
+				>
+					<MoreHorizontal size={24} />
 				</Button>
 				<Popover {...stylex.props(styles.popover)}>
 					<Menu {...stylex.props(styles.menu)} onAction={handleAction}>
