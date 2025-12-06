@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
-import { Mail, Search, Eye } from "lucide-react";
+import { Eye, Mail, Search } from "lucide-react";
 import { Input } from "./input";
 
 const meta: Meta<typeof Input> = {
@@ -95,7 +95,14 @@ export const Disabled: Story = {
 
 export const AllSizes: Story = {
 	render: () => (
-		<div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "300px" }}>
+		<div
+			style={{
+				display: "flex",
+				flexDirection: "column",
+				gap: "16px",
+				width: "300px",
+			}}
+		>
 			<Input size="sm" placeholder="Small" />
 			<Input size="md" placeholder="Medium" />
 			<Input size="lg" placeholder="Large" />

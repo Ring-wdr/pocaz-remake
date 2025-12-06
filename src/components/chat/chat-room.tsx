@@ -26,7 +26,7 @@ import {
 	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
-import { confirmAction } from "@/components/confirm-modal";
+import { confirmAction } from "@/components/ui";
 import {
 	preCacheUsers,
 	useChatPresence,

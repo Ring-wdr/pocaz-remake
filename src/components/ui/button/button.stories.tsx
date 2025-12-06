@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
-import { Heart, Send, Trash2 } from "lucide-react";
+import { Heart, Trash2 } from "lucide-react";
 import { Button } from "./button";
 
 const meta: Meta<typeof Button> = {

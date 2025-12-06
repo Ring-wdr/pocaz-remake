@@ -1,7 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { type ButtonHTMLAttributes, forwardRef } from "react";
+import type { ComponentProps } from "react";
 import {
 	colors,
 	fontSize,
@@ -108,44 +108,41 @@ const styles = stylex.create({
 	},
 });
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline";
+export type ButtonVariant =
+	| "primary"
+	| "secondary"
+	| "ghost"
+	| "danger"
+	| "outline";
 export type ButtonSize = "sm" | "md" | "lg";
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ComponentProps<"button"> {
 	variant?: ButtonVariant;
 	size?: ButtonSize;
 	fullWidth?: boolean;
 	iconOnly?: boolean;
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-	(
-		{
-			variant = "primary",
-			size = "md",
-			fullWidth = false,
-			iconOnly = false,
-			children,
-			...props
-		},
-		ref,
-	) => {
-		return (
-			<button
-				ref={ref}
-				{...stylex.props(
-					styles.base,
-					styles[variant],
-					styles[size],
-					fullWidth && styles.fullWidth,
-					iconOnly && styles.iconOnly,
-				)}
-				{...props}
-			>
-				{children}
-			</button>
-		);
-	},
-);
-
-Button.displayName = "Button";
+export function Button({
+	variant = "primary",
+	size = "md",
+	fullWidth = false,
+	iconOnly = false,
+	children,
+	...props
+}: ButtonProps) {
+	return (
+		<button
+			{...stylex.props(
+				styles.base,
+				styles[variant],
+				styles[size],
+				fullWidth && styles.fullWidth,
+				iconOnly && styles.iconOnly,
+			)}
+			{...props}
+		>
+			{children}
+		</button>
+	);
+}

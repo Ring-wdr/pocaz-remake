@@ -1,7 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { type InputHTMLAttributes, forwardRef } from "react";
+import { type ComponentProps, type ReactNode, useId } from "react";
 import {
 	colors,
 	fontSize,
@@ -113,86 +113,81 @@ const styles = stylex.create({
 
 export type InputSize = "sm" | "md" | "lg";
 
-export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
+export interface InputProps extends Omit<ComponentProps<"input">, "size"> {
 	label?: string;
 	error?: string;
 	helperText?: string;
-	leftIcon?: React.ReactNode;
-	rightIcon?: React.ReactNode;
+	leftIcon?: ReactNode;
+	rightIcon?: ReactNode;
 	size?: InputSize;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-	(
-		{
-			label,
-			error,
-			helperText,
-			leftIcon,
-			rightIcon,
-			size = "md",
-			required,
-			id,
-			...props
-		},
-		ref,
-	) => {
-		const inputId = id || `input-${Math.random().toString(36).slice(2, 9)}`;
-		const errorId = error ? `${inputId}-error` : undefined;
-		const helperId = helperText ? `${inputId}-helper` : undefined;
+export function Input({
+	label,
+	error,
+	helperText,
+	leftIcon,
+	rightIcon,
+	size = "md",
+	required,
+	id,
+	...props
+}: InputProps) {
+	const reactId = useId();
+	const inputId = id || `input-${reactId}`;
+	const errorId = error ? `${inputId}-error` : undefined;
+	const helperId = helperText ? `${inputId}-helper` : undefined;
 
-		return (
-			<div {...stylex.props(styles.wrapper)}>
-				{label && (
-					<label htmlFor={inputId} {...stylex.props(styles.label)}>
-						{label}
-						{required && (
-							<span {...stylex.props(styles.required)} aria-hidden="true">
-								{" "}
-								*
-							</span>
-						)}
-					</label>
-				)}
+	return (
+		<div {...stylex.props(styles.wrapper)}>
+			{label && (
+				<label htmlFor={inputId} {...stylex.props(styles.label)}>
+					{label}
+					{required && (
+						<span {...stylex.props(styles.required)} aria-hidden="true">
+							{" "}
+							*
+						</span>
+					)}
+				</label>
+			)}
 
-				<div {...stylex.props(styles.inputWrapper)}>
-					{leftIcon && <span {...stylex.props(styles.leftIcon)}>{leftIcon}</span>}
+			<div {...stylex.props(styles.inputWrapper)}>
+				{leftIcon && <span {...stylex.props(styles.leftIcon)}>{leftIcon}</span>}
 
-					<input
-						ref={ref}
-						id={inputId}
-						aria-required={required}
-						aria-invalid={!!error}
-						aria-describedby={
-							[errorId, helperId].filter(Boolean).join(" ") || undefined
-						}
-						{...stylex.props(
-							styles.input,
-							styles[size],
-							Boolean(error) && styles.inputError,
-							Boolean(leftIcon) && styles.inputWithLeftIcon,
-							Boolean(rightIcon) && styles.inputWithRightIcon,
-						)}
-						{...props}
-					/>
+				<input
+					id={inputId}
+					aria-required={required}
+					aria-invalid={!!error}
+					aria-describedby={
+						[errorId, helperId].filter(Boolean).join(" ") || undefined
+					}
+					{...stylex.props(
+						styles.input,
+						styles[size],
+						Boolean(error) && styles.inputError,
+						Boolean(leftIcon) && styles.inputWithLeftIcon,
+						Boolean(rightIcon) && styles.inputWithRightIcon,
+					)}
+					{...props}
+				/>
 
-					{rightIcon && <span {...stylex.props(styles.rightIcon)}>{rightIcon}</span>}
-				</div>
-
-				{error && (
-					<span id={errorId} {...stylex.props(styles.errorMessage)} role="alert">
-						{error}
-					</span>
-				)}
-
-				{!error && helperText && (
-					<span id={helperId} {...stylex.props(styles.helperText)}>
-						{helperText}
-					</span>
+				{rightIcon && (
+					<span {...stylex.props(styles.rightIcon)}>{rightIcon}</span>
 				)}
 			</div>
-		);
-	},
-);
 
-Input.displayName = "Input";
+			{error && (
+				<span id={errorId} {...stylex.props(styles.errorMessage)} role="alert">
+					{error}
+				</span>
+			)}
+
+			{!error && helperText && (
+				<span id={helperId} {...stylex.props(styles.helperText)}>
+					{helperText}
+				</span>
+			)}
+		</div>
+	);
+}
