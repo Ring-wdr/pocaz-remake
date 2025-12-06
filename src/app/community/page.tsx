@@ -35,8 +35,8 @@ const styles = stylex.create({
 export default function CommunityPage() {
 	return (
 		<div {...stylex.props(styles.container)}>
+			<PageHeader />
 			<div {...stylex.props(styles.content)}>
-				<PageHeader />
 				<CategoryTabsSection />
 				<PostListSection />
 			</div>

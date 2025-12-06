@@ -13,6 +13,7 @@ import {
 	ProfileSkeleton,
 	StatsSkeleton,
 } from "@/components/mypage/skeletons";
+import { FixedPageHeader } from "@/components/ui";
 import { getSession } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
 import { colors } from "../global-tokens.stylex";
@@ -38,13 +39,6 @@ const styles = stylex.create({
 		paddingRight: "14px",
 		paddingBottom: "24px",
 	},
-	pageTitle: {
-		fontSize: "24px",
-		fontWeight: 800,
-		color: colors.textPrimary,
-		margin: 0,
-		marginBottom: "20px",
-	},
 });
 
 export default async function MyPage() {
@@ -56,9 +50,8 @@ export default async function MyPage() {
 
 	return (
 		<div {...stylex.props(styles.container)}>
+			<FixedPageHeader title="마이페이지" />
 			<div {...stylex.props(styles.content)}>
-				<h1 {...stylex.props(styles.pageTitle)}>마이페이지</h1>
-
 				<Suspense fallback={<ProfileSkeleton />}>
 					<ProfileSection />
 				</Suspense>

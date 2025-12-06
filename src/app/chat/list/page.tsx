@@ -9,6 +9,7 @@ import { Footer } from "@/components/home";
 import { createMetadata } from "@/lib/metadata";
 import type { MarketSummary } from "@/types/entities";
 import { api } from "@/utils/eden";
+import { FixedPageHeader, fixedHeaderStyles } from "@/components/ui";
 import {
 	colors,
 	fontSize,
@@ -37,36 +38,6 @@ const styles = stylex.create({
 		paddingLeft: "14px",
 		paddingRight: "14px",
 		paddingBottom: "24px",
-	},
-	header: {
-		display: "flex",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginBottom: "16px",
-	},
-	headerLeft: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xs,
-	},
-	backButton: {
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-		width: "32px",
-		height: "32px",
-		color: colors.textSecondary,
-		backgroundColor: "transparent",
-		borderWidth: 0,
-		borderRadius: radius.sm,
-		cursor: "pointer",
-		textDecoration: "none",
-	},
-	title: {
-		fontSize: "24px",
-		fontWeight: 800,
-		color: colors.textPrimary,
-		margin: 0,
 	},
 	marketInfo: {
 		display: "flex",
@@ -129,20 +100,20 @@ export default async function ChatListPage({
 
 	return (
 		<div {...stylex.props(styles.container)}>
+			<FixedPageHeader
+				title={marketId ? "거래 채팅" : "채팅"}
+				leading={
+					firstMarketId ? (
+						<Link
+							href="/chat/list"
+							{...stylex.props(fixedHeaderStyles.roundButton)}
+						>
+							<ArrowLeft size={20} />
+						</Link>
+					) : undefined
+				}
+			/>
 			<div {...stylex.props(styles.content)}>
-				<div {...stylex.props(styles.header)}>
-					<div {...stylex.props(styles.headerLeft)}>
-						{marketId && (
-							<Link href="/chat/list" {...stylex.props(styles.backButton)}>
-								<ArrowLeft size={20} />
-							</Link>
-						)}
-						<h1 {...stylex.props(styles.title)}>
-							{marketId ? "거래 채팅" : "채팅"}
-						</h1>
-					</div>
-				</div>
-
 				{marketInfo && (
 					<div {...stylex.props(styles.marketInfo)}>
 						{marketInfo.thumbnail && (
@@ -163,9 +134,9 @@ export default async function ChatListPage({
 					</div>
 				)}
 
-			<Suspense fallback={<ChatListSkeleton showFilters={!firstMarketId} />}>
-				<ChatListSection marketId={firstMarketId} />
-			</Suspense>
+				<Suspense fallback={<ChatListSkeleton showFilters={!firstMarketId} />}>
+					<ChatListSection marketId={firstMarketId} />
+				</Suspense>
 			</div>
 			<Footer />
 		</div>
