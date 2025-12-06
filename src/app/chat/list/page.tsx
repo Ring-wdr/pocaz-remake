@@ -163,9 +163,9 @@ export default async function ChatListPage({
 					</div>
 				)}
 
-				<Suspense fallback={<ChatListSkeleton />}>
-					<ChatListSection marketId={firstMarketId} />
-				</Suspense>
+			<Suspense fallback={<ChatListSkeleton showFilters={!firstMarketId} />}>
+				<ChatListSection marketId={firstMarketId} />
+			</Suspense>
 			</div>
 			<Footer />
 		</div>
