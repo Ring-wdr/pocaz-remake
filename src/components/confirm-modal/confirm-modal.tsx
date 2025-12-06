@@ -115,16 +115,18 @@ const styles = stylex.create({
 		},
 	},
 	content: {
+		display: "flex",
+		flexDirection: "column",
+		gap: spacing.sm,
 		flex: 1,
 		overflowY: "auto",
 		paddingTop: spacing.md,
-		paddingBottom: spacing.md,
+		paddingBottom: spacing.sm,
 		paddingLeft: spacing.md,
 		paddingRight: spacing.md,
 	},
 	description: {
 		margin: 0,
-		marginBottom: spacing.md,
 		fontSize: fontSize.md,
 		color: colors.textTertiary,
 		lineHeight: lineHeight.normal,
@@ -132,7 +134,8 @@ const styles = stylex.create({
 	form: {
 		display: "flex",
 		flexDirection: "column",
-		gap: spacing.sm,
+		flex: 1,
+		minHeight: 0,
 	},
 	fieldGroup: {
 		display: "flex",
@@ -184,12 +187,9 @@ const styles = stylex.create({
 		justifyContent: "flex-end",
 		gap: spacing.xs,
 		paddingTop: spacing.sm,
-		paddingBottom: spacing.md,
+		paddingBottom: spacing.sm,
 		paddingLeft: spacing.md,
 		paddingRight: spacing.md,
-		borderTopWidth: 1,
-		borderTopStyle: "solid",
-		borderTopColor: colors.borderPrimary,
 	},
 	button: {
 		paddingTop: spacing.xs,
@@ -203,10 +203,8 @@ const styles = stylex.create({
 		cursor: "pointer",
 		transition: "background-color 0.15s ease, transform 0.1s ease",
 		":focus-visible": {
-			outlineWidth: 2,
-			outlineStyle: "solid",
-			outlineColor: colors.accentPrimary,
-			outlineOffset: "2px",
+			outlineWidth: 0,
+			boxShadow: `0 0 0 2px ${colors.bgPrimary}, 0 0 0 4px ${colors.accentPrimary}`,
 		},
 		":active": {
 			transform: "scale(0.98)",
@@ -380,18 +378,18 @@ export function ConfirmModal({
 					</button>
 				</div>
 
-				<div {...stylex.props(styles.content)}>
-					{description && (
-						<p id={descriptionId} {...stylex.props(styles.description)}>
-							{description}
-						</p>
-					)}
+				<form
+					{...stylex.props(styles.form)}
+					onSubmit={handleSubmit}
+					noValidate
+				>
+					<div {...stylex.props(styles.content)}>
+						{description && (
+							<p id={descriptionId} {...stylex.props(styles.description)}>
+								{description}
+							</p>
+						)}
 
-					<form
-						{...stylex.props(styles.form)}
-						onSubmit={handleSubmit}
-						noValidate
-					>
 						{fields.map((field) => (
 							<div key={field.name} {...stylex.props(styles.fieldGroup)}>
 								<label
@@ -433,24 +431,24 @@ export function ConfirmModal({
 								)}
 							</div>
 						))}
+					</div>
 
-						<div {...stylex.props(styles.footer)}>
-							<button
-								type="button"
-								{...stylex.props(styles.button, styles.cancelButton)}
-								onClick={handleCancel}
-							>
-								{cancelText}
-							</button>
-							<button
-								type="submit"
-								{...stylex.props(styles.button, styles.confirmButton)}
-							>
-								{confirmText}
-							</button>
-						</div>
-					</form>
-				</div>
+					<div {...stylex.props(styles.footer)}>
+						<button
+							type="button"
+							{...stylex.props(styles.button, styles.cancelButton)}
+							onClick={handleCancel}
+						>
+							{cancelText}
+						</button>
+						<button
+							type="submit"
+							{...stylex.props(styles.button, styles.confirmButton)}
+						>
+							{confirmText}
+						</button>
+					</div>
+				</form>
 			</div>
 
 			{/* 스크린리더를 위한 라이브 리전 */}
