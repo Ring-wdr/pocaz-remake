@@ -1,4 +1,8 @@
+import { redirect } from "next/navigation";
+
+import { getCurrentUser } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
+
 import CommunityWritePageClient from "./page.client";
 
 export const metadata = createMetadata({
@@ -8,6 +12,12 @@ export const metadata = createMetadata({
 	ogTitle: "Community Write",
 });
 
-export default function CommunityWritePage() {
+export default async function CommunityWritePage() {
+	const currentUser = await getCurrentUser();
+
+	if (!currentUser) {
+		redirect("/login?redirect=/community/write");
+	}
+
 	return <CommunityWritePageClient />;
 }

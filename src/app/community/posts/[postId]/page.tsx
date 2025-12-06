@@ -254,6 +254,7 @@ export default async function PostDetailPage({
 						postId={postId}
 						initialLiked={likeStatus?.liked ?? false}
 						initialCount={likeStatus?.count ?? post.likeCount}
+						isLoggedIn={!!currentUser}
 					/>
 					<span {...stylex.props(styles.statItem)}>
 						<MessageCircle size={18} />

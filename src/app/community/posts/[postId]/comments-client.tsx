@@ -5,12 +5,14 @@ import {
 	Check,
 	ChevronDown,
 	CornerDownRight,
+	LogIn,
 	MessageCircle,
 	Pencil,
 	Send,
 	Trash2,
 	X,
 } from "lucide-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -228,6 +230,27 @@ const styles = stylex.create({
 		color: colors.textPlaceholder,
 		fontSize: fontSize.md,
 	},
+	loginPrompt: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: spacing.xs,
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
+		marginBottom: spacing.md,
+		backgroundColor: colors.bgSecondary,
+		borderRadius: radius.md,
+		fontSize: fontSize.md,
+		color: colors.textMuted,
+	},
+	loginLink: {
+		display: "inline-flex",
+		alignItems: "center",
+		gap: spacing.xxxs,
+		color: colors.accentPrimary,
+		textDecoration: "none",
+		fontWeight: fontWeight.medium,
+	},
 	editForm: {
 		display: "flex",
 		gap: spacing.xxs,
@@ -355,42 +378,121 @@ export function CommentsClient({
 	};
 
 	const handleSubmitComment = () => {
-		if (!commentText.trim()) return;
+		if (!commentText.trim() || !currentUserId) return;
+
+		const trimmedContent = commentText.trim();
+		const tempId = `temp-${Date.now()}`;
+
+		// 낙관적 업데이트: 임시 댓글 추가
+		const tempComment: Comment = {
+			id: tempId,
+			content: trimmedContent,
+			createdAt: new Date().toISOString(),
+			deletedAt: null,
+			user: {
+				id: currentUserId,
+				nickname: "나",
+				profileImage: null,
+			},
+			replies: [],
+			replyCount: 0,
+		};
+
+		setComments((prev) => [tempComment, ...prev]);
+		setTotalCount((prev) => prev + 1);
+		setCommentText("");
 
 		startTransition(async () => {
 			const { data, error } = await api.posts({ id: postId }).comments.post({
-				content: commentText.trim(),
+				content: trimmedContent,
 			});
 
 			if (error || !data) {
-				toast.error("댓글 작성에 실패했습니다");
+				// 롤백: 임시 댓글 제거
+				setComments((prev) => prev.filter((c) => c.id !== tempId));
+				setTotalCount((prev) => prev - 1);
+				toast.error("댓글 작성에 실패했습니다", {
+					action: {
+						label: "재시도",
+						onClick: () => {
+							setCommentText(trimmedContent);
+						},
+					},
+				});
 				return;
 			}
 
-			setCommentText("");
+			// 서버 응답으로 교체
 			await fetchComments();
-			toast.success("댓글이 작성되었습니다");
 		});
 	};
 
 	const handleSubmitReply = (parentId: string) => {
-		if (!replyText.trim()) return;
+		if (!replyText.trim() || !currentUserId) return;
+
+		const trimmedContent = replyText.trim();
+		const tempId = `temp-reply-${Date.now()}`;
+
+		// 낙관적 업데이트: 임시 답글 추가
+		const tempReply: CommentReply = {
+			id: tempId,
+			content: trimmedContent,
+			createdAt: new Date().toISOString(),
+			deletedAt: null,
+			user: {
+				id: currentUserId,
+				nickname: "나",
+				profileImage: null,
+			},
+		};
+
+		setComments((prev) =>
+			prev.map((comment) =>
+				comment.id === parentId
+					? {
+							...comment,
+							replies: [...comment.replies, tempReply],
+							replyCount: comment.replyCount + 1,
+						}
+					: comment,
+			),
+		);
+		setReplyText("");
+		setReplyingTo(null);
 
 		startTransition(async () => {
 			const { data, error } = await api.posts({ id: postId }).comments.post({
-				content: replyText.trim(),
+				content: trimmedContent,
 				parentId,
 			});
 
 			if (error || !data) {
-				toast.error("답글 작성에 실패했습니다");
+				// 롤백: 임시 답글 제거
+				setComments((prev) =>
+					prev.map((comment) =>
+						comment.id === parentId
+							? {
+									...comment,
+									replies: comment.replies.filter((r) => r.id !== tempId),
+									replyCount: comment.replyCount - 1,
+								}
+							: comment,
+					),
+				);
+				toast.error("답글 작성에 실패했습니다", {
+					action: {
+						label: "재시도",
+						onClick: () => {
+							setReplyText(trimmedContent);
+							setReplyingTo(parentId);
+						},
+					},
+				});
 				return;
 			}
 
-			setReplyText("");
-			setReplyingTo(null);
+			// 서버 응답으로 교체
 			await fetchComments();
-			toast.success("답글이 작성되었습니다");
 		});
 	};
 
@@ -416,26 +518,118 @@ export function CommentsClient({
 	const handleSaveEdit = (commentId: string) => {
 		if (!editContent.trim()) return;
 
+		const trimmedContent = editContent.trim();
+
+		// 이전 내용 저장 (롤백용)
+		const findOriginalContent = (): string | null => {
+			for (const comment of comments) {
+				if (comment.id === commentId) return comment.content;
+				for (const reply of comment.replies) {
+					if (reply.id === commentId) return reply.content;
+				}
+			}
+			return null;
+		};
+		const originalContent = findOriginalContent();
+
+		// 낙관적 업데이트
+		setComments((prev) =>
+			prev.map((comment) => {
+				if (comment.id === commentId) {
+					return { ...comment, content: trimmedContent };
+				}
+				return {
+					...comment,
+					replies: comment.replies.map((reply) =>
+						reply.id === commentId
+							? { ...reply, content: trimmedContent }
+							: reply,
+					),
+				};
+			}),
+		);
+		setEditingId(null);
+		setEditContent("");
+
 		startTransition(async () => {
 			const { error } = await api
 				.posts({ id: postId })
 				.comments({ commentId })
-				.put({ content: editContent.trim() });
+				.put({ content: trimmedContent });
 
 			if (error) {
-				toast.error("댓글 수정에 실패했습니다");
+				// 롤백
+				if (originalContent) {
+					setComments((prev) =>
+						prev.map((comment) => {
+							if (comment.id === commentId) {
+								return { ...comment, content: originalContent };
+							}
+							return {
+								...comment,
+								replies: comment.replies.map((reply) =>
+									reply.id === commentId
+										? { ...reply, content: originalContent }
+										: reply,
+								),
+							};
+						}),
+					);
+				}
+				toast.error("댓글 수정에 실패했습니다", {
+					action: {
+						label: "재시도",
+						onClick: () => {
+							setEditingId(commentId);
+							setEditContent(trimmedContent);
+						},
+					},
+				});
 				return;
 			}
 
-			setEditingId(null);
-			setEditContent("");
-			await fetchComments();
 			toast.success("댓글이 수정되었습니다");
 		});
 	};
 
 	const handleDelete = (commentId: string) => {
 		if (!confirm("댓글을 삭제하시겠습니까?")) return;
+
+		// 이전 상태 저장 (롤백용)
+		const previousComments = [...comments];
+		const previousTotalCount = totalCount;
+
+		// 낙관적 업데이트: 댓글 또는 답글 제거
+		let isParentComment = false;
+		setComments((prev) => {
+			// 먼저 부모 댓글인지 확인
+			const parentComment = prev.find((c) => c.id === commentId);
+			if (parentComment) {
+				isParentComment = true;
+				// 답글이 있으면 삭제 표시만, 없으면 완전 제거
+				if (parentComment.replies.length > 0) {
+					return prev.map((c) =>
+						c.id === commentId
+							? { ...c, content: "", deletedAt: new Date().toISOString() }
+							: c,
+					);
+				}
+				return prev.filter((c) => c.id !== commentId);
+			}
+			// 답글인 경우
+			return prev.map((comment) => ({
+				...comment,
+				replies: comment.replies.filter((r) => r.id !== commentId),
+				replyCount:
+					comment.replies.some((r) => r.id === commentId)
+						? comment.replyCount - 1
+						: comment.replyCount,
+			}));
+		});
+
+		if (isParentComment) {
+			setTotalCount((prev) => prev - 1);
+		}
 
 		startTransition(async () => {
 			const { error } = await api
@@ -444,10 +638,14 @@ export function CommentsClient({
 				.delete();
 
 			if (error) {
+				// 롤백
+				setComments(previousComments);
+				setTotalCount(previousTotalCount);
 				toast.error("댓글 삭제에 실패했습니다");
 				return;
 			}
 
+			// 서버 상태와 동기화
 			await fetchComments();
 			toast.success("댓글이 삭제되었습니다");
 		});
@@ -461,7 +659,7 @@ export function CommentsClient({
 				<h2 {...stylex.props(styles.title)}>댓글 {totalCount}</h2>
 			</div>
 
-			{isLoggedIn && (
+			{isLoggedIn ? (
 				<div {...stylex.props(styles.commentForm)}>
 					<input
 						type="text"
@@ -488,6 +686,15 @@ export function CommentsClient({
 					>
 						<Send size={18} />
 					</button>
+				</div>
+			) : (
+				<div {...stylex.props(styles.loginPrompt)}>
+					<span>댓글을 작성하려면</span>
+					<Link href="/login" {...stylex.props(styles.loginLink)}>
+						<LogIn size={14} />
+						로그인
+					</Link>
+					<span>해주세요</span>
 				</div>
 			)}
 

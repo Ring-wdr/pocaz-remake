@@ -27,6 +27,16 @@ export interface ChatPaginationOptions {
 }
 
 /**
+ * 채팅방 목록 필터 옵션
+ */
+export interface ChatRoomFilterOptions {
+	search?: string; // 채팅방 이름 또는 멤버 닉네임 검색
+	filter?: "all" | "trading" | "general"; // all: 전체, trading: 마켓 연결, general: 일반
+	cursor?: string;
+	limit?: number;
+}
+
+/**
  * ChatRoom Service
  */
 export const chatRoomService = {
@@ -117,16 +127,54 @@ export const chatRoomService = {
 	},
 
 	/**
-	 * 사용자의 ChatRoom 목록 조회
+	 * 사용자의 ChatRoom 목록 조회 (필터, 검색, 페이지네이션 지원)
 	 */
-	async findByUserId(userId: string, marketId?: string) {
-		return prisma.chatRoom.findMany({
+	async findByUserId(
+		userId: string,
+		options: ChatRoomFilterOptions & { marketId?: string } = {},
+	) {
+		const { search, filter, cursor, limit = 20, marketId } = options;
+
+		// 필터 조건 구성
+		const filterConditions: Parameters<typeof prisma.chatRoom.findMany>[0] = {
 			where: {
 				members: {
 					some: { userId },
 				},
 				...(marketId && { marketId }),
+				// filter 옵션에 따른 조건
+				...(filter === "trading" && { marketId: { not: null } }),
+				...(filter === "general" && { marketId: null }),
+				// 검색 조건 (채팅방 이름 또는 멤버 닉네임)
+				...(search && {
+					OR: [
+						{ name: { contains: search, mode: "insensitive" as const } },
+						{
+							members: {
+								some: {
+									user: {
+										nickname: { contains: search, mode: "insensitive" as const },
+									},
+								},
+							},
+						},
+						{
+							market: {
+								title: { contains: search, mode: "insensitive" as const },
+							},
+						},
+					],
+				}),
 			},
+		};
+
+		const rooms = await prisma.chatRoom.findMany({
+			...filterConditions,
+			take: limit + 1,
+			...(cursor && {
+				cursor: { id: cursor },
+				skip: 1,
+			}),
 			include: {
 				members: {
 					include: {
@@ -172,6 +220,16 @@ export const chatRoomService = {
 			},
 			orderBy: { createdAt: "desc" },
 		});
+
+		const hasMore = rooms.length > limit;
+		const items = hasMore ? rooms.slice(0, -1) : rooms;
+		const nextCursor = hasMore ? items[items.length - 1]?.id : null;
+
+		return {
+			items,
+			nextCursor,
+			hasMore,
+		};
 	},
 
 	/**

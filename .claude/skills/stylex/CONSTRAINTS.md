@@ -101,20 +101,83 @@ flexBasis: 'auto',
 
 `stylex.keyframes()` cannot be exported or imported. Must be defined in the same file where used.
 
-```typescript
-// tokens.stylex.ts - CANNOT export keyframes
-export const fadeIn = stylex.keyframes({...}); // WRONG
+### WRONG: Using `<style>` Tag or Inline Animation
 
-// component.tsx - Define locally
+```typescript
+// WRONG - <style> 태그로 keyframes 정의
+return (
+  <>
+    <style>
+      {`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
+    </style>
+    <Loader2 style={{ animation: "spin 1s linear infinite" }} />
+  </>
+);
+
+// WRONG - 인라인 style로 animation 지정
+<Loader2 style={{ animation: "spin 1s linear infinite" }} />
+```
+
+### CORRECT: Using `stylex.keyframes()`
+
+```typescript
+// component.tsx - Define keyframes and styles locally
+const spin = stylex.keyframes({
+  "0%": { transform: "rotate(0deg)" },
+  "100%": { transform: "rotate(360deg)" },
+});
+
+const styles = stylex.create({
+  spinner: {
+    animationName: spin,
+    animationDuration: "1s",
+    animationTimingFunction: "linear",
+    animationIterationCount: "infinite",
+  },
+});
+
+// 사용 - lucide-react 같은 외부 컴포넌트에도 적용 가능
+<Loader2 size={16} {...stylex.props(styles.spinner)} />
+
+// 다른 스타일과 조합
+<Loader2 size={20} {...stylex.props(styles.spinner, styles.icon)} />
+```
+
+### Common Animation Patterns
+
+```typescript
 const fadeIn = stylex.keyframes({
   '0%': { opacity: 0 },
   '100%': { opacity: 1 },
 });
 
+const spin = stylex.keyframes({
+  '0%': { transform: 'rotate(0deg)' },
+  '100%': { transform: 'rotate(360deg)' },
+});
+
+const pulse = stylex.keyframes({
+  '0%, 100%': { opacity: 1 },
+  '50%': { opacity: 0.5 },
+});
+
 const styles = stylex.create({
-  animated: {
+  fadeIn: {
     animationName: fadeIn,
     animationDuration: '0.3s',
+    animationTimingFunction: 'ease-out',
+  },
+  spinner: {
+    animationName: spin,
+    animationDuration: '1s',
+    animationTimingFunction: 'linear',
+    animationIterationCount: 'infinite',
+  },
+  pulse: {
+    animationName: pulse,
+    animationDuration: '2s',
+    animationTimingFunction: 'ease-in-out',
+    animationIterationCount: 'infinite',
   },
 });
 ```

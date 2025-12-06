@@ -489,6 +489,39 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			},
 		},
 	)
+	// GET /api/users/me/check-nickname - 닉네임 중복 검사
+	.get(
+		"/me/check-nickname",
+		async ({ auth, query, set }) => {
+			const { nickname } = query;
+			if (!nickname || nickname.length < 2 || nickname.length > 20) {
+				set.status = 400;
+				return { error: "닉네임은 2-20자 이내로 입력해주세요" };
+			}
+
+			const user = await userService.findBySupabaseId(auth.user.id);
+			const isAvailable = await userService.isNicknameAvailable(
+				nickname,
+				user?.id,
+			);
+
+			return { available: isAvailable };
+		},
+		{
+			query: t.Object({
+				nickname: t.String(),
+			}),
+			response: {
+				200: t.Object({ available: t.Boolean() }),
+				400: ErrorSchema,
+			},
+			detail: {
+				tags: ["Users"],
+				summary: "닉네임 중복 검사",
+				description: "입력한 닉네임이 사용 가능한지 확인합니다.",
+			},
+		},
+	)
 	// GET /api/users/me/activity - 내 활동 내역
 	.get(
 		"/me/activity",

@@ -1,14 +1,14 @@
 import * as stylex from "@stylexjs/stylex";
-import { ArrowLeft, Filter } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
 import { ChatListSection } from "@/components/chat/sections";
 import { ChatListSkeleton } from "@/components/chat/skeletons";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
 import type { MarketSummary } from "@/types/entities";
 import { api } from "@/utils/eden";
-import { createMetadata } from "@/lib/metadata";
 import {
 	colors,
 	fontSize,
@@ -67,22 +67,6 @@ const styles = stylex.create({
 		fontWeight: 800,
 		color: colors.textPrimary,
 		margin: 0,
-	},
-	filterButton: {
-		display: "flex",
-		alignItems: "center",
-		gap: "4px",
-		paddingTop: "6px",
-		paddingBottom: "6px",
-		paddingLeft: "12px",
-		paddingRight: "12px",
-		fontSize: "13px",
-		fontWeight: 500,
-		color: colors.textMuted,
-		backgroundColor: colors.bgTertiary,
-		borderRadius: "16px",
-		borderWidth: 0,
-		cursor: "pointer",
 	},
 	marketInfo: {
 		display: "flex",
@@ -157,12 +141,6 @@ export default async function ChatListPage({
 							{marketId ? "거래 채팅" : "채팅"}
 						</h1>
 					</div>
-					{!marketId && (
-						<button type="button" {...stylex.props(styles.filterButton)}>
-							<Filter size={14} />
-							필터
-						</button>
-					)}
 				</div>
 
 				{marketInfo && (

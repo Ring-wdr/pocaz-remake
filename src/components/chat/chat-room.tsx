@@ -2,8 +2,18 @@
 
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
-import { ArrowLeft, MoreVertical, Plus, Send } from "lucide-react";
+import {
+	AlertCircle,
+	ArrowLeft,
+	DoorOpen,
+	MoreVertical,
+	Plus,
+	RefreshCw,
+	Send,
+	X,
+} from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -18,11 +28,18 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import {
+	preCacheUsers,
 	useChatPresence,
 	useChatRealtime,
 } from "@/lib/hooks/use-chat-realtime";
 import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
 import { api } from "@/utils/eden";
+
+/** 실패한 메시지 추적을 위한 확장 타입 */
+interface ChatMessageWithStatus extends ChatMessage {
+	status?: "sending" | "sent" | "failed";
+	retryCount?: number;
+}
 
 const styles = stylex.create({
 	container: {
@@ -286,6 +303,100 @@ const styles = stylex.create({
 		backgroundColor: colors.borderPrimary,
 		cursor: "default",
 	},
+	// 실패 메시지 스타일
+	failedMessageContainer: {
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "flex-end",
+	},
+	failedBubble: {
+		backgroundColor: colors.statusErrorBg,
+		borderWidth: 1,
+		borderStyle: "solid",
+		borderColor: colors.statusError,
+	},
+	failedActions: {
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.xxs,
+		marginTop: spacing.xxxs,
+	},
+	failedText: {
+		fontSize: fontSize.sm,
+		color: colors.statusError,
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.xxxs,
+	},
+	retryButton: {
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.xxxs,
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xxs,
+		paddingRight: spacing.xxs,
+		fontSize: fontSize.sm,
+		color: colors.accentPrimary,
+		backgroundColor: "transparent",
+		borderWidth: 0,
+		cursor: "pointer",
+	},
+	// 메뉴 관련 스타일
+	menuOverlay: {
+		position: "fixed",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
+		display: "flex",
+		alignItems: "flex-end",
+		justifyContent: "center",
+		zIndex: 100,
+	},
+	menuSheet: {
+		width: "100%",
+		maxWidth: "500px",
+		backgroundColor: colors.bgPrimary,
+		borderTopLeftRadius: radius.lg,
+		borderTopRightRadius: radius.lg,
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.lg,
+	},
+	menuHandle: {
+		width: "40px",
+		height: "4px",
+		backgroundColor: colors.borderSecondary,
+		borderRadius: radius.sm,
+		margin: "0 auto",
+		marginBottom: spacing.sm,
+	},
+	menuItem: {
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.sm,
+		width: "100%",
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
+		paddingLeft: spacing.md,
+		paddingRight: spacing.md,
+		fontSize: fontSize.base,
+		color: colors.textSecondary,
+		backgroundColor: "transparent",
+		borderWidth: 0,
+		cursor: "pointer",
+		textAlign: "left",
+	},
+	menuItemDanger: {
+		color: colors.statusError,
+	},
+	// 전송중 상태 스타일
+	sendingIndicator: {
+		fontSize: "11px",
+		color: colors.textPlaceholder,
+		fontStyle: "italic",
+	},
 });
 
 interface ChatRoomProps {
@@ -297,6 +408,8 @@ interface ChatRoomProps {
 	currentUserId: string;
 }
 
+const MAX_RETRY_COUNT = 3;
+
 export default function ChatRoom({
 	roomId,
 	roomName,
@@ -305,9 +418,13 @@ export default function ChatRoom({
 	initialMessages,
 	currentUserId,
 }: ChatRoomProps) {
-	const [messages, setMessages] = useState(initialMessages);
+	const router = useRouter();
+	const [messages, setMessages] =
+		useState<ChatMessageWithStatus[]>(initialMessages);
 	const [inputValue, setInputValue] = useState("");
 	const [isSending, setIsSending] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [isLeaving, setIsLeaving] = useState(false);
 	const messagesRef = useRef<HTMLDivElement | null>(null);
 
 	const currentUser = useMemo(
@@ -327,49 +444,104 @@ export default function ChatRoom({
 		});
 	}, []);
 
+	/** 메시지 전송 함수 (재시도 포함) */
+	const sendMessage = useCallback(
+		async (content: string, existingTempId?: string, retryCount = 0) => {
+			const tempId = existingTempId || `temp-${Date.now()}`;
+
+			// 새 메시지인 경우 optimistic 추가
+			if (!existingTempId) {
+				const optimisticMessage: ChatMessageWithStatus = {
+					id: tempId,
+					content,
+					createdAt: new Date().toISOString(),
+					user: {
+						id: currentUserId,
+						nickname: currentUser?.nickname ?? "나",
+						profileImage: currentUser?.profileImage ?? null,
+					},
+					status: "sending",
+					retryCount: 0,
+				};
+				setMessages((prev) => [...prev, optimisticMessage]);
+			} else {
+				// 재시도인 경우 상태만 업데이트
+				setMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === tempId
+							? { ...msg, status: "sending" as const, retryCount }
+							: msg,
+					),
+				);
+			}
+
+			try {
+				const { data, error } = await api.chat
+					.rooms({ id: roomId })
+					.messages.post({ content });
+
+				if (error || !data) {
+					throw new Error("메시지 전송 실패");
+				}
+
+				// 성공시 메시지 교체
+				setMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === tempId
+							? { ...(data as ChatMessage), status: "sent" as const }
+							: msg,
+					),
+				);
+			} catch (err) {
+				console.error("Message send error:", err);
+
+				// 실패 상태로 업데이트
+				setMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === tempId
+							? { ...msg, status: "failed" as const, retryCount }
+							: msg,
+					),
+				);
+
+				if (retryCount === 0) {
+					toast.error("메시지 전송에 실패했습니다. 다시 시도해주세요.");
+				}
+			}
+		},
+		[roomId, currentUserId, currentUser],
+	);
+
 	const handleSend = () => {
 		const content = inputValue.trim();
 		if (!content || isSending) return;
 
-		const tempId = `temp-${Date.now()}`;
-		const optimisticMessage: ChatMessage = {
-			id: tempId,
-			content,
-			createdAt: new Date().toISOString(),
-			user: {
-				id: currentUserId,
-				nickname: currentUser?.nickname ?? "나",
-				profileImage: currentUser?.profileImage ?? null,
-			},
-		};
-
-		setMessages((prev) => [...prev, optimisticMessage]);
 		setInputValue("");
 		setIsSending(true);
-
-		api.chat
-			.rooms({ id: roomId })
-			.messages.post({ content })
-			.then(({ data, error }) => {
-				if (error || !data) {
-					setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
-					toast.error("메시지 전송에 실패했습니다.");
-					return;
-				}
-
-				setMessages((prev) =>
-					prev.map((msg) =>
-						msg.id === tempId && "id" in data ? (data as ChatMessage) : msg,
-					),
-				);
-			})
-			.catch((error) => {
-				console.error(error);
-				setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
-				toast.error("메시지 전송에 실패했습니다.");
-			})
-			.finally(() => setIsSending(false));
+		sendMessage(content).finally(() => setIsSending(false));
 	};
+
+	/** 실패한 메시지 재시도 */
+	const handleRetry = useCallback(
+		(message: ChatMessageWithStatus) => {
+			const newRetryCount = (message.retryCount ?? 0) + 1;
+
+			if (newRetryCount > MAX_RETRY_COUNT) {
+				toast.error("최대 재시도 횟수를 초과했습니다. 메시지를 삭제해주세요.");
+				return;
+			}
+
+			toast.info(`재시도 중... (${newRetryCount}/${MAX_RETRY_COUNT})`);
+			sendMessage(message.content, message.id, newRetryCount);
+		},
+		[sendMessage],
+	);
+
+	/** 실패한 메시지 삭제 */
+	const handleDeleteFailed = useCallback((messageId: string) => {
+		setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+		toast.success("메시지가 삭제되었습니다.");
+	}, []);
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" && !e.shiftKey) {
@@ -378,12 +550,40 @@ export default function ChatRoom({
 		}
 	};
 
-	const handleIncomingMessage = (message: ChatMessage) => {
+	const handleIncomingMessage = useCallback((message: ChatMessage) => {
 		setMessages((prev) => {
 			const exists = prev.some((m) => m.id === message.id);
 			if (exists) return prev;
-			return [...prev, message];
+			return [...prev, { ...message, status: "sent" as const }];
 		});
+	}, []);
+
+	/** 채팅방 나가기 */
+	const handleLeaveRoom = async () => {
+		if (isLeaving) return;
+
+		const confirmed = window.confirm(
+			"정말 채팅방을 나가시겠습니까? 대화 내용은 복구할 수 없습니다.",
+		);
+		if (!confirmed) return;
+
+		setIsLeaving(true);
+		try {
+			const { error } = await api.chat.rooms({ id: roomId }).leave.delete();
+
+			if (error) {
+				throw new Error("채팅방 나가기 실패");
+			}
+
+			toast.success("채팅방을 나갔습니다.");
+			router.push("/chat/list");
+		} catch (err) {
+			console.error("Leave room error:", err);
+			toast.error("채팅방 나가기에 실패했습니다.");
+		} finally {
+			setIsLeaving(false);
+			setIsMenuOpen(false);
+		}
 	};
 
 	const { onlineUsers } = useChatPresence(roomId, currentUserId, {
@@ -393,9 +593,16 @@ export default function ChatRoom({
 
 	useChatRealtime(roomId, handleIncomingMessage);
 
+	// 채팅방 멤버를 캐시에 미리 등록 (realtime 메시지 수신 시 추가 fetch 방지)
 	useEffect(() => {
-		setMessages(initialMessages);
-	}, [initialMessages]);
+		preCacheUsers(
+			members.map((m) => ({
+				id: m.id,
+				nickname: m.nickname,
+				profileImage: m.profileImage,
+			})),
+		);
+	}, [members]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: message change by realtime api
 	useEffect(() => {
@@ -430,7 +637,11 @@ export default function ChatRoom({
 						</div>
 					</div>
 				</div>
-				<button type="button" {...stylex.props(styles.menuButton)}>
+				<button
+					type="button"
+					onClick={() => setIsMenuOpen(true)}
+					{...stylex.props(styles.menuButton)}
+				>
 					<MoreVertical size={20} />
 				</button>
 			</div>
@@ -463,31 +674,77 @@ export default function ChatRoom({
 				</div>
 				{messages.map((message) => {
 					const isMine = message.user.id === currentUserId;
+					const isFailed = message.status === "failed";
+					const isSendingMsg = message.status === "sending";
+
 					return (
 						<div key={message.id}>
 							<div
 								{...stylex.props(
 									styles.messageRow,
 									isMine ? styles.messageRowMine : styles.messageRowTheirs,
+									isFailed && styles.failedMessageContainer,
 								)}
 							>
 								<div
 									{...stylex.props(
 										styles.messageBubble,
 										isMine ? styles.bubbleMine : styles.bubbleTheirs,
+										isFailed && styles.failedBubble,
 									)}
 								>
 									{message.content}
 								</div>
 							</div>
-							<div
-								{...stylex.props(
-									styles.messageTime,
-									isMine ? styles.messageTimeMine : styles.messageTimeTheirs,
-								)}
-							>
-								{dayjs(message.createdAt).format("HH:mm")}
-							</div>
+
+							{/* 전송 중 표시 */}
+							{isSendingMsg && isMine && (
+								<div
+									{...stylex.props(styles.messageTime, styles.messageTimeMine)}
+								>
+									<span {...stylex.props(styles.sendingIndicator)}>
+										전송 중...
+									</span>
+								</div>
+							)}
+
+							{/* 실패 메시지 액션 */}
+							{isFailed && isMine && (
+								<div {...stylex.props(styles.failedActions)}>
+									<span {...stylex.props(styles.failedText)}>
+										<AlertCircle size={12} />
+										전송 실패
+									</span>
+									<button
+										type="button"
+										onClick={() => handleRetry(message)}
+										{...stylex.props(styles.retryButton)}
+									>
+										<RefreshCw size={12} />
+										재시도
+									</button>
+									<button
+										type="button"
+										onClick={() => handleDeleteFailed(message.id)}
+										{...stylex.props(styles.retryButton)}
+									>
+										<X size={12} />
+										삭제
+									</button>
+								</div>
+							)}
+
+							{/* 일반 메시지 시간 표시 */}
+							{!isSendingMsg && !isFailed && (
+								<div
+									{...stylex.props(
+										styles.messageTime,
+										isMine ? styles.messageTimeMine : styles.messageTimeTheirs,
+									)}
+								>
+									{dayjs(message.createdAt).format("HH:mm")}
+								</div>
+							)}
 						</div>
 					);
 				})}
@@ -519,6 +776,36 @@ export default function ChatRoom({
 					<Send size={18} />
 				</button>
 			</div>
+
+			{/* 메뉴 바텀 시트 */}
+			{isMenuOpen && (
+				<div
+					role="dialog"
+					aria-modal="true"
+					aria-label="채팅방 메뉴"
+					{...stylex.props(styles.menuOverlay)}
+					onClick={() => setIsMenuOpen(false)}
+					onKeyDown={(e) => e.key === "Escape" && setIsMenuOpen(false)}
+				>
+					<div
+						role="menu"
+						{...stylex.props(styles.menuSheet)}
+						onClick={(e) => e.stopPropagation()}
+						onKeyDown={(e) => e.stopPropagation()}
+					>
+						<div {...stylex.props(styles.menuHandle)} />
+						<button
+							type="button"
+							onClick={handleLeaveRoom}
+							disabled={isLeaving}
+							{...stylex.props(styles.menuItem, styles.menuItemDanger)}
+						>
+							<DoorOpen size={20} />
+							{isLeaving ? "나가는 중..." : "채팅방 나가기"}
+						</button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

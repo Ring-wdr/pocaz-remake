@@ -90,18 +90,31 @@ interface LikeButtonProps {
 	postId: string;
 	initialLiked: boolean;
 	initialCount: number;
+	isLoggedIn: boolean;
 }
 
 export function LikeButton({
 	postId,
 	initialLiked,
 	initialCount,
+	isLoggedIn,
 }: LikeButtonProps) {
+	const router = useRouter();
 	const [isLiked, setIsLiked] = useState(initialLiked);
 	const [likeCount, setLikeCount] = useState(initialCount);
 	const [isPending, startTransition] = useTransition();
 
 	const handleLike = () => {
+		if (!isLoggedIn) {
+			toast.error("로그인이 필요합니다", {
+				action: {
+					label: "로그인",
+					onClick: () => router.push("/login"),
+				},
+			});
+			return;
+		}
+
 		startTransition(async () => {
 			const previousLiked = isLiked;
 			const previousCount = likeCount;
