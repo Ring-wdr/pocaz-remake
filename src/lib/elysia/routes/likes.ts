@@ -140,7 +140,7 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			},
 		},
 	)
-	// GET /api/likes/me - 내가 좋아요한 게시글 목록 (페이지네이션 지원)
+	// GET /api/likes/me - 내가 좋아요한 게시글 목록 (페이지네이션 및 정렬 지원)
 	.get(
 		"/me",
 		async ({ auth, query }) => {
@@ -150,9 +150,11 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			}
 
 			const parsedLimit = query.limit ? Number.parseInt(query.limit, 10) : 20;
+			const sort = query.sort as "likedAt" | "popular" | "recent" | undefined;
 			const result = await likeService.getLikedPosts(user.id, {
 				cursor: query.cursor,
 				limit: Number.isFinite(parsedLimit) ? parsedLimit : 20,
+				sort: sort ?? "likedAt",
 			});
 
 			return {
@@ -174,6 +176,7 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			query: t.Object({
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
+				sort: t.Optional(t.Union([t.Literal("likedAt"), t.Literal("popular"), t.Literal("recent")])),
 			}),
 			response: t.Object({
 				items: t.Array(
@@ -194,7 +197,7 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			detail: {
 				tags: ["Likes"],
 				summary: "내가 좋아요한 게시글 목록",
-				description: "현재 사용자가 좋아요한 게시글 목록을 조회합니다 (페이지네이션 지원).",
+				description: "현재 사용자가 좋아요한 게시글 목록을 조회합니다 (페이지네이션 및 정렬 지원). sort: likedAt(좋아요한 순), popular(인기순), recent(최신순)",
 			},
 		},
 	)

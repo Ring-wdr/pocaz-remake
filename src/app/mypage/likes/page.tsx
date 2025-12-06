@@ -22,6 +22,16 @@ export const metadata = createMetadata({
 
 const PAGE_SIZE = 20;
 
+type SortOption = "likedAt" | "popular" | "recent";
+
+const SORT_OPTIONS: SortOption[] = ["likedAt", "popular", "recent"];
+
+const sortLabels: Record<SortOption, string> = {
+	likedAt: "좋아요한 순",
+	popular: "인기순",
+	recent: "최신순",
+};
+
 const styles = stylex.create({
 	container: {
 		flex: 1,
@@ -71,10 +81,37 @@ const styles = stylex.create({
 		flexDirection: "column",
 		gap: spacing.sm,
 	},
+	sortRow: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		gap: spacing.xs,
+	},
 	helpText: {
 		margin: 0,
 		fontSize: fontSize.sm,
 		color: colors.textMuted,
+	},
+	sortTabs: {
+		display: "flex",
+		gap: spacing.xxxs,
+	},
+	sortTab: {
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		fontSize: fontSize.sm,
+		fontWeight: fontWeight.medium,
+		color: colors.textMuted,
+		backgroundColor: colors.bgSecondary,
+		borderWidth: 0,
+		borderRadius: radius.sm,
+		textDecoration: "none",
+	},
+	sortTabActive: {
+		color: colors.textInverse,
+		backgroundColor: colors.bgInverse,
 	},
 	postList: {
 		display: "flex",
@@ -211,11 +248,14 @@ const styles = stylex.create({
 	},
 });
 
-const buildHref = (params: { cursor?: string | null }) => {
+const buildHref = (params: { cursor?: string | null; sort?: SortOption }) => {
 	const urlParams = new URLSearchParams();
 	urlParams.set("limit", `${PAGE_SIZE}`);
 	if (params.cursor) {
 		urlParams.set("cursor", params.cursor);
+	}
+	if (params.sort && params.sort !== "likedAt") {
+		urlParams.set("sort", params.sort);
 	}
 
 	const qs = urlParams.toString();
@@ -225,11 +265,14 @@ const buildHref = (params: { cursor?: string | null }) => {
 export default async function LikesPage({
 	searchParams,
 }: PageProps<"/mypage/likes">) {
-	const { cursor, limit } = await searchParams;
+	const { cursor, limit, sort } = await searchParams;
 	const cursorParam = typeof cursor === "string" ? cursor : undefined;
 	const limitParam = typeof limit === "string" ? limit : `${PAGE_SIZE}`;
+	const sortParam = (typeof sort === "string" && ["likedAt", "popular", "recent"].includes(sort)
+		? sort
+		: "likedAt") as SortOption;
 
-	const query: Record<string, string> = { limit: limitParam };
+	const query: Record<string, string> = { limit: limitParam, sort: sortParam };
 	if (cursorParam) {
 		query.cursor = cursorParam;
 	}
@@ -240,8 +283,8 @@ export default async function LikesPage({
 	const nextCursor = data?.nextCursor ?? null;
 
 	const nextHref =
-		hasMore && nextCursor ? buildHref({ cursor: nextCursor }) : null;
-	const resetHref = buildHref({});
+		hasMore && nextCursor ? buildHref({ cursor: nextCursor, sort: sortParam }) : null;
+	const resetHref = buildHref({ sort: sortParam });
 
 	return (
 		<div {...stylex.props(styles.container)}>
@@ -253,9 +296,25 @@ export default async function LikesPage({
 			</header>
 
 			<div {...stylex.props(styles.content)}>
-				<p {...stylex.props(styles.helpText)}>
-					좋아요한 순으로 정렬되며, 페이지당 {PAGE_SIZE}개씩 표시됩니다.
-				</p>
+				<div {...stylex.props(styles.sortRow)}>
+					<p {...stylex.props(styles.helpText)}>
+						페이지당 {PAGE_SIZE}개씩 표시됩니다.
+					</p>
+					<div {...stylex.props(styles.sortTabs)}>
+						{SORT_OPTIONS.map((option) => (
+							<Link
+								key={option}
+								href={buildHref({ sort: option })}
+								{...stylex.props(
+									styles.sortTab,
+									sortParam === option && styles.sortTabActive,
+								)}
+							>
+								{sortLabels[option]}
+							</Link>
+						))}
+					</div>
+				</div>
 
 				{error ? (
 					<div {...stylex.props(styles.errorBox)}>
@@ -281,7 +340,7 @@ export default async function LikesPage({
 								<h3 {...stylex.props(styles.postTitle)}>{post.content}</h3>
 								<div {...stylex.props(styles.postMeta)}>
 									<span {...stylex.props(styles.postTime)}>
-										{formatRelativeTime(post.likedAt)}
+										{formatRelativeTime(sortParam === "likedAt" ? post.likedAt : post.createdAt)}
 									</span>
 									<div {...stylex.props(styles.postStats)}>
 										<span {...stylex.props(styles.stat, styles.statLiked)}>
@@ -314,7 +373,7 @@ export default async function LikesPage({
 									styles.paginationSecondary,
 								)}
 							>
-								최신 보기
+								처음 보기
 							</Link>
 						) : (
 							<span {...stylex.props(styles.spacer)} />

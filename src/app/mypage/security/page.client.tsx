@@ -1,7 +1,13 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { AlertTriangle, ArrowLeft, LogOut, Trash2 } from "lucide-react";
+import {
+	AlertTriangle,
+	ArrowLeft,
+	Loader2,
+	LogOut,
+	Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -189,11 +195,14 @@ const styles = stylex.create({
 		overflow: "hidden",
 	},
 	modalHeader: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: spacing.xxs,
 		paddingTop: spacing.md,
 		paddingBottom: spacing.xs,
 		paddingLeft: spacing.md,
 		paddingRight: spacing.md,
-		textAlign: "center",
 	},
 	modalTitle: {
 		fontSize: fontSize.lg,
@@ -214,6 +223,10 @@ const styles = stylex.create({
 		lineHeight: 1.5,
 		margin: 0,
 	},
+	modalTextStrong: {
+		color: colors.statusError,
+		fontWeight: fontWeight.semibold,
+	},
 	modalActions: {
 		display: "flex",
 		borderTopWidth: 1,
@@ -221,6 +234,10 @@ const styles = stylex.create({
 		borderTopColor: colors.borderPrimary,
 	},
 	modalButton: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: spacing.xxs,
 		flex: 1,
 		paddingTop: spacing.xs,
 		paddingBottom: spacing.xs,
@@ -239,23 +256,34 @@ const styles = stylex.create({
 	modalButtonDanger: {
 		color: colors.statusError,
 	},
+	modalButtonPrimary: {
+		color: colors.accentPrimary,
+	},
 });
+
+type ModalType = "logout" | "delete" | null;
 
 export default function SecurityPageClient({
 	loginProvider,
 	loginEmail,
 }: SecurityPageClientProps) {
-	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [activeModal, setActiveModal] = useState<ModalType>(null);
 	const [isLoggingOut, startLogout] = useTransition();
 	const [isDeleting, startDelete] = useTransition();
 
 	const handleLogout = () => {
 		startLogout(async () => {
 			try {
+				toast.loading("로그아웃 중...", { id: "logout" });
 				await signOut();
+				toast.success("로그아웃되었습니다.", { id: "logout" });
 			} catch (error) {
 				console.error(error);
-				toast.error("로그아웃에 실패했습니다. 다시 시도해 주세요.");
+				toast.error("로그아웃에 실패했습니다. 다시 시도해 주세요.", {
+					id: "logout",
+				});
+			} finally {
+				setActiveModal(null);
 			}
 		});
 	};
@@ -263,6 +291,7 @@ export default function SecurityPageClient({
 	const handleDeleteAccount = () => {
 		startDelete(async () => {
 			try {
+				toast.loading("회원 탈퇴 처리 중...", { id: "delete" });
 				const result = await api.users.me.delete();
 				let errorMessage = "";
 				if (result.response.status === 404) {
@@ -280,23 +309,30 @@ export default function SecurityPageClient({
 					throw new Error(errorMessage);
 				}
 
-				toast.success("회원 탈퇴가 완료되었습니다.");
+				toast.success("회원 탈퇴가 완료되었습니다.", { id: "delete" });
 				await signOut();
 			} catch (error) {
 				console.error(error);
 				if (error instanceof Error) {
-					toast.error(error.message);
+					toast.error(error.message, { id: "delete" });
 				} else {
-					toast.error("회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+					toast.error("회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해 주세요.", {
+						id: "delete",
+					});
 				}
 			} finally {
-				setShowDeleteModal(false);
+				setActiveModal(null);
 			}
 		});
 	};
 
+	const isProcessing = isLoggingOut || isDeleting;
+
 	return (
 		<div {...stylex.props(styles.container)}>
+			<style>
+				{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
+			</style>
 			<header {...stylex.props(styles.header)}>
 				<Link href="/mypage/settings" {...stylex.props(styles.backButton)}>
 					<ArrowLeft size={20} />
@@ -324,29 +360,47 @@ export default function SecurityPageClient({
 					<div {...stylex.props(styles.list)}>
 						<button
 							type="button"
-							onClick={handleLogout}
-							disabled={isLoggingOut || isDeleting}
+							onClick={() => setActiveModal("logout")}
+							disabled={isProcessing}
 							{...stylex.props(
 								styles.item,
-								(isLoggingOut || isDeleting) && styles.actionDisabled,
+								isProcessing && styles.actionDisabled,
 							)}
 						>
-							<LogOut size={20} {...stylex.props(styles.icon)} />
-							<span {...stylex.props(styles.label)}>로그아웃</span>
+							{isLoggingOut ? (
+								<Loader2
+									size={20}
+									style={{ animation: "spin 1s linear infinite" }}
+									{...stylex.props(styles.icon)}
+								/>
+							) : (
+								<LogOut size={20} {...stylex.props(styles.icon)} />
+							)}
+							<span {...stylex.props(styles.label)}>
+								{isLoggingOut ? "로그아웃 중..." : "로그아웃"}
+							</span>
 						</button>
 						<button
 							type="button"
-							onClick={() => setShowDeleteModal(true)}
-							disabled={isDeleting}
+							onClick={() => setActiveModal("delete")}
+							disabled={isProcessing}
 							{...stylex.props(
 								styles.item,
 								styles.itemLast,
-								isDeleting && styles.actionDisabled,
+								isProcessing && styles.actionDisabled,
 							)}
 						>
-							<Trash2 size={20} {...stylex.props(styles.iconDanger)} />
+							{isDeleting ? (
+								<Loader2
+									size={20}
+									style={{ animation: "spin 1s linear infinite" }}
+									{...stylex.props(styles.iconDanger)}
+								/>
+							) : (
+								<Trash2 size={20} {...stylex.props(styles.iconDanger)} />
+							)}
 							<span {...stylex.props(styles.label, styles.labelDanger)}>
-								회원 탈퇴
+								{isDeleting ? "처리 중..." : "회원 탈퇴"}
 							</span>
 						</button>
 					</div>
@@ -361,22 +415,75 @@ export default function SecurityPageClient({
 				</div>
 			</div>
 
-			{showDeleteModal && (
+			{activeModal === "logout" && (
 				<div {...stylex.props(styles.modal)}>
 					<div {...stylex.props(styles.modalContent)}>
 						<div {...stylex.props(styles.modalHeader)}>
-							<h3 {...stylex.props(styles.modalTitle)}>회원 탈퇴</h3>
+							<LogOut size={20} />
+							<h3 {...stylex.props(styles.modalTitle)}>로그아웃</h3>
 						</div>
 						<div {...stylex.props(styles.modalBody)}>
 							<p {...stylex.props(styles.modalText)}>
-								정말로 탈퇴하시겠습니까?
-								{"\n"}모든 데이터가 삭제되며 복구할 수 없습니다.
+								정말로 로그아웃하시겠습니까?
 							</p>
 						</div>
 						<div {...stylex.props(styles.modalActions)}>
 							<button
 								type="button"
-								onClick={() => setShowDeleteModal(false)}
+								onClick={() => setActiveModal(null)}
+								disabled={isLoggingOut}
+								{...stylex.props(
+									styles.modalButton,
+									styles.modalButtonCancel,
+									isLoggingOut && styles.actionDisabled,
+								)}
+							>
+								취소
+							</button>
+							<button
+								type="button"
+								onClick={handleLogout}
+								disabled={isLoggingOut}
+								{...stylex.props(
+									styles.modalButton,
+									styles.modalButtonPrimary,
+									isLoggingOut && styles.actionDisabled,
+								)}
+							>
+								{isLoggingOut && (
+									<Loader2
+										size={16}
+										style={{ animation: "spin 1s linear infinite" }}
+									/>
+								)}
+								{isLoggingOut ? "로그아웃 중..." : "로그아웃"}
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{activeModal === "delete" && (
+				<div {...stylex.props(styles.modal)}>
+					<div {...stylex.props(styles.modalContent)}>
+						<div {...stylex.props(styles.modalHeader)}>
+							<AlertTriangle size={20} color={colors.statusError} />
+							<h3 {...stylex.props(styles.modalTitle)}>회원 탈퇴</h3>
+						</div>
+						<div {...stylex.props(styles.modalBody)}>
+							<p {...stylex.props(styles.modalText)}>
+								정말로 탈퇴하시겠습니까?
+								<br />
+								<br />
+								<span {...stylex.props(styles.modalTextStrong)}>
+									모든 데이터가 삭제되며 복구할 수 없습니다.
+								</span>
+							</p>
+						</div>
+						<div {...stylex.props(styles.modalActions)}>
+							<button
+								type="button"
+								onClick={() => setActiveModal(null)}
 								disabled={isDeleting}
 								{...stylex.props(
 									styles.modalButton,
@@ -396,7 +503,13 @@ export default function SecurityPageClient({
 									isDeleting && styles.actionDisabled,
 								)}
 							>
-								탈퇴
+								{isDeleting && (
+									<Loader2
+										size={16}
+										style={{ animation: "spin 1s linear infinite" }}
+									/>
+								)}
+								{isDeleting ? "처리 중..." : "탈퇴하기"}
 							</button>
 						</div>
 					</div>

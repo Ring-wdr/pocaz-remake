@@ -165,4 +165,19 @@ export const userService = {
 			},
 		});
 	},
+
+	/**
+	 * 닉네임 중복 검사
+	 * @returns true if nickname is available
+	 */
+	async isNicknameAvailable(nickname: string, excludeUserId?: string) {
+		const existingUser = await prisma.user.findFirst({
+			where: {
+				nickname,
+				deletedAt: null,
+				...(excludeUserId && { id: { not: excludeUserId } }),
+			},
+		});
+		return !existingUser;
+	},
 };

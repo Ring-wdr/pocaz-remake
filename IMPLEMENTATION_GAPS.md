@@ -7,11 +7,11 @@
 - [v] 로그인 로딩/에러 상태 및 추가 로그인 옵션 검토 (`src/app/login/page.tsx`)
 
 ## 커뮤니티
-- [ ] 게시글 수정 페이지 구현 또는 메뉴 제거 (`community/posts/[postId]/components.tsx` → `/community/posts/[id]/edit`)
-- [ ] 목록 검색/정렬/페이지네이션 및 오류·빈 상태 개선 (`components/community/sections/post-list-section.tsx`)
-- [ ] 비로그인 좋아요·댓글 가드 및 로그인 유도
-- [ ] 댓글/답글 낙관적 업데이트·재시도 UX 추가 (`comments-client.tsx`)
-- [ ] 글쓰기: 제목/본문 분리, 업로드 실패·용량 제한, 로그인 체크 (`community/write/page.client.tsx`)
+- [v] 게시글 수정 페이지 구현 또는 메뉴 제거 (`community/posts/[postId]/edit/page.tsx`, `page.client.tsx`)
+- [v] 목록 검색/정렬/페이지네이션 및 오류·빈 상태 개선 (`components/community/sections/post-list-section.tsx`)
+- [v] 비로그인 좋아요·댓글 가드 및 로그인 유도 (`components.tsx`, `comments-client.tsx`)
+- [v] 댓글/답글 낙관적 업데이트·재시도 UX 추가 (`comments-client.tsx`)
+- [v] 글쓰기: 제목/본문 분리, 업로드 실패·용량 제한, 로그인 체크 (`community/write/page.tsx`, `page.client.tsx`)
 
 ## 마켓
 - [v] 검색바/필터 탭을 API 파라미터와 연동, 페이지네이션·정렬 추가 (`market/page.tsx`, `components/market/sections`)
@@ -29,13 +29,14 @@
 - [v] 활동·리스트 페이지 페이지네이션/필터 및 오류 UX 보완
 
 ## 마이페이지 (개별)
-- [ ] 내 글 링크 버그: `/community/posts/${id}`로 수정 (`mypage/posts/page.tsx`)
-- [ ] 프로필 수정: 닉네임 중복 검증, 파일 제한, 저장 중 로딩 표시 (`mypage/edit/profile-form.tsx`)
+- [v] 내 글 링크: 이미 `/community/posts/${id}` 사용 중 (버그 아님) (`mypage/posts/page.tsx`)
+- [v] 프로필 수정: 닉네임 중복 검증(API + debounce), 파일 타입/용량 제한(5MB), 저장 중 로딩 표시 (`mypage/edit/profile-form.tsx`, `lib/elysia/routes/users.ts`)
 - [ ] 설정: 다크모드/테마 토글 실제 동작 및 영속화 (`mypage/settings/page.tsx`)
-- [ ] 알림 설정: 서버/푸시 권한 연동, 토글 영속화 (`mypage/notifications/page.client.tsx`)
-- [ ] 보안: 탈퇴/로그아웃 피드백·재인증/2차 확인 강화 (`mypage/security/page.client.tsx`)
-- [ ] 판매/구매/거래/찜: 필터·정렬/탭 동작, 위시 해제·상태 변경 액션 추가 (`mypage/wishlist|sales|purchases|trades/page.tsx`)
-- [ ] 좋아요한 글: 페이지네이션·정렬 및 오류/빈 상태 개선 (`mypage/likes/page.tsx`)
+- [ ] 알림 설정: 서버/푸시 권한 연동, 토글 영속화 (`mypage/notifications/page.client.tsx`) - 현재 localStorage만 지원
+- [v] 보안: 로그아웃/탈퇴 2차 확인 모달, 로딩 표시 강화 (`mypage/security/page.client.tsx`)
+- [v] 판매/구매/거래: 탭 필터링 동작 추가 (`mypage/sales/page.client.tsx`)
+- [v] 찜: 위시 해제 액션 추가 (`mypage/wishlist/page.client.tsx`)
+- [v] 좋아요한 글: 정렬 옵션(좋아요한 순/인기순/최신순) 추가, 페이지네이션 유지 (`mypage/likes/page.tsx`, `lib/services/like.ts`)
 
 ## 고객지원/공통
 - [v] 문의: 첨부/연락처 필드, 접수 번호·상태 표시, 로그인 가드 (`support/inquiry/page.client.tsx`)
