@@ -1,7 +1,12 @@
 import * as stylex from "@stylexjs/stylex";
 import { User } from "lucide-react";
-import { type ImgHTMLAttributes } from "react";
-import { colors, fontSize, fontWeight, radius } from "@/app/global-tokens.stylex";
+import type { ImgHTMLAttributes } from "react";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+} from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	base: {
@@ -88,7 +93,6 @@ export interface AvatarProps
 	extends Omit<ImgHTMLAttributes<HTMLImageElement>, "size"> {
 	size?: AvatarSize;
 	shape?: AvatarShape;
-	src?: string | null;
 	alt?: string;
 	fallback?: string;
 	badge?: React.ReactNode;

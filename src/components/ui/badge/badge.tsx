@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { type HTMLAttributes } from "react";
+import type { HTMLAttributes } from "react";
 import {
 	colors,
 	fontSize,
@@ -7,6 +7,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { capitalize } from "@/utils/string";
 
 const styles = stylex.create({
 	base: {
@@ -119,7 +120,13 @@ const styles = stylex.create({
 	},
 });
 
-export type BadgeVariant = "default" | "primary" | "success" | "warning" | "error" | "info";
+export type BadgeVariant =
+	| "default"
+	| "primary"
+	| "success"
+	| "warning"
+	| "error"
+	| "info";
 export type BadgeSize = "sm" | "md" | "lg";
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
@@ -129,6 +136,11 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 	dot?: boolean;
 }
 
+const convertVariantToStyleKey = <T extends string>(
+	prefix: T,
+	variant: BadgeVariant,
+): `${T}${Capitalize<BadgeVariant>}` => `${prefix}${capitalize(variant)}`;
+
 export function Badge({
 	variant = "default",
 	size = "md",
@@ -137,8 +149,8 @@ export function Badge({
 	children,
 	...props
 }: BadgeProps) {
-	const outlineStyleKey = `outline${variant.charAt(0).toUpperCase()}${variant.slice(1)}` as keyof typeof styles;
-	const dotStyleKey = `dot${variant.charAt(0).toUpperCase()}${variant.slice(1)}` as keyof typeof styles;
+	const outlineStyleKey = convertVariantToStyleKey("outline", variant);
+	const dotStyleKey = convertVariantToStyleKey("dot", variant);
 
 	return (
 		<span
