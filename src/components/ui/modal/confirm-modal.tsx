@@ -12,8 +12,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { useBodyScrollLock, useFocusManagement } from "@/hooks";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button, Input } from "@/components/ui";
 
 const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)" as const;
 
