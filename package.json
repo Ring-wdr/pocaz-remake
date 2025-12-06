@@ -40,6 +40,7 @@
     "pg": "^8.16.3",
     "prisma": "^7.0.1",
     "react": "19.2.1",
+    "react-aria-components": "^1.13.0",
     "react-dom": "19.2.1",
     "sonner": "^2.0.7",
     "swiper": "^12.0.3"

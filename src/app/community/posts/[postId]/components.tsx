@@ -4,6 +4,13 @@ import * as stylex from "@stylexjs/stylex";
 import { Heart, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import {
+	Button,
+	Menu,
+	MenuItem,
+	MenuTrigger,
+	Popover,
+} from "react-aria-components";
 import { toast } from "sonner";
 
 import {
@@ -76,13 +83,56 @@ const styles = stylex.create({
 		fontSize: fontSize.md,
 		color: colors.textPrimary,
 		textAlign: "left",
+		outlineWidth: 0,
+	},
+	dropdownItemHovered: {
+		backgroundColor: colors.bgSecondary,
+	},
+	dropdownItemFocused: {
+		backgroundColor: colors.bgSecondary,
 	},
 	dropdownItemDanger: {
 		color: colors.statusError,
 	},
+	dropdownItemDangerHovered: {
+		backgroundColor: "rgba(220, 38, 38, 0.1)",
+	},
 	placeholder: {
 		width: size.touchTarget,
 		height: size.touchTarget,
+	},
+	menu: {
+		outlineWidth: 0,
+	},
+	popover: {
+		backgroundColor: colors.bgPrimary,
+		borderWidth: 1,
+		borderStyle: "solid",
+		borderColor: colors.borderPrimary,
+		borderRadius: radius.md,
+		boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+		overflow: "hidden",
+		minWidth: 120,
+		outlineWidth: 0,
+	},
+	moreButtonInner: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		width: size.touchTarget,
+		height: size.touchTarget,
+		backgroundColor: "transparent",
+		borderWidth: 0,
+		cursor: "pointer",
+		color: colors.textPrimary,
+		outlineWidth: 0,
+	},
+	moreButtonFocusVisible: {
+		outlineWidth: 2,
+		outlineStyle: "solid",
+		outlineColor: colors.accentPrimary,
+		outlineOffset: "2px",
+		borderRadius: radius.sm,
 	},
 });
 
@@ -166,74 +216,89 @@ interface PostActionsProps {
 
 export function PostActions({ postId, isOwner }: PostActionsProps) {
 	const router = useRouter();
-	const [isOpen, setIsOpen] = useState(false);
 	const [isPending, startTransition] = useTransition();
 
 	if (!isOwner) {
 		return <div {...stylex.props(styles.placeholder)} />;
 	}
 
-	const handleEdit = () => {
-		setIsOpen(false);
-		router.push(`/community/posts/${postId}/edit`);
-	};
-
-	const handleDelete = async () => {
-		const confirmed = await confirmAction({
-			title: "게시글 삭제",
-			description: "정말 삭제하시겠습니까?",
-			confirmText: "삭제",
-			cancelText: "취소",
-		});
-		if (!confirmed) {
-			setIsOpen(false);
+	const handleAction = async (key: React.Key) => {
+		if (key === "edit") {
+			router.push(`/community/posts/${postId}/edit`);
 			return;
 		}
 
-		startTransition(async () => {
-			const { error } = await api.posts({ id: postId }).delete();
+		if (key === "delete") {
+			const confirmed = await confirmAction({
+				title: "게시글 삭제",
+				description: "정말 삭제하시겠습니까?",
+				confirmText: "삭제",
+				cancelText: "취소",
+			});
+			if (!confirmed) return;
 
-			if (error) {
-				toast.error("삭제에 실패했습니다");
-				return;
-			}
+			startTransition(async () => {
+				const { error } = await api.posts({ id: postId }).delete();
 
-			toast.success("게시글이 삭제되었습니다");
-			router.replace("/community");
-		});
+				if (error) {
+					toast.error("삭제에 실패했습니다");
+					return;
+				}
+
+				toast.success("게시글이 삭제되었습니다");
+				router.replace("/community");
+			});
+		}
 	};
 
 	return (
 		<div {...stylex.props(styles.moreButton)}>
-			<button
-				type="button"
-				onClick={() => setIsOpen(!isOpen)}
-				disabled={isPending}
-				{...stylex.props(styles.moreButton)}
-			>
-				<MoreHorizontal size={24} />
-			</button>
-			{isOpen && (
-				<div {...stylex.props(styles.dropdown)}>
-					<button
-						type="button"
-						onClick={handleEdit}
-						{...stylex.props(styles.dropdownItem)}
-					>
-						<Pencil size={16} />
-						수정
-					</button>
-					<button
-						type="button"
-						onClick={handleDelete}
-						disabled={isPending}
-						{...stylex.props(styles.dropdownItem, styles.dropdownItemDanger)}
-					>
-						<Trash2 size={16} />
-						삭제
-					</button>
-				</div>
-			)}
+			<MenuTrigger>
+				<Button aria-label="게시글 메뉴" isDisabled={isPending}>
+					{({ isFocusVisible }) => (
+						<span
+							{...stylex.props(
+								styles.moreButtonInner,
+								isFocusVisible && styles.moreButtonFocusVisible,
+							)}
+						>
+							<MoreHorizontal size={24} />
+						</span>
+					)}
+				</Button>
+				<Popover {...stylex.props(styles.popover)}>
+					<Menu {...stylex.props(styles.menu)} onAction={handleAction}>
+						<MenuItem id="edit" textValue="수정">
+							{({ isFocused, isHovered }) => (
+								<div
+									{...stylex.props(
+										styles.dropdownItem,
+										(isFocused || isHovered) && styles.dropdownItemHovered,
+									)}
+								>
+									<Pencil size={16} />
+									수정
+								</div>
+							)}
+						</MenuItem>
+						<MenuItem id="delete" textValue="삭제" isDisabled={isPending}>
+							{({ isFocused, isHovered }) => (
+								<div
+									{...stylex.props(
+										styles.dropdownItem,
+										styles.dropdownItemDanger,
+										(isFocused || isHovered) &&
+											styles.dropdownItemDangerHovered,
+									)}
+								>
+									<Trash2 size={16} />
+									삭제
+								</div>
+							)}
+						</MenuItem>
+					</Menu>
+				</Popover>
+			</MenuTrigger>
 		</div>
 	);
 }
