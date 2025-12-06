@@ -94,9 +94,13 @@ const styles = stylex.create({
 		margin: 0,
 	},
 	memberCount: {
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.xxs,
 		fontSize: fontSize.sm,
 		color: colors.textMuted,
 		margin: 0,
+		minHeight: "20px",
 	},
 	onlineBadge: {
 		display: "inline-flex",
@@ -239,6 +243,10 @@ const styles = stylex.create({
 		textAlign: "left",
 	},
 	inputArea: {
+		position: "sticky",
+		bottom: size.bottomMenuHeight,
+		left: 0,
+		right: 0,
 		display: "flex",
 		alignItems: "center",
 		gap: spacing.xxs,
@@ -250,6 +258,7 @@ const styles = stylex.create({
 		borderTopWidth: 1,
 		borderTopStyle: "solid",
 		borderTopColor: colors.borderPrimary,
+		zIndex: 10,
 	},
 	attachButton: {
 		display: "flex",
