@@ -101,9 +101,8 @@ const styles = stylex.create({
 		fontSize: fontSize.sm,
 		color: colors.textMuted,
 		margin: 0,
-		minHeight: "20px",
 	},
-	onlineBadge: {
+	statusBadge: {
 		display: "inline-flex",
 		alignItems: "center",
 		gap: spacing.xxxs,
@@ -112,9 +111,15 @@ const styles = stylex.create({
 		paddingLeft: spacing.xs,
 		paddingRight: spacing.xs,
 		fontSize: fontSize.sm,
+		borderRadius: radius.sm,
+	},
+	statusOnline: {
 		color: colors.statusSuccess,
 		backgroundColor: colors.statusSuccessBg,
-		borderRadius: radius.sm,
+	},
+	statusOffline: {
+		color: colors.textMuted,
+		backgroundColor: colors.bgTertiary,
 	},
 	menuButton: {
 		display: "flex",
@@ -642,11 +647,18 @@ export default function ChatRoom({
 						<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
 						<div {...stylex.props(styles.memberCount)}>
 							{members.length > 2 && `${members.length}명 참여`}
-							{onlineUsers.length > 0 && (
-								<span {...stylex.props(styles.onlineBadge)}>
-									• 온라인 {onlineUsers.length}
-								</span>
-							)}
+							<span
+								{...stylex.props(
+									styles.statusBadge,
+									onlineUsers.length > 0
+										? styles.statusOnline
+										: styles.statusOffline,
+								)}
+							>
+								{onlineUsers.length > 0
+									? `온라인 ${onlineUsers.length}`
+									: "오프라인"}
+							</span>
 						</div>
 					</div>
 				</div>
