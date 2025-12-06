@@ -20,6 +20,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { Button, Input } from "@/components/ui";
 import { normalizeEdenError } from "@/lib/elysia/client/error";
 import { api } from "@/utils/eden";
 
@@ -207,23 +208,6 @@ const styles = stylex.create({
 		backgroundRepeat: "no-repeat",
 		backgroundPosition: "right 12px center",
 	},
-	input: {
-		paddingTop: spacing.xs,
-		paddingBottom: spacing.xs,
-		paddingLeft: spacing.sm,
-		paddingRight: spacing.sm,
-		fontSize: fontSize.md,
-		color: colors.textSecondary,
-		backgroundColor: colors.bgSecondary,
-		borderWidth: 1,
-		borderStyle: "solid",
-		borderColor: colors.borderPrimary,
-		borderRadius: radius.md,
-		outline: "none",
-	},
-	inputInvalid: {
-		borderColor: colors.statusError,
-	},
 	textarea: {
 		paddingTop: spacing.xs,
 		paddingBottom: spacing.xs,
@@ -332,26 +316,6 @@ const styles = stylex.create({
 		color: colors.textMuted,
 		cursor: "pointer",
 		fontSize: fontSize.sm,
-	},
-	submitButton: {
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-		gap: spacing.xxs,
-		paddingTop: spacing.xs,
-		paddingBottom: spacing.xs,
-		fontSize: fontSize.md,
-		fontWeight: fontWeight.semibold,
-		color: colors.textInverse,
-		backgroundColor: colors.bgInverse,
-		borderWidth: 0,
-		borderRadius: radius.md,
-		cursor: "pointer",
-		marginTop: spacing.sm,
-	},
-	submitButtonDisabled: {
-		backgroundColor: colors.textPlaceholder,
-		cursor: "not-allowed",
 	},
 	notice: {
 		paddingTop: spacing.sm,
@@ -672,27 +636,20 @@ export default function InquiryPageClient({
 						</select>
 					</div>
 
-					<div {...stylex.props(styles.formGroup)}>
-						<label htmlFor="title" {...stylex.props(styles.label)}>
-							제목
-						</label>
-						<input
-							id="title"
-							type="text"
-							value={title}
-							onChange={(e) =>
-								dispatch({
-									type: "setField",
-									field: "title",
-									value: e.target.value,
-								})
-							}
-							placeholder="제목을 입력해 주세요"
-							maxLength={100}
-							disabled={isSubmitting}
-							{...stylex.props(styles.input)}
-						/>
-					</div>
+					<Input
+						label="제목"
+						value={title}
+						onChange={(e) =>
+							dispatch({
+								type: "setField",
+								field: "title",
+								value: e.target.value,
+							})
+						}
+						placeholder="제목을 입력해 주세요"
+						maxLength={100}
+						disabled={isSubmitting}
+					/>
 
 					<div {...stylex.props(styles.formGroup)}>
 						<label htmlFor="content" {...stylex.props(styles.label)}>
@@ -718,58 +675,38 @@ export default function InquiryPageClient({
 						</span>
 					</div>
 
-					<div {...stylex.props(styles.formGroup)}>
-						<label htmlFor="contactEmail" {...stylex.props(styles.label)}>
-							회신 받을 이메일
-						</label>
-						<input
-							id="contactEmail"
-							type="email"
-							value={contactEmail}
-							onChange={(e) =>
-								dispatch({
-									type: "setField",
-									field: "contactEmail",
-									value: e.target.value,
-								})
-							}
-							placeholder="답변을 받을 이메일을 입력해 주세요"
-							disabled={isSubmitting}
-							{...stylex.props(
-								styles.input,
-								!!contactEmail && !isEmailValid && styles.inputInvalid,
-							)}
-						/>
-						<p {...stylex.props(styles.sublabel)}>
-							로그인 계정과 다른 주소도 사용 가능합니다.
-						</p>
-					</div>
+					<Input
+						label="회신 받을 이메일"
+						type="email"
+						value={contactEmail}
+						onChange={(e) =>
+							dispatch({
+								type: "setField",
+								field: "contactEmail",
+								value: e.target.value,
+							})
+						}
+						placeholder="답변을 받을 이메일을 입력해 주세요"
+						disabled={isSubmitting}
+						error={!!contactEmail && !isEmailValid ? "유효한 이메일을 입력해 주세요" : undefined}
+						helperText="로그인 계정과 다른 주소도 사용 가능합니다."
+					/>
 
-					<div {...stylex.props(styles.formGroup)}>
-						<label htmlFor="contactPhone" {...stylex.props(styles.label)}>
-							추가 연락처 (선택)
-						</label>
-						<div {...stylex.props(styles.attachmentActions)}>
-							<input
-								id="contactPhone"
-								type="tel"
-								value={contactPhone}
-								onChange={(e) =>
-									dispatch({
-										type: "setField",
-										field: "contactPhone",
-										value: e.target.value,
-									})
-								}
-								placeholder="전화번호 또는 메신저 ID를 남겨주세요"
-								disabled={isSubmitting}
-								{...stylex.props(styles.input)}
-							/>
-						</div>
-						<p {...stylex.props(styles.sublabel)}>
-							필요 시 빠른 확인을 위해 사용됩니다.
-						</p>
-					</div>
+					<Input
+						label="추가 연락처 (선택)"
+						type="tel"
+						value={contactPhone}
+						onChange={(e) =>
+							dispatch({
+								type: "setField",
+								field: "contactPhone",
+								value: e.target.value,
+							})
+						}
+						placeholder="전화번호 또는 메신저 ID를 남겨주세요"
+						disabled={isSubmitting}
+						helperText="필요 시 빠른 확인을 위해 사용됩니다."
+					/>
 
 					<div {...stylex.props(styles.attachmentBox)}>
 						<div {...stylex.props(styles.attachmentHeader)}>
@@ -837,17 +774,14 @@ export default function InquiryPageClient({
 						)}
 					</div>
 
-					<button
+					<Button
 						type="submit"
 						disabled={!isValid || isSubmitting}
-						{...stylex.props(
-							styles.submitButton,
-							(!isValid || isSubmitting) && styles.submitButtonDisabled,
-						)}
+						fullWidth
 					>
 						<Send size={18} />
 						{isSubmitting ? "문의 접수 중..." : "문의하기"}
-					</button>
+					</Button>
 				</form>
 
 				{lastSubmission && (

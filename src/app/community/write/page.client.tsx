@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { colors, size } from "@/app/global-tokens.stylex";
+import { Button, Input } from "@/components/ui";
 import { api } from "@/utils/eden";
 
 const categories = [
@@ -67,24 +68,6 @@ const styles = stylex.create({
 		color: colors.textPrimary,
 		margin: 0,
 	},
-	submitButton: {
-		paddingTop: "10px",
-		paddingBottom: "10px",
-		paddingLeft: "20px",
-		paddingRight: "20px",
-		fontSize: "15px",
-		fontWeight: 600,
-		color: colors.textInverse,
-		backgroundColor: colors.bgInverse,
-		borderWidth: 0,
-		borderRadius: "8px",
-		cursor: "pointer",
-		transition: "opacity 0.2s ease",
-	},
-	submitButtonDisabled: {
-		opacity: 0.5,
-		cursor: "not-allowed",
-	},
 	content: {
 		flex: 1,
 		paddingTop: "20px",
@@ -136,25 +119,6 @@ const styles = stylex.create({
 	categoryButtonActive: {
 		backgroundColor: colors.bgInverse,
 		color: colors.textInverse,
-	},
-	input: {
-		width: "100%",
-		paddingTop: "14px",
-		paddingBottom: "14px",
-		paddingLeft: "16px",
-		paddingRight: "16px",
-		fontSize: "16px",
-		color: colors.textPrimary,
-		backgroundColor: colors.bgSecondary,
-		borderWidth: 1,
-		borderStyle: "solid",
-		borderColor: colors.borderPrimary,
-		borderRadius: "12px",
-		outline: "none",
-		transition: "border-color 0.2s ease",
-		"::placeholder": {
-			color: colors.textPlaceholder,
-		},
 	},
 	textarea: {
 		width: "100%",
@@ -288,23 +252,6 @@ const styles = stylex.create({
 		borderTopStyle: "solid",
 		borderTopColor: colors.borderPrimary,
 		zIndex: 10,
-	},
-	bottomButton: {
-		width: "100%",
-		paddingTop: "16px",
-		paddingBottom: "16px",
-		fontSize: "16px",
-		fontWeight: 600,
-		color: colors.textInverse,
-		backgroundColor: colors.bgInverse,
-		borderWidth: 0,
-		borderRadius: "12px",
-		cursor: "pointer",
-		transition: "opacity 0.2s ease",
-	},
-	bottomButtonDisabled: {
-		opacity: 0.5,
-		cursor: "not-allowed",
 	},
 });
 
@@ -529,18 +476,13 @@ export default function CommunityWritePage() {
 				</fieldset>
 
 				<div {...stylex.props(styles.formGroup)}>
-					<label htmlFor="title" {...stylex.props(styles.label)}>
-						제목
-						<span {...stylex.props(styles.required)}>*</span>
-					</label>
-					<input
-						id="title"
-						type="text"
+					<Input
+						label="제목"
+						required
 						placeholder="제목을 입력해주세요"
 						value={title}
 						onChange={(e) => setTitle(e.target.value)}
 						maxLength={100}
-						{...stylex.props(styles.input)}
 					/>
 					<div {...stylex.props(styles.charCount)}>{title.length}/100</div>
 				</div>
@@ -618,21 +560,18 @@ export default function CommunityWritePage() {
 			</div>
 
 			<div {...stylex.props(styles.bottomButtonContainer)}>
-				<button
+				<Button
 					type="button"
 					onClick={handleSubmit}
 					disabled={isDisabled}
-					{...stylex.props(
-						styles.bottomButton,
-						isDisabled && styles.bottomButtonDisabled,
-					)}
+					fullWidth
 				>
 					{isPending ? (
 						<Loader2 size={20} className="animate-spin" />
 					) : (
 						"등록하기"
 					)}
-				</button>
+				</Button>
 			</div>
 		</div>
 	);
