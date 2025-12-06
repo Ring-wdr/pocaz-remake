@@ -136,11 +136,6 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 	dot?: boolean;
 }
 
-const convertVariantToStyleKey = <T extends string>(
-	prefix: T,
-	variant: BadgeVariant,
-): `${T}${Capitalize<BadgeVariant>}` => `${prefix}${capitalize(variant)}`;
-
 export function Badge({
 	variant = "default",
 	size = "md",
@@ -149,8 +144,9 @@ export function Badge({
 	children,
 	...props
 }: BadgeProps) {
-	const outlineStyleKey = convertVariantToStyleKey("outline", variant);
-	const dotStyleKey = convertVariantToStyleKey("dot", variant);
+	const outlineStyleKey =
+		`outline${capitalize(variant)}` as keyof typeof styles;
+	const dotStyleKey = `dot${capitalize(variant)}` as keyof typeof styles;
 
 	return (
 		<span
