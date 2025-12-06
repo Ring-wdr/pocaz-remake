@@ -40,3 +40,5 @@ next-env.d.ts
 
 #migration
 legacy
+*storybook.log
+storybook-static

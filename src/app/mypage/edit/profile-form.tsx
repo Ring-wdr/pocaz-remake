@@ -16,10 +16,9 @@ import { toast } from "sonner";
 import {
 	colors,
 	fontSize,
-	fontWeight,
-	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { Button, Input } from "@/components/ui";
 import { api } from "@/utils/eden";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -93,88 +92,10 @@ const styles = stylex.create({
 		flexDirection: "column",
 		gap: spacing.md,
 	},
-	formGroup: {
-		display: "flex",
-		flexDirection: "column",
-		gap: spacing.xxs,
-	},
-	label: {
-		fontSize: fontSize.sm,
-		fontWeight: fontWeight.semibold,
-		color: colors.textSecondary,
-	},
-	inputWrapper: {
-		position: "relative",
-	},
-	input: {
-		width: "100%",
-		paddingTop: spacing.xs,
-		paddingBottom: spacing.xs,
-		paddingLeft: spacing.sm,
-		paddingRight: spacing.lg,
-		fontSize: fontSize.md,
-		color: colors.textSecondary,
-		backgroundColor: colors.bgSecondary,
-		borderWidth: 1,
-		borderStyle: "solid",
-		borderColor: colors.borderPrimary,
-		borderRadius: radius.md,
-		outline: "none",
-		boxSizing: "border-box",
-	},
-	inputError: {
-		borderColor: colors.statusError,
-	},
-	inputSuccess: {
-		borderColor: colors.statusSuccess,
-	},
-	inputDisabled: {
-		color: colors.textMuted,
-		cursor: "not-allowed",
-	},
-	inputHint: {
-		fontSize: fontSize.sm,
-		color: colors.textMuted,
-		margin: 0,
-	},
-	inputHintError: {
-		color: colors.statusError,
-	},
-	inputHintSuccess: {
-		color: colors.statusSuccess,
-	},
-	inputIcon: {
-		position: "absolute",
-		right: spacing.xs,
-		top: "50%",
-		transform: "translateY(-50%)",
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-	},
 	headerActions: {
 		display: "flex",
 		justifyContent: "flex-end",
 		marginBottom: spacing.sm,
-	},
-	saveButton: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxs,
-		paddingTop: spacing.xxs,
-		paddingBottom: spacing.xxs,
-		paddingLeft: spacing.xs,
-		paddingRight: spacing.xs,
-		fontSize: fontSize.md,
-		fontWeight: fontWeight.semibold,
-		color: colors.accentPrimary,
-		backgroundColor: "transparent",
-		borderWidth: 0,
-		cursor: "pointer",
-	},
-	saveButtonDisabled: {
-		color: colors.textPlaceholder,
-		cursor: "not-allowed",
 	},
 });
 
@@ -380,23 +301,24 @@ export default function EditProfileForm({
 		}
 	};
 
+	const nicknameHint = getNicknameHint();
+	const hasNicknameError =
+		nicknameStatus === "taken" || nicknameStatus === "invalid";
+
 	return (
 		<>
 			<div {...stylex.props(styles.headerActions)}>
-				<button
-					type="button"
+				<Button
+					variant="ghost"
 					onClick={handleSave}
 					disabled={!canSave}
-					{...stylex.props(
-						styles.saveButton,
-						!canSave && styles.saveButtonDisabled,
-					)}
+					size="sm"
 				>
 					{isSaving && (
 						<Loader2 size={16} {...stylex.props(styles.spinner)} />
 					)}
 					{isSaving ? "저장 중..." : "저장"}
-				</button>
+				</Button>
 			</div>
 			<div {...stylex.props(styles.avatarSection)}>
 				<div {...stylex.props(styles.avatarWrap)}>
@@ -440,52 +362,25 @@ export default function EditProfileForm({
 			</div>
 
 			<div {...stylex.props(styles.form)}>
-				<div {...stylex.props(styles.formGroup)}>
-					<label htmlFor="email" {...stylex.props(styles.label)}>
-						이메일
-					</label>
-					<input
-						id="email"
-						type="email"
-						value={initialEmail}
-						disabled
-						{...stylex.props(styles.input, styles.inputDisabled)}
-					/>
-					<p {...stylex.props(styles.inputHint)}>이메일은 변경할 수 없습니다</p>
-				</div>
+				<Input
+					label="이메일"
+					value={initialEmail}
+					disabled
+					helperText="이메일은 변경할 수 없습니다"
+					readOnly
+				/>
 
-				<div {...stylex.props(styles.formGroup)}>
-					<label htmlFor="nickname" {...stylex.props(styles.label)}>
-						닉네임
-					</label>
-					<div {...stylex.props(styles.inputWrapper)}>
-						<input
-							id="nickname"
-							type="text"
-							value={nickname}
-							onChange={handleNicknameChange}
-							placeholder="닉네임을 입력해 주세요"
-							maxLength={20}
-							{...stylex.props(
-								styles.input,
-								nicknameStatus === "available" && styles.inputSuccess,
-								(nicknameStatus === "taken" || nicknameStatus === "invalid") &&
-									styles.inputError,
-							)}
-						/>
-						<span {...stylex.props(styles.inputIcon)}>{getNicknameIcon()}</span>
-					</div>
-					<p
-						{...stylex.props(
-							styles.inputHint,
-							nicknameStatus === "available" && styles.inputHintSuccess,
-							(nicknameStatus === "taken" || nicknameStatus === "invalid") &&
-								styles.inputHintError,
-						)}
-					>
-						{getNicknameHint()}
-					</p>
-				</div>
+				<Input
+					label="닉네임"
+					value={nickname}
+					onChange={handleNicknameChange}
+					placeholder="닉네임을 입력해 주세요"
+					maxLength={20}
+					required
+					rightIcon={getNicknameIcon()}
+					error={hasNicknameError ? nicknameHint : undefined}
+					helperText={!hasNicknameError ? nicknameHint : undefined}
+				/>
 			</div>
 		</>
 	);

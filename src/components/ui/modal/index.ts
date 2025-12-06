@@ -1,9 +1,10 @@
-// Re-export from new location for backward compatibility
 export {
 	ConfirmModal,
 	type ConfirmModalField,
 	type ConfirmModalProps,
+} from "./confirm-modal";
+export {
 	confirmAction,
 	type OpenConfirmOptions,
 	openConfirm,
-} from "@/components/ui/modal";
+} from "./open-confirm";

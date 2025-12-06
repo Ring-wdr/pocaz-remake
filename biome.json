@@ -21,6 +21,9 @@
 			},
 			"performance": {
 				"noImgElement": "off"
+			},
+			"a11y": {
+				"noAutofocus": "off"
 			}
 		}
 	},

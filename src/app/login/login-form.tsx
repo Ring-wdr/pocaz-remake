@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { useActionState } from "react";
 import { type SignInState, signInWithGoogle } from "@/lib/auth/actions";
+import { Button } from "@/components/ui";
 import {
 	colors,
 	fontSize,
@@ -31,36 +32,6 @@ const styles = stylex.create({
 		display: "flex",
 		flexDirection: "column",
 		gap: spacing.xs,
-	},
-	button: {
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-		gap: spacing.xs,
-		width: "100%",
-		paddingTop: spacing.sm,
-		paddingBottom: spacing.sm,
-		paddingLeft: spacing.md,
-		paddingRight: spacing.md,
-		fontSize: fontSize.md,
-		fontWeight: fontWeight.semibold,
-		color: colors.textSecondary,
-		backgroundColor: colors.bgPrimary,
-		borderWidth: 1,
-		borderStyle: "solid",
-		borderColor: colors.borderPrimary,
-		borderRadius: radius.md,
-		cursor: "pointer",
-		transition: "background-color 0.2s ease, box-shadow 0.2s ease",
-		":hover": {
-			backgroundColor: colors.bgSecondary,
-			boxShadow: colors.shadowLight,
-		},
-		":disabled": {
-			cursor: "not-allowed",
-			backgroundColor: colors.bgSecondary,
-			color: colors.textMuted,
-		},
 	},
 	googleIcon: {
 		width: "20px",
@@ -152,9 +123,11 @@ export default function LoginForm() {
 	return (
 		<div {...stylex.props(styles.form)}>
 			<form action={formAction}>
-				<button
+				<Button
 					type="submit"
-					{...stylex.props(styles.button)}
+					variant="secondary"
+					size="md"
+					fullWidth
 					disabled={pending}
 					aria-busy={pending}
 				>
@@ -187,7 +160,7 @@ export default function LoginForm() {
 					)}
 					{pending ? "로그인 요청 중..." : "Google로 계속하기"}
 					{!pending && <ArrowRight size={18} />}
-				</button>
+				</Button>
 			</form>
 
 			{state?.error && (
