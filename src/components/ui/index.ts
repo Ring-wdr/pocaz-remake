@@ -56,6 +56,3 @@ export {
 	SkeletonCard,
 	SkeletonText,
 } from "./skeleton";
-export type { ToasterProps, ToastOptions, ToastType } from "./toast";
-// Toast
-export { Toaster, toast } from "./toast";

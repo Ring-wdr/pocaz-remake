@@ -160,25 +160,7 @@ import { Skeleton, SkeletonAvatar, SkeletonText } from "@/components/ui";
 <SkeletonText lines={3} />
 ```
 
-#### Toast (`src/components/ui/toast/`)
-- Sonner 래퍼
-- **메서드**: `toast.success()`, `toast.error()`, `toast.warning()`, `toast.info()`, `toast.promise()`
-
-```tsx
-import { toast, Toaster } from "@/components/ui";
-
-// layout.tsx에 Toaster 추가
-<Toaster />
-
-// 사용
-toast.success("저장되었습니다");
-toast.error("오류가 발생했습니다");
-toast.promise(saveData(), {
-  loading: "저장 중...",
-  success: "저장 완료!",
-  error: "저장 실패",
-});
-```
+#### Toast (`sonner`)
 
 ### Phase 5: Storybook 설정
 
@@ -246,9 +228,6 @@ src/
 │   │   ├── skeleton/
 │   │   │   ├── skeleton.tsx
 │   │   │   ├── skeleton.stories.tsx
-│   │   │   └── index.ts
-│   │   ├── toast/
-│   │   │   ├── toast.tsx
 │   │   │   └── index.ts
 │   │   └── index.ts                 # Barrel export
 │   │
