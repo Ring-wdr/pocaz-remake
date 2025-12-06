@@ -9,11 +9,11 @@ import { toast } from "sonner";
 import {
 	colors,
 	fontSize,
-	fontWeight,
 	radius,
 	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { confirmAction } from "@/components/confirm-modal";
 import { api } from "@/utils/eden";
 
 const styles = stylex.create({
@@ -136,7 +136,9 @@ export function LikeButton({
 			// Sync with server response
 			setIsLiked(data.liked);
 			setLikeCount(data.count);
-			toast.success(data.liked ? "좋아요를 눌렀습니다" : "좋아요를 취소했습니다");
+			toast.success(
+				data.liked ? "좋아요를 눌렀습니다" : "좋아요를 취소했습니다",
+			);
 		});
 	};
 
@@ -176,8 +178,14 @@ export function PostActions({ postId, isOwner }: PostActionsProps) {
 		router.push(`/community/posts/${postId}/edit`);
 	};
 
-	const handleDelete = () => {
-		if (!confirm("정말 삭제하시겠습니까?")) {
+	const handleDelete = async () => {
+		const confirmed = await confirmAction({
+			title: "게시글 삭제",
+			description: "정말 삭제하시겠습니까?",
+			confirmText: "삭제",
+			cancelText: "취소",
+		});
+		if (!confirmed) {
 			setIsOpen(false);
 			return;
 		}

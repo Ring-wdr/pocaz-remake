@@ -34,6 +34,7 @@ import {
 } from "@/lib/hooks/use-chat-realtime";
 import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
 import { api } from "@/utils/eden";
+import { confirmAction } from "@/components/confirm-modal";
 
 /** 실패한 메시지 추적을 위한 확장 타입 */
 interface ChatMessageWithStatus extends ChatMessage {
@@ -571,9 +572,12 @@ export default function ChatRoom({
 	const handleLeaveRoom = async () => {
 		if (isLeaving) return;
 
-		const confirmed = window.confirm(
-			"정말 채팅방을 나가시겠습니까? 대화 내용은 복구할 수 없습니다.",
-		);
+		const confirmed = await confirmAction({
+			title: "채팅방 나가기",
+			description: "정말 채팅방을 나가시겠습니까? 대화 내용은 복구할 수 없습니다.",
+			confirmText: "나가기",
+			cancelText: "취소",
+		});
 		if (!confirmed) return;
 
 		setIsLeaving(true);
