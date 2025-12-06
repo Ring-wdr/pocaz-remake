@@ -98,6 +98,13 @@ export interface AvatarProps
 	badge?: React.ReactNode;
 }
 
+const fallbackSizeStyles = {
+	sm: styles.fallbackSm,
+	md: styles.fallbackMd,
+	lg: styles.fallbackLg,
+	xl: styles.fallbackXl,
+};
+
 export function Avatar({
 	size = "md",
 	shape = "circle",
@@ -107,34 +114,17 @@ export function Avatar({
 	badge,
 	...props
 }: AvatarProps) {
-	const fallbackSizeStyle = {
-		sm: styles.fallbackSm,
-		md: styles.fallbackMd,
-		lg: styles.fallbackLg,
-		xl: styles.fallbackXl,
-	}[size];
-
-	const renderContent = () => {
-		if (src) {
-			return (
-				<img src={src} alt={alt} {...stylex.props(styles.image)} {...props} />
-			);
-		}
-
-		if (fallback) {
-			return (
-				<span {...stylex.props(styles.fallback, fallbackSizeStyle)}>
-					{fallback.slice(0, 2)}
-				</span>
-			);
-		}
-
-		return <User size={iconSizes[size]} />;
-	};
-
 	return (
 		<div {...stylex.props(styles.base, styles[size], styles[shape])}>
-			{renderContent()}
+			{src && (
+				<img src={src} alt={alt} {...stylex.props(styles.image)} {...props} />
+			)}
+			{fallback && (
+				<span {...stylex.props(styles.fallback, fallbackSizeStyles[size])}>
+					{fallback.slice(0, 2)}
+				</span>
+			)}
+			{!src && !fallback && <User size={iconSizes[size]} />}
 			{badge && <div {...stylex.props(styles.badgeContainer)}>{badge}</div>}
 		</div>
 	);

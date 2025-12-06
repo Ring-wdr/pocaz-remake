@@ -2,7 +2,12 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { Search, XCircle } from "lucide-react";
-import { useEffect, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import {
+	type ChangeEvent,
+	type KeyboardEvent,
+	useEffect,
+	useState,
+} from "react";
 import {
 	colors,
 	fontSize,
