@@ -18,15 +18,7 @@
 		-moz-tab-size: 4;
 		tab-size: 4;
 		line-height: 1.5;
-		background-color: #2563eb;
 	}
-
-	@media (prefers-color-scheme: dark) {
-		html {
-			background-color: #3b82f6;
-		}
-	}
-
 	/* Body defaults */
 	body {
 		min-height: 100dvh;

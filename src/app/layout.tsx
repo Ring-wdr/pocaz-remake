@@ -40,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 const styles = stylex.create({
 	html: {
 		colorScheme: "light dark",
+		backgroundColor: colors.accentPrimary,
 	},
 	reset: {
 		minHeight: "100%",
