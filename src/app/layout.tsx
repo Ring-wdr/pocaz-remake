@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { Metadata } from "next";
+import { OverlayProvider } from "overlay-kit";
 import { Toaster } from "sonner";
-
 import { Layout } from "@/components/home";
 import { pretendard } from "@/fonts/pretendard";
 import { createMetadata } from "@/lib/metadata";
@@ -28,8 +28,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 			lang="ko"
 		>
 			<body {...stylex.props(styles.reset, styles.body)}>
-				<Toaster richColors position="top-center" />
-				<Layout>{children}</Layout>
+				<OverlayProvider>
+					<Toaster richColors position="top-center" />
+					<Layout>{children}</Layout>
+				</OverlayProvider>
 			</body>
 		</html>
 	);
