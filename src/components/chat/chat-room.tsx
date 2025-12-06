@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useCallback, useEffect, useOptimistic, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -39,15 +39,17 @@ import { openChatRoomMenu } from "./open-chat-room-menu";
 
 /** 실패한 메시지 추적을 위한 확장 타입 */
 interface ChatMessageWithStatus extends ChatMessage {
-	status: "sending" | "sent" | "failed";
+	status?: "sending" | "sent" | "failed";
 	retryCount?: number;
+	clientId?: string;
 }
 
 const styles = stylex.create({
 	container: {
 		display: "flex",
 		flexDirection: "column",
-		height: "100vh",
+		height: stylex.firstThatWorks("100dvh", "100vh"),
+		overflow: "hidden",
 		backgroundColor: colors.bgSecondary,
 	},
 	header: {
@@ -358,55 +360,6 @@ interface ChatRoomProps {
 
 const MAX_RETRY_COUNT = 3;
 
-type OptimisticAction =
-	| { type: "send"; message: ChatMessageWithStatus }
-	| { type: "settleSuccess"; tempId: string; message: ChatMessage }
-	| { type: "settleFailure"; tempId: string; retryCount: number }
-	| { type: "retry"; tempId: string; retryCount: number }
-	| { type: "deleteFailed"; tempId: string };
-
-const messageOptimisticAction = (
-	state: ChatMessageWithStatus[],
-	action: OptimisticAction,
-): ChatMessageWithStatus[] => {
-	switch (action.type) {
-		case "send":
-			return [...state, action.message];
-		case "settleSuccess": {
-			const withoutTemp = state.filter((m) => m.id !== action.tempId);
-			const hasServer = withoutTemp.some((m) => m.id === action.message.id);
-			if (hasServer) {
-				return withoutTemp;
-			}
-			return [...withoutTemp, { ...action.message, status: "sent" }];
-		}
-		case "settleFailure":
-			return state.map((msg) =>
-				msg.id === action.tempId
-					? {
-							...msg,
-							status: "failed",
-							retryCount: action.retryCount,
-						}
-					: msg,
-			);
-		case "retry":
-			return state.map((msg) =>
-				msg.id === action.tempId
-					? {
-							...msg,
-							status: "sending",
-							retryCount: action.retryCount,
-						}
-					: msg,
-			);
-		case "deleteFailed":
-			return state.filter((msg) => msg.id !== action.tempId);
-		default:
-			return state;
-	}
-};
-
 export default function ChatRoom({
 	roomId,
 	roomName,
@@ -416,16 +369,10 @@ export default function ChatRoom({
 	currentUserId,
 }: ChatRoomProps) {
 	const router = useRouter();
-	const [messages, setMessages] = useState<ChatMessageWithStatus[]>(() =>
-		initialMessages.map((msg) => ({
-			...msg,
-			status: "sent",
-		})),
-	);
-	const [optimisticMessages, addOptimistic] = useOptimistic(
-		messages,
-		messageOptimisticAction,
-	);
+	const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+	const [pendingMessages, setPendingMessages] = useState<
+		ChatMessageWithStatus[]
+	>([]);
 	const [inputValue, setInputValue] = useState("");
 	const [isSending, setIsSending] = useState(false);
 	const [isLeaving, setIsLeaving] = useState(false);
@@ -449,6 +396,7 @@ export default function ChatRoom({
 	const sendMessage = useCallback(
 		async (content: string, existingTempId?: string, retryCount = 0) => {
 			const tempId = existingTempId || `temp-${Date.now()}`;
+			const clientId = existingTempId ? undefined : crypto.randomUUID();
 
 			// 새 메시지인 경우 optimistic 추가
 			if (!existingTempId) {
@@ -463,11 +411,15 @@ export default function ChatRoom({
 					},
 					status: "sending",
 					retryCount: 0,
+					clientId,
 				};
-				addOptimistic({ type: "send", message: optimisticMessage });
+				setPendingMessages((prev) => [...prev, optimisticMessage]);
 			} else {
-				// 재시도인 경우 상태만 업데이트
-				addOptimistic({ type: "retry", tempId, retryCount });
+				setPendingMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === tempId ? { ...msg, status: "sending", retryCount } : msg,
+					),
+				);
 			}
 
 			try {
@@ -487,30 +439,27 @@ export default function ChatRoom({
 					return;
 				}
 
-				// 성공시 메시지 교체
+				setPendingMessages((prev) =>
+					prev.filter((msg) => msg.id !== tempId && msg.clientId !== clientId),
+				);
 				setMessages((prev) => {
 					const exists = prev.some((msg) => msg.id === messageData.id);
 					if (exists) return prev;
-					return [...prev, { ...messageData, status: "sent" }];
-				});
-				addOptimistic({
-					type: "settleSuccess",
-					tempId,
-					message: messageData,
+					return [...prev, messageData];
 				});
 			} catch (err) {
 				console.error("Message send error:", err);
-				addOptimistic({
-					type: "settleFailure",
-					tempId,
-					retryCount,
-				});
+				setPendingMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === tempId ? { ...msg, status: "failed", retryCount } : msg,
+					),
+				);
 				if (retryCount === 0) {
 					toast.error("메시지 전송에 실패했습니다. 다시 시도해주세요.");
 				}
 			}
 		},
-		[roomId, currentUser, addOptimistic],
+		[roomId, currentUser],
 	);
 
 	const handleSend = () => {
@@ -539,13 +488,10 @@ export default function ChatRoom({
 	);
 
 	/** 실패한 메시지 삭제 */
-	const handleDeleteFailed = useCallback(
-		(messageId: string) => {
-			addOptimistic({ type: "deleteFailed", tempId: messageId });
-			toast.success("메시지가 삭제되었습니다.");
-		},
-		[addOptimistic],
-	);
+	const handleDeleteFailed = useCallback((messageId: string) => {
+		setPendingMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+		toast.success("메시지가 삭제되었습니다.");
+	}, []);
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" && !e.shiftKey) {
@@ -554,13 +500,19 @@ export default function ChatRoom({
 		}
 	};
 
-	const handleIncomingMessage = useCallback((message: ChatMessage) => {
-		setMessages((prev) => {
-			const exists = prev.some((m) => m.id === message.id);
-			if (exists) return prev;
-			return [...prev, { ...message, status: "sent" }];
-		});
-	}, []);
+	const handleIncomingMessage = useCallback(
+		(message: ChatMessage) => {
+			// 내 메시지 에코는 낙관/응답 흐름에서 처리하므로 무시
+			if (message.user.id === currentUser.id) return;
+
+			setMessages((prev) => {
+				const exists = prev.some((m) => m.id === message.id);
+				if (exists) return prev;
+				return [...prev, message];
+			});
+		},
+		[currentUser.id],
+	);
 
 	/** 메뉴 열기 */
 	const handleOpenMenu = async () => {
@@ -623,7 +575,15 @@ export default function ChatRoom({
 	// biome-ignore lint/correctness/useExhaustiveDependencies: message change by realtime api
 	useEffect(() => {
 		scrollToBottom();
-	}, [scrollToBottom, optimisticMessages.length]);
+	}, [scrollToBottom, pendingMessages.length, messages.length]);
+
+	const renderedMessages = [
+		...messages.map<ChatMessageWithStatus>((msg) => ({
+			...msg,
+			status: "sent",
+		})),
+		...pendingMessages,
+	];
 
 	return (
 		<div {...stylex.props(styles.container)}>
@@ -684,7 +644,7 @@ export default function ChatRoom({
 				<div {...stylex.props(styles.dateGroup)}>
 					<span {...stylex.props(styles.dateBadge)}>오늘</span>
 				</div>
-				{optimisticMessages.map((message) => {
+				{renderedMessages.map((message) => {
 					const isMine = message.user.id === currentUserId;
 					const isFailed = message.status === "failed";
 					const isSendingMsg = message.status === "sending";
