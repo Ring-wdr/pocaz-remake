@@ -27,7 +27,18 @@ interface SecurityPageClientProps {
 	loginEmail: string;
 }
 
+const spin = stylex.keyframes({
+	"0%": { transform: "rotate(0deg)" },
+	"100%": { transform: "rotate(360deg)" },
+});
+
 const styles = stylex.create({
+	spinner: {
+		animationName: spin,
+		animationDuration: "1s",
+		animationTimingFunction: "linear",
+		animationIterationCount: "infinite",
+	},
 	container: {
 		flex: 1,
 		display: "flex",
@@ -330,9 +341,6 @@ export default function SecurityPageClient({
 
 	return (
 		<div {...stylex.props(styles.container)}>
-			<style>
-				{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
-			</style>
 			<header {...stylex.props(styles.header)}>
 				<Link href="/mypage/settings" {...stylex.props(styles.backButton)}>
 					<ArrowLeft size={20} />
@@ -370,8 +378,7 @@ export default function SecurityPageClient({
 							{isLoggingOut ? (
 								<Loader2
 									size={20}
-									style={{ animation: "spin 1s linear infinite" }}
-									{...stylex.props(styles.icon)}
+									{...stylex.props(styles.spinner, styles.icon)}
 								/>
 							) : (
 								<LogOut size={20} {...stylex.props(styles.icon)} />
@@ -393,8 +400,7 @@ export default function SecurityPageClient({
 							{isDeleting ? (
 								<Loader2
 									size={20}
-									style={{ animation: "spin 1s linear infinite" }}
-									{...stylex.props(styles.iconDanger)}
+									{...stylex.props(styles.spinner, styles.iconDanger)}
 								/>
 							) : (
 								<Trash2 size={20} {...stylex.props(styles.iconDanger)} />
@@ -453,7 +459,7 @@ export default function SecurityPageClient({
 								{isLoggingOut && (
 									<Loader2
 										size={16}
-										style={{ animation: "spin 1s linear infinite" }}
+										{...stylex.props(styles.spinner)}
 									/>
 								)}
 								{isLoggingOut ? "로그아웃 중..." : "로그아웃"}
@@ -506,7 +512,7 @@ export default function SecurityPageClient({
 								{isDeleting && (
 									<Loader2
 										size={16}
-										style={{ animation: "spin 1s linear infinite" }}
+										{...stylex.props(styles.spinner)}
 									/>
 								)}
 								{isDeleting ? "처리 중..." : "탈퇴하기"}

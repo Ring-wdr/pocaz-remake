@@ -3,6 +3,12 @@ import { ArrowLeft, Heart, MessageCircle, Share2 } from "lucide-react";
 import Link from "next/link";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
 
+const skeletonPulse = stylex.keyframes({
+	"0%": { opacity: 0.6 },
+	"50%": { opacity: 0.3 },
+	"100%": { opacity: 0.6 },
+});
+
 export const styles = stylex.create({
 	container: {
 		flex: 1,
@@ -244,11 +250,7 @@ export const styles = stylex.create({
 	// Skeleton styles
 	skeleton: {
 		backgroundColor: colors.bgTertiary,
-		animationName: stylex.keyframes({
-			"0%": { opacity: 0.6 },
-			"50%": { opacity: 0.3 },
-			"100%": { opacity: 0.6 },
-		}),
+		animationName: skeletonPulse,
 		animationDuration: "1.5s",
 		animationIterationCount: "infinite",
 	},

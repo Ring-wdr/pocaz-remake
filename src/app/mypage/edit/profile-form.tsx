@@ -25,7 +25,18 @@ import { api } from "@/utils/eden";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
+const spin = stylex.keyframes({
+	"0%": { transform: "rotate(0deg)" },
+	"100%": { transform: "rotate(360deg)" },
+});
+
 const styles = stylex.create({
+	spinner: {
+		animationName: spin,
+		animationDuration: "1s",
+		animationTimingFunction: "linear",
+		animationIterationCount: "infinite",
+	},
 	avatarSection: {
 		display: "flex",
 		flexDirection: "column",
@@ -356,7 +367,7 @@ export default function EditProfileForm({
 					<Loader2
 						size={16}
 						color={colors.textMuted}
-						style={{ animation: "spin 1s linear infinite" }}
+						{...stylex.props(styles.spinner)}
 					/>
 				);
 			case "available":
@@ -371,9 +382,6 @@ export default function EditProfileForm({
 
 	return (
 		<>
-			<style>
-				{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
-			</style>
 			<div {...stylex.props(styles.headerActions)}>
 				<button
 					type="button"
@@ -385,10 +393,7 @@ export default function EditProfileForm({
 					)}
 				>
 					{isSaving && (
-						<Loader2
-							size={16}
-							style={{ animation: "spin 1s linear infinite" }}
-						/>
+						<Loader2 size={16} {...stylex.props(styles.spinner)} />
 					)}
 					{isSaving ? "저장 중..." : "저장"}
 				</button>
@@ -416,10 +421,7 @@ export default function EditProfileForm({
 						)}
 					>
 						{isUploading ? (
-							<Loader2
-								size={16}
-								style={{ animation: "spin 1s linear infinite" }}
-							/>
+							<Loader2 size={16} {...stylex.props(styles.spinner)} />
 						) : (
 							<Camera size={16} />
 						)}
