@@ -48,9 +48,21 @@ const styles = stylex.create({
 	container: {
 		display: "flex",
 		flexDirection: "column",
-		height: stylex.firstThatWorks("100dvh", "100vh"),
+		flex: 1,
+		minHeight: 0,
+		height: "100%",
+		maxHeight: stylex.firstThatWorks(
+			`calc(100dvh - ${size.bottomMenuHeight})`,
+			`calc(100vh - ${size.bottomMenuHeight})`,
+		),
 		overflow: "hidden",
 		backgroundColor: colors.bgSecondary,
+	},
+	topSection: {
+		position: "sticky",
+		top: 0,
+		zIndex: 10,
+		backgroundColor: colors.bgPrimary,
 	},
 	header: {
 		display: "flex",
@@ -168,6 +180,7 @@ const styles = stylex.create({
 	},
 	messages: {
 		flex: 1,
+		minHeight: 0,
 		overflowY: "auto",
 		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
@@ -234,7 +247,7 @@ const styles = stylex.create({
 	},
 	inputArea: {
 		position: "sticky",
-		bottom: size.bottomMenuHeight,
+		bottom: 0,
 		left: 0,
 		right: 0,
 		display: "flex",
@@ -586,61 +599,69 @@ export default function ChatRoom({
 	];
 
 	return (
-		<div {...stylex.props(styles.container)}>
-			<div {...stylex.props(styles.header)}>
-				<Link href="/chat/list" {...stylex.props(styles.backButton)}>
-					<ArrowLeft size={24} />
-				</Link>
-				<div {...stylex.props(styles.partnerInfo)}>
-					{partner?.profileImage ? (
-						<img
-							src={partner.profileImage}
-							alt={displayName}
-							{...stylex.props(styles.avatar)}
-						/>
-					) : (
-						<div {...stylex.props(styles.avatar)} />
-					)}
-					<div>
-						<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
-						<div {...stylex.props(styles.memberCount)}>
-							{members.length > 2 && `${members.length}명 참여`}
-							<OnlineStatusBadge onlineCount={onlineUsers.length} />
+		<div data-chat-container {...stylex.props(styles.container)}>
+			<div {...stylex.props(styles.topSection)}>
+				<div {...stylex.props(styles.header)}>
+					<Link href="/chat/list" {...stylex.props(styles.backButton)}>
+						<ArrowLeft size={24} />
+					</Link>
+					<div {...stylex.props(styles.partnerInfo)}>
+						{partner?.profileImage ? (
+							<img
+								src={partner.profileImage}
+								alt={displayName}
+								{...stylex.props(styles.avatar)}
+							/>
+						) : (
+							<div {...stylex.props(styles.avatar)} />
+						)}
+						<div>
+							<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
+							<div {...stylex.props(styles.memberCount)}>
+								{members.length > 2 && `${members.length}명 참여`}
+								<OnlineStatusBadge onlineCount={onlineUsers.length} />
+							</div>
 						</div>
 					</div>
+					<button
+						type="button"
+						onClick={handleOpenMenu}
+						{...stylex.props(styles.menuButton)}
+					>
+						<MoreVertical size={20} />
+					</button>
 				</div>
-				<button
-					type="button"
-					onClick={handleOpenMenu}
-					{...stylex.props(styles.menuButton)}
-				>
-					<MoreVertical size={20} />
-				</button>
+
+				{market && (
+					<Link
+						href={`/market/${market.id}`}
+						{...stylex.props(styles.productBanner)}
+					>
+						{market.thumbnail && (
+							<img
+								src={market.thumbnail}
+								alt={market.title}
+								{...stylex.props(styles.productImage)}
+							/>
+						)}
+						<div {...stylex.props(styles.productInfo)}>
+							<p {...stylex.props(styles.productTitle)}>{market.title}</p>
+							<p {...stylex.props(styles.productPrice)}>
+								{market.price
+									? `${market.price.toLocaleString()}원`
+									: "가격협의"}
+							</p>
+						</div>
+						<span {...stylex.props(styles.productStatus)}>{market.status}</span>
+					</Link>
+				)}
 			</div>
 
-			{market && (
-				<Link
-					href={`/market/${market.id}`}
-					{...stylex.props(styles.productBanner)}
-				>
-					{market.thumbnail && (
-						<img
-							src={market.thumbnail}
-							alt={market.title}
-							{...stylex.props(styles.productImage)}
-						/>
-					)}
-					<div {...stylex.props(styles.productInfo)}>
-						<p {...stylex.props(styles.productTitle)}>{market.title}</p>
-						<p {...stylex.props(styles.productPrice)}>
-							{market.price ? `${market.price.toLocaleString()}원` : "가격협의"}
-						</p>
-					</div>
-					<span {...stylex.props(styles.productStatus)}>{market.status}</span>
-				</Link>
-			)}
-
-			<div ref={messagesRef} {...stylex.props(styles.messages)}>
+			<div
+				ref={messagesRef}
+				data-chat-messages
+				{...stylex.props(styles.messages)}
+			>
 				<div {...stylex.props(styles.dateGroup)}>
 					<span {...stylex.props(styles.dateBadge)}>오늘</span>
 				</div>
@@ -722,7 +743,7 @@ export default function ChatRoom({
 				})}
 			</div>
 
-			<div {...stylex.props(styles.inputArea)}>
+			<div data-chat-input {...stylex.props(styles.inputArea)}>
 				<button type="button" {...stylex.props(styles.attachButton)}>
 					<Plus size={20} />
 				</button>

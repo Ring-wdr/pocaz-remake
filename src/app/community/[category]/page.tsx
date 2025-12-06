@@ -84,8 +84,8 @@ export default async function CategoryPage({
 
 	return (
 		<div {...stylex.props(styles.container)}>
+			<PageHeader />
 			<div {...stylex.props(styles.content)}>
-				<PageHeader />
 				<CategoryTabsSection />
 				<PostListSection />
 			</div>

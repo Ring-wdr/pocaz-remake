@@ -56,3 +56,5 @@ export {
 	SkeletonCard,
 	SkeletonText,
 } from "./skeleton";
+// FixedPageHeader
+export { FixedPageHeader, fixedHeaderStyles } from "./fixed-page-header";

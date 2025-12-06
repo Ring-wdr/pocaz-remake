@@ -3,20 +3,9 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 
 import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import { FixedPageHeader } from "@/components/ui";
 
 const styles = stylex.create({
-	header: {
-		display: "flex",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginBottom: spacing.sm,
-	},
-	title: {
-		fontSize: fontSize.xl,
-		fontWeight: fontWeight.extrabold,
-		color: colors.textPrimary,
-		margin: 0,
-	},
 	writeButton: {
 		display: "flex",
 		alignItems: "center",
@@ -40,12 +29,14 @@ const styles = stylex.create({
 
 export default function PageHeader() {
 	return (
-		<div {...stylex.props(styles.header)}>
-			<h1 {...stylex.props(styles.title)}>커뮤니티</h1>
-			<Link href="/community/write" {...stylex.props(styles.writeButton)}>
-				<Pencil size={16} {...stylex.props(styles.writeIcon)} />
-				글쓰기
-			</Link>
-		</div>
+		<FixedPageHeader
+			title="커뮤니티"
+			trailing={
+				<Link href="/community/write" {...stylex.props(styles.writeButton)}>
+					<Pencil size={16} {...stylex.props(styles.writeIcon)} />
+					글쓰기
+				</Link>
+			}
+		/>
 	);
 }

@@ -76,8 +76,8 @@ export default async function MarketPage({
 
 	return (
 		<div {...stylex.props(styles.container)}>
+			<PageHeader />
 			<div {...stylex.props(styles.content)}>
-				<PageHeader />
 				<MarketFilters keyword={keyword} status={status} sort={sort} />
 				<Suspense fallback={<ProductGridSkeleton />}>
 					<ProductGridSection
