@@ -91,19 +91,24 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 	// ChatRoom Routes
 	// ==========================================
 
-	// GET /api/chat/rooms - 내 채팅방 목록
+	// GET /api/chat/rooms - 내 채팅방 목록 (필터, 검색, 페이지네이션 지원)
 	.get(
 		"/rooms",
-		async ({ auth }) => {
+		async ({ auth, query }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
-				return { rooms: [] };
+				return { rooms: [], nextCursor: null, hasMore: false };
 			}
 
-			const rooms = await chatRoomService.findByUserId(user.id);
+			const result = await chatRoomService.findByUserId(user.id, {
+				search: query.search,
+				filter: query.filter as "all" | "trading" | "general" | undefined,
+				cursor: query.cursor,
+				limit: query.limit ? Number.parseInt(query.limit) : 20,
+			});
 
 			return {
-				rooms: rooms.map((room) => ({
+				rooms: result.items.map((room) => ({
 					id: room.id,
 					name: room.name,
 					createdAt: room.createdAt.toISOString(),
@@ -130,16 +135,27 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 							}
 						: null,
 				})),
+				nextCursor: result.nextCursor,
+				hasMore: result.hasMore,
 			};
 		},
 		{
+			query: t.Object({
+				search: t.Optional(t.String()),
+				filter: t.Optional(t.String()),
+				cursor: t.Optional(t.String()),
+				limit: t.Optional(t.String()),
+			}),
 			response: t.Object({
 				rooms: t.Array(RoomItemSchema),
+				nextCursor: t.Nullable(t.String()),
+				hasMore: t.Boolean(),
 			}),
 			detail: {
 				tags: ["Chat"],
 				summary: "내 채팅방 목록 조회",
-				description: "현재 사용자가 참여중인 채팅방 목록을 조회합니다.",
+				description:
+					"현재 사용자가 참여중인 채팅방 목록을 조회합니다. 검색, 필터, 페이지네이션을 지원합니다.",
 			},
 		},
 	)

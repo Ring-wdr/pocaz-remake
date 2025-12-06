@@ -19,10 +19,10 @@
 - [v] 등록: 스토리지 업로드 사용, 상태/협상 가능 여부를 구조화해 전송, 검증·로그인 가드·에러 UX 강화 (`market/register/page.client.tsx`)
 
 ## 채팅
-- [ ] 전송 실패 재시도/알림, 첨부·이미지 전송 옵션 검토 (`components/chat/chat-room.tsx`)
-- [ ] Supabase realtime 시 사용자 정보 반복 fetch 제거(페이로드 포함 or 캐시) (`use-chat-realtime.ts`)
-- [ ] 타이핑/읽음/차단·나가기 등 관리 액션 검토
-- [ ] 채팅 목록 필터/검색·페이지네이션 및 필터 버튼 동작 구현 (`chat/list/page.tsx`, `components/chat/sections`)
+- [v] 전송 실패 재시도/알림, 첨부·이미지 전송 옵션 검토 (`components/chat/chat-room.tsx`)
+- [v] Supabase realtime 시 사용자 정보 반복 fetch 제거(페이로드 포함 or 캐시) (`use-chat-realtime.ts`)
+- [v] 타이핑/읽음/차단·나가기 등 관리 액션 검토 - 나가기 구현 완료, 타이핑/읽음은 추후
+- [v] 채팅 목록 필터/검색·페이지네이션 및 필터 버튼 동작 구현 (`chat/list/page.tsx`, `components/chat/sections`)
 
 ## 마이페이지 (공통)
 - [v] `users.me.summary` 엔드포인트 유효성/구현 후 실제 통계 연결 (`components/mypage/sections/stats-section.tsx`)

@@ -19,6 +19,65 @@ export interface ChatMessage {
 }
 
 /**
+ * 사용자 정보 캐시 (메모리 캐시)
+ * 세션 동안 유지되며 반복 fetch를 방지
+ */
+const userCache = new Map<
+	string,
+	{ id: string; nickname: string; profileImage: string | null }
+>();
+
+/** 캐시된 사용자 정보 조회 또는 fetch */
+async function getCachedUser(userId: string): Promise<{
+	id: string;
+	nickname: string;
+	profileImage: string | null;
+}> {
+	// 캐시에 있으면 바로 반환
+	const cached = userCache.get(userId);
+	if (cached) {
+		return cached;
+	}
+
+	// 캐시에 없으면 fetch
+	try {
+		const response = await fetch(`/api/users/${userId}`);
+		if (response.ok) {
+			const userData = await response.json();
+			const user = {
+				id: userData.id,
+				nickname: userData.nickname,
+				profileImage: userData.profileImage,
+			};
+			// 캐시에 저장
+			userCache.set(userId, user);
+			return user;
+		}
+	} catch (error) {
+		console.error("Failed to fetch user data:", error);
+	}
+
+	// 실패시 기본값 반환
+	return {
+		id: userId,
+		nickname: "Unknown",
+		profileImage: null,
+	};
+}
+
+/**
+ * 채팅방 멤버를 캐시에 미리 등록
+ * 채팅방 입장 시 호출하면 realtime 메시지 수신 시 추가 fetch 불필요
+ */
+export function preCacheUsers(
+	users: Array<{ id: string; nickname: string; profileImage: string | null }>,
+) {
+	for (const user of users) {
+		userCache.set(user.id, user);
+	}
+}
+
+/**
  * Supabase Realtime 채팅 훅
  *
  * PostgreSQL Changes를 구독하여 새 메시지를 실시간으로 받습니다.
@@ -61,34 +120,14 @@ export function useChatRealtime(
 						userId: string;
 					};
 
-					try {
-						const response = await fetch(`/api/users/${newMessage.userId}`);
-						if (response.ok) {
-							const userData = await response.json();
-							onNewMessageRef.current?.({
-								id: newMessage.id,
-								content: newMessage.content,
-								createdAt: newMessage.createdAt,
-								user: {
-									id: userData.id,
-									nickname: userData.nickname,
-									profileImage: userData.profileImage,
-								},
-							});
-						}
-					} catch (error) {
-						console.error("Failed to fetch user data for message:", error);
-						onNewMessageRef.current?.({
-							id: newMessage.id,
-							content: newMessage.content,
-							createdAt: newMessage.createdAt,
-							user: {
-								id: newMessage.userId,
-								nickname: "Unknown",
-								profileImage: null,
-							},
-						});
-					}
+					// 캐시된 사용자 정보 사용 (반복 fetch 방지)
+					const user = await getCachedUser(newMessage.userId);
+					onNewMessageRef.current?.({
+						id: newMessage.id,
+						content: newMessage.content,
+						createdAt: newMessage.createdAt,
+						user,
+					});
 				},
 			)
 			.subscribe((status) => {
