@@ -1,13 +1,19 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { ArrowLeft, ImagePlus, Loader2, X } from "lucide-react";
+import {
+	AlertCircle,
+	ArrowLeft,
+	ImagePlus,
+	Loader2,
+	RefreshCw,
+	X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
-
+import { toast } from "sonner";
 import { colors, size } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
-import { toast } from "sonner";
 
 const categories = [
 	{ id: 1, name: "자유게시판", slug: "free" },
@@ -18,7 +24,11 @@ const categories = [
 interface ImageFile {
 	file: File;
 	preview: string;
+	status: "pending" | "uploading" | "uploaded" | "failed";
+	uploadedUrl?: string;
 }
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const styles = stylex.create({
 	container: {
@@ -229,6 +239,32 @@ const styles = stylex.create({
 		cursor: "pointer",
 		fontSize: "14px",
 	},
+	imageOverlay: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: "rgba(0, 0, 0, 0.5)",
+		borderRadius: "12px",
+	},
+	retryButton: {
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		gap: "4px",
+		backgroundColor: "transparent",
+		borderWidth: 0,
+		cursor: "pointer",
+		color: colors.textInverse,
+	},
+	retryText: {
+		fontSize: "10px",
+		color: colors.textInverse,
+	},
 	hiddenInput: {
 		display: "none",
 	},
@@ -290,11 +326,24 @@ export default function CommunityWritePage() {
 		if (!files) return;
 
 		const newImages: ImageFile[] = [];
+		let oversizedCount = 0;
+
 		Array.from(files).forEach((file) => {
 			if (images.length + newImages.length >= 10) return;
+
+			// Check file size
+			if (file.size > MAX_FILE_SIZE) {
+				oversizedCount++;
+				return;
+			}
+
 			const preview = URL.createObjectURL(file);
-			newImages.push({ file, preview });
+			newImages.push({ file, preview, status: "pending" });
 		});
+
+		if (oversizedCount > 0) {
+			toast.error(`${oversizedCount}개 파일이 10MB를 초과하여 제외되었습니다`);
+		}
 
 		setImages((prev) => [...prev, ...newImages]);
 
@@ -314,22 +363,94 @@ export default function CommunityWritePage() {
 		});
 	};
 
-	const uploadImages = async (
-		imageFiles: ImageFile[],
-	): Promise<string[] | null> => {
-		if (imageFiles.length === 0) return [];
+	const uploadSingleImage = async (
+		imageFile: ImageFile,
+		index: number,
+	): Promise<string | null> => {
+		// Update status to uploading
+		setImages((prev) =>
+			prev.map((img, i) =>
+				i === index ? { ...img, status: "uploading" } : img,
+			),
+		);
 
-		const { data, error } = await api.storage.upload.files.post({
-			bucket: "posts",
-			files: imageFiles.map((img) => img.file),
+		try {
+			const { data, error } = await api.storage.upload.files.post({
+				bucket: "posts",
+				files: [imageFile.file],
+			});
+
+			if (error || !data || !("uploaded" in data) || !data.uploaded?.[0]) {
+				throw new Error("Upload failed");
+			}
+
+			const uploadedUrl = data.uploaded[0].publicUrl;
+
+			// Update status to uploaded
+			setImages((prev) =>
+				prev.map((img, i) =>
+					i === index ? { ...img, status: "uploaded", uploadedUrl } : img,
+				),
+			);
+
+			return uploadedUrl;
+		} catch {
+			// Update status to failed
+			setImages((prev) =>
+				prev.map((img, i) =>
+					i === index ? { ...img, status: "failed" } : img,
+				),
+			);
+			return null;
+		}
+	};
+
+	const handleRetryUpload = async (index: number) => {
+		const image = images[index];
+		if (!image || image.status !== "failed") return;
+
+		const result = await uploadSingleImage(image, index);
+		if (result) {
+			toast.success("이미지 업로드 성공");
+		} else {
+			toast.error("이미지 업로드에 실패했습니다", {
+				action: {
+					label: "재시도",
+					onClick: () => handleRetryUpload(index),
+				},
+			});
+		}
+	};
+
+	const uploadAllImages = async (): Promise<string[] | null> => {
+		const pendingImages = images.filter((img) => img.status === "pending");
+		const alreadyUploaded = images
+			.filter((img) => img.status === "uploaded" && img.uploadedUrl)
+			.map((img) => img.uploadedUrl as string);
+
+		if (pendingImages.length === 0) {
+			return alreadyUploaded;
+		}
+
+		const uploadPromises = pendingImages.map((img) => {
+			const index = images.indexOf(img);
+			return uploadSingleImage(img, index);
 		});
 
-		if (error || !data || !("uploaded" in data) || !data.uploaded) {
-			console.error("Failed to upload images:", error);
+		const results = await Promise.all(uploadPromises);
+		const failedCount = results.filter((r) => r === null).length;
+
+		if (failedCount > 0) {
+			toast.error(`${failedCount}개 이미지 업로드에 실패했습니다`, {
+				action: {
+					label: "재시도",
+					onClick: () => handleSubmit(),
+				},
+			});
 			return null;
 		}
 
-		return data.uploaded.map((item) => item.publicUrl);
+		return [...alreadyUploaded, ...(results.filter(Boolean) as string[])];
 	};
 
 	const handleSubmit = () => {
@@ -337,9 +458,8 @@ export default function CommunityWritePage() {
 
 		startTransition(async () => {
 			// Upload images first
-			const imageUrls = await uploadImages(images);
+			const imageUrls = await uploadAllImages();
 			if (imageUrls === null) {
-				toast.error("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
 				return;
 			}
 
@@ -356,7 +476,12 @@ export default function CommunityWritePage() {
 
 			if (error || !data) {
 				console.error("Failed to create post:", error);
-				toast.error("게시글 작성에 실패했습니다. 다시 시도해주세요.");
+				toast.error("게시글 작성에 실패했습니다", {
+					action: {
+						label: "재시도",
+						onClick: () => handleSubmit(),
+					},
+				});
 				return;
 			}
 
@@ -393,7 +518,8 @@ export default function CommunityWritePage() {
 								onClick={() => setSelectedCategory(category.id)}
 								{...stylex.props(
 									styles.categoryButton,
-									selectedCategory === category.id && styles.categoryButtonActive
+									selectedCategory === category.id &&
+										styles.categoryButtonActive,
 								)}
 							>
 								{category.name}
@@ -440,7 +566,9 @@ export default function CommunityWritePage() {
 					<div {...stylex.props(styles.imageUploadArea)}>
 						<label {...stylex.props(styles.imageUploadButton)}>
 							<ImagePlus size={28} {...stylex.props(styles.uploadIcon)} />
-							<span {...stylex.props(styles.uploadText)}>{images.length}/10</span>
+							<span {...stylex.props(styles.uploadText)}>
+								{images.length}/10
+							</span>
 							<input
 								ref={fileInputRef}
 								type="file"
@@ -458,6 +586,24 @@ export default function CommunityWritePage() {
 									alt={`첨부 이미지 ${index + 1}`}
 									{...stylex.props(styles.imagePreview)}
 								/>
+								{image.status === "uploading" && (
+									<div {...stylex.props(styles.imageOverlay)}>
+										<Loader2 size={24} color="white" className="animate-spin" />
+									</div>
+								)}
+								{image.status === "failed" && (
+									<div {...stylex.props(styles.imageOverlay)}>
+										<button
+											type="button"
+											onClick={() => handleRetryUpload(index)}
+											{...stylex.props(styles.retryButton)}
+										>
+											<AlertCircle size={20} />
+											<RefreshCw size={16} />
+											<span {...stylex.props(styles.retryText)}>재시도</span>
+										</button>
+									</div>
+								)}
 								<button
 									type="button"
 									onClick={() => handleRemoveImage(index)}
@@ -481,7 +627,11 @@ export default function CommunityWritePage() {
 						isDisabled && styles.bottomButtonDisabled,
 					)}
 				>
-					{isPending ? <Loader2 size={20} className="animate-spin" /> : "등록하기"}
+					{isPending ? (
+						<Loader2 size={20} className="animate-spin" />
+					) : (
+						"등록하기"
+					)}
 				</button>
 			</div>
 		</div>

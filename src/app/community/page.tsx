@@ -1,12 +1,10 @@
 import * as stylex from "@stylexjs/stylex";
-import { Suspense } from "react";
 
 import { PageHeader } from "@/components/community";
 import {
 	CategoryTabsSection,
 	PostListSection,
 } from "@/components/community/sections";
-import { PostListSkeleton } from "@/components/community/skeletons";
 import { Footer } from "@/components/home";
 import { createMetadata } from "@/lib/metadata";
 import { colors } from "../global-tokens.stylex";
@@ -40,9 +38,7 @@ export default function CommunityPage() {
 			<div {...stylex.props(styles.content)}>
 				<PageHeader />
 				<CategoryTabsSection />
-				<Suspense fallback={<PostListSkeleton />}>
-					<PostListSection />
-				</Suspense>
+				<PostListSection />
 			</div>
 			<Footer />
 		</div>
