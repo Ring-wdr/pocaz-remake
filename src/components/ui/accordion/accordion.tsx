@@ -4,10 +4,10 @@ import * as stylex from "@stylexjs/stylex";
 import { ChevronDown } from "lucide-react";
 import {
 	createContext,
-	useContext,
-	useState,
 	type HTMLAttributes,
 	type ReactNode,
+	useContext,
+	useState,
 } from "react";
 import {
 	colors,
@@ -16,6 +16,8 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+
+const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)" as const;
 
 const styles = stylex.create({
 	root: {
@@ -76,11 +78,29 @@ const styles = stylex.create({
 	},
 	icon: {
 		color: colors.textMuted,
-		transition: "transform 0.2s ease",
+		transition: {
+			default: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+			[REDUCED_MOTION]: "none",
+		},
 		flexShrink: 0,
 	},
 	iconOpen: {
 		transform: "rotate(180deg)",
+	},
+	// Content wrapper with grid animation
+	contentWrapper: {
+		display: "grid",
+		gridTemplateRows: "0fr",
+		transition: {
+			default: "grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+			[REDUCED_MOTION]: "none",
+		},
+	},
+	contentWrapperOpen: {
+		gridTemplateRows: "1fr",
+	},
+	contentInner: {
+		overflow: "hidden",
 	},
 	content: {
 		paddingTop: 0,
@@ -180,24 +200,26 @@ export interface AccordionTriggerProps
 	hideIcon?: boolean;
 }
 
+const sizeStyles = {
+	sm: styles.triggerSm,
+	md: null,
+	lg: styles.triggerLg,
+} as const;
+
+const iconSizes = {
+	sm: 16,
+	md: 18,
+	lg: 20,
+} as const;
+
 export function AccordionTrigger({
 	children,
 	hideIcon = false,
 	...props
 }: AccordionTriggerProps) {
 	const { isOpen, toggle, size } = useAccordionItem();
-
-	const sizeStyle = {
-		sm: styles.triggerSm,
-		md: null,
-		lg: styles.triggerLg,
-	}[size];
-
-	const iconSize = {
-		sm: 16,
-		md: 18,
-		lg: 20,
-	}[size];
+	const sizeStyle = sizeStyles[size];
+	const iconSize = iconSizes[size];
 
 	return (
 		<button
@@ -223,10 +245,11 @@ export interface AccordionContentProps extends HTMLAttributes<HTMLDivElement> {
 	children: ReactNode;
 }
 
-export function AccordionContent({ children, ...props }: AccordionContentProps) {
+export function AccordionContent({
+	children,
+	...props
+}: AccordionContentProps) {
 	const { isOpen, size } = useAccordionItem();
-
-	if (!isOpen) return null;
 
 	const sizeStyle = {
 		sm: styles.contentSm,
@@ -235,8 +258,17 @@ export function AccordionContent({ children, ...props }: AccordionContentProps) 
 	}[size];
 
 	return (
-		<div {...stylex.props(styles.content, sizeStyle)} {...props}>
-			{children}
+		<div
+			{...stylex.props(
+				styles.contentWrapper,
+				isOpen && styles.contentWrapperOpen,
+			)}
+		>
+			<div {...stylex.props(styles.contentInner)}>
+				<div {...stylex.props(styles.content, sizeStyle)} {...props}>
+					{children}
+				</div>
+			</div>
 		</div>
 	);
 }

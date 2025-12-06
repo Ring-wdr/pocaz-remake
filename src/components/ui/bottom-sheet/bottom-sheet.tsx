@@ -1,9 +1,23 @@
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: backdrop click event */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: backdrop click event */
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
 import { X } from "lucide-react";
-import { useEffect, useRef, type HTMLAttributes, type ReactNode } from "react";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	type HTMLAttributes,
+	type ReactNode,
+	useEffect,
+	useEffectEvent,
+	useRef,
+} from "react";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { useBodyScrollLock, useFocusManagement } from "@/hooks";
 
 const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)" as const;
@@ -44,8 +58,8 @@ const styles = stylex.create({
 	sheet: {
 		width: "100%",
 		maxWidth: "500px",
-		maxHeight: "90vh",
 		backgroundColor: colors.bgPrimary,
+		color: colors.textPrimary,
 		borderTopLeftRadius: radius.lg,
 		borderTopRightRadius: radius.lg,
 		overflow: "hidden",
@@ -63,12 +77,19 @@ const styles = stylex.create({
 		animationFillMode: "forwards",
 	},
 	sheetSm: {
-		maxHeight: "40vh",
+		minHeight: "50vh",
+		maxHeight: "65vh",
 	},
-	sheetLg: {
+	sheetMd: {
+		minHeight: "65vh",
 		maxHeight: "80vh",
 	},
+	sheetLg: {
+		minHeight: "80vh",
+		maxHeight: "92vh",
+	},
 	sheetFull: {
+		minHeight: "100vh",
 		maxHeight: "100vh",
 		borderTopLeftRadius: 0,
 		borderTopRightRadius: 0,
@@ -169,6 +190,13 @@ export interface BottomSheetProps extends HTMLAttributes<HTMLDivElement> {
 	children: ReactNode;
 }
 
+const sizeStyles = {
+	sm: styles.sheetSm,
+	md: styles.sheetMd,
+	lg: styles.sheetLg,
+	full: styles.sheetFull,
+};
+
 export function BottomSheet({
 	isOpen,
 	onClose,
@@ -191,18 +219,20 @@ export function BottomSheet({
 		initialFocusRef: showCloseButton ? closeButtonRef : undefined,
 	});
 
+	const closeCallback = useEffectEvent(onClose);
+
 	useEffect(() => {
 		if (!isOpen || !closeOnEscape) return;
 
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === "Escape") {
-				onClose();
+				closeCallback();
 			}
 		};
 
 		document.addEventListener("keydown", handleKeyDown);
 		return () => document.removeEventListener("keydown", handleKeyDown);
-	}, [isOpen, closeOnEscape, onClose]);
+	}, [isOpen, closeOnEscape]);
 
 	if (!isOpen) return null;
 
@@ -212,12 +242,7 @@ export function BottomSheet({
 		}
 	};
 
-	const sizeStyle = {
-		sm: styles.sheetSm,
-		md: null,
-		lg: styles.sheetLg,
-		full: styles.sheetFull,
-	}[size];
+	const sizeStyle = sizeStyles[size];
 
 	const showHeader = title || showCloseButton;
 
@@ -264,7 +289,10 @@ export function BottomSheet({
 				)}
 
 				<div
-					{...stylex.props(styles.content, noPadding && styles.contentNoPadding)}
+					{...stylex.props(
+						styles.content,
+						noPadding && styles.contentNoPadding,
+					)}
 				>
 					{children}
 				</div>

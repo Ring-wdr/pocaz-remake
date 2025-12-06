@@ -100,6 +100,108 @@ const { isOpen, open, close, toggle } = useDisclosure({
 });
 ```
 
+### Phase 4: 추가 컴포넌트
+
+#### Avatar (`src/components/ui/avatar/`)
+- **크기**: `sm`, `md`, `lg`, `xl`
+- **형태**: `circle`, `rounded`
+- **옵션**: `src`, `fallback`, `badge`
+
+```tsx
+import { Avatar } from "@/components/ui";
+
+<Avatar src="/profile.jpg" size="md" />
+<Avatar fallback="김철수" size="lg" />
+<Avatar size="md" badge={<Badge variant="success" dot />} />
+```
+
+#### Accordion (`src/components/ui/accordion/`)
+- **컴포넌트**: `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`
+- **크기**: `sm`, `md`, `lg`
+- **옵션**: `defaultOpen`, `bordered`
+
+```tsx
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui";
+
+<Accordion>
+  <AccordionItem>
+    <AccordionTrigger>질문</AccordionTrigger>
+    <AccordionContent>답변</AccordionContent>
+  </AccordionItem>
+</Accordion>
+```
+
+#### BottomSheet (`src/components/ui/bottom-sheet/`)
+- **크기**: `sm`, `md`, `lg`, `full`
+- **옵션**: `showHandle`, `showCloseButton`, `noPadding`, `footer`
+
+```tsx
+import { BottomSheet } from "@/components/ui";
+
+<BottomSheet
+  isOpen={isOpen}
+  onClose={() => setIsOpen(false)}
+  title="메뉴"
+  showCloseButton
+>
+  <p>내용</p>
+</BottomSheet>
+```
+
+#### Skeleton (`src/components/ui/skeleton/`)
+- **변형**: `text`, `circular`, `rectangular`, `rounded`
+- **프리셋**: `SkeletonText`, `SkeletonAvatar`, `SkeletonCard`
+
+```tsx
+import { Skeleton, SkeletonAvatar, SkeletonText } from "@/components/ui";
+
+<Skeleton variant="text" width={200} height={16} />
+<SkeletonAvatar size="md" />
+<SkeletonText lines={3} />
+```
+
+#### Toast (`src/components/ui/toast/`)
+- Sonner 래퍼
+- **메서드**: `toast.success()`, `toast.error()`, `toast.warning()`, `toast.info()`, `toast.promise()`
+
+```tsx
+import { toast, Toaster } from "@/components/ui";
+
+// layout.tsx에 Toaster 추가
+<Toaster />
+
+// 사용
+toast.success("저장되었습니다");
+toast.error("오류가 발생했습니다");
+toast.promise(saveData(), {
+  loading: "저장 중...",
+  success: "저장 완료!",
+  error: "저장 실패",
+});
+```
+
+### Phase 5: Storybook 설정
+
+- [x] Storybook 설치 및 기본 설정
+- [x] StyleX 빌드 연동 (webpack 설정)
+- [x] 글로벌 스타일 데코레이터
+- [x] 다크모드 지원 (`addon-themes`)
+- [x] 접근성 검사 (`addon-a11y`)
+- [x] Button.stories.tsx 작성
+- [x] Input.stories.tsx 작성
+- [x] Badge.stories.tsx 작성
+- [x] Avatar.stories.tsx 작성
+- [x] Accordion.stories.tsx 작성
+- [x] BottomSheet.stories.tsx 작성
+- [x] Skeleton.stories.tsx 작성
+- [x] SearchBar.stories.tsx 작성
+- [x] Modal.stories.tsx 작성
+
+```bash
+# Storybook 실행
+bun run storybook
+```
+
 ---
 
 ## 📁 현재 파일 구조
@@ -108,21 +210,45 @@ const { isOpen, open, close, toggle } = useDisclosure({
 src/
 ├── components/
 │   ├── ui/                          # ✅ 공통 UI 컴포넌트
-│   │   ├── button/
-│   │   │   ├── button.tsx
+│   │   ├── accordion/
+│   │   │   ├── accordion.tsx
+│   │   │   ├── accordion.stories.tsx
 │   │   │   └── index.ts
-│   │   ├── input/
-│   │   │   ├── input.tsx
+│   │   ├── avatar/
+│   │   │   ├── avatar.tsx
+│   │   │   ├── avatar.stories.tsx
 │   │   │   └── index.ts
 │   │   ├── badge/
 │   │   │   ├── badge.tsx
+│   │   │   ├── badge.stories.tsx
+│   │   │   └── index.ts
+│   │   ├── bottom-sheet/
+│   │   │   ├── bottom-sheet.tsx
+│   │   │   ├── bottom-sheet.stories.tsx
+│   │   │   └── index.ts
+│   │   ├── button/
+│   │   │   ├── button.tsx
+│   │   │   ├── button.stories.tsx
+│   │   │   └── index.ts
+│   │   ├── input/
+│   │   │   ├── input.tsx
+│   │   │   ├── input.stories.tsx
 │   │   │   └── index.ts
 │   │   ├── modal/
 │   │   │   ├── confirm-modal.tsx
 │   │   │   ├── open-confirm.tsx
+│   │   │   ├── modal.stories.tsx
 │   │   │   └── index.ts
 │   │   ├── search-bar/
 │   │   │   ├── search-bar.tsx
+│   │   │   ├── search-bar.stories.tsx
+│   │   │   └── index.ts
+│   │   ├── skeleton/
+│   │   │   ├── skeleton.tsx
+│   │   │   ├── skeleton.stories.tsx
+│   │   │   └── index.ts
+│   │   ├── toast/
+│   │   │   ├── toast.tsx
 │   │   │   └── index.ts
 │   │   └── index.ts                 # Barrel export
 │   │
@@ -131,54 +257,24 @@ src/
 │   ├── market/
 │   └── ...
 │
-└── hooks/
-    ├── use-body-scroll-lock.ts
-    ├── use-debounce.ts              # ✅ NEW
-    ├── use-disclosure.ts            # ✅ NEW
-    ├── use-focus-management.ts
-    ├── use-media-query.ts
-    └── index.ts
+├── hooks/
+│   ├── use-body-scroll-lock.ts
+│   ├── use-debounce.ts
+│   ├── use-disclosure.ts
+│   ├── use-focus-management.ts
+│   ├── use-media-query.ts
+│   └── index.ts
+│
+└── .storybook/
+    ├── main.ts                      # StyleX 웹팩 플러그인 설정
+    └── preview.ts                   # 글로벌 스타일, 테마 설정
 ```
 
 ---
 
 ## 🔜 남은 작업
 
-### Phase 4: 추가 컴포넌트 (선택사항)
-
-| 컴포넌트 | 설명 | 우선순위 |
-|---------|------|----------|
-| Avatar | 사용자 아바타, 폴백 이미지 | 중 |
-| Accordion | FAQItem 패턴 일반화 | 중 |
-| BottomSheet | 모바일 바텀시트 | 중 |
-| Skeleton | 공통 스켈레톤 유틸리티 | 낮음 |
-| Toast | Sonner 래퍼 | 낮음 |
-
-### Phase 5: Storybook 설정
-
-```bash
-# 1. Storybook 설치
-bunx storybook@latest init
-
-# 2. StyleX 플러그인 연동 필요
-# 3. 글로벌 토큰 데코레이터 설정
-# 4. 각 컴포넌트 Story 작성
-```
-
-#### Storybook 설정 체크리스트
-- [ ] Storybook 설치 및 기본 설정
-- [ ] StyleX 빌드 연동 (webpack/vite 설정)
-- [ ] 글로벌 스타일 데코레이터 (`global-tokens.stylex.ts`)
-- [ ] 다크모드 지원 (`addon-themes`)
-- [ ] 접근성 검사 (`addon-a11y`)
-- [ ] Button.stories.tsx 작성
-- [ ] Input.stories.tsx 작성
-- [ ] Badge.stories.tsx 작성
-- [ ] Modal.stories.tsx 작성
-- [ ] SearchBar.stories.tsx 작성
-- [ ] 문서화 (autodocs)
-
-### Phase 6: 기존 코드 마이그레이션
+### Phase 6: 기존 코드 마이그레이션 (선택사항)
 
 #### 영향받는 파일 (ConfirmModal 사용처)
 - `src/components/chat/chat-room.tsx`
