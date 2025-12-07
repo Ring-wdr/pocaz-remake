@@ -1,6 +1,14 @@
 import * as stylex from "@stylexjs/stylex";
 
-import { colors, radius, spacing } from "../../global-tokens.stylex";
+import { CategoryTabsSection } from "@/components/community/sections";
+import { PostListSkeleton } from "@/components/community/skeletons";
+import {
+	colors,
+	fontSize,
+	lineHeight,
+	radius,
+	spacing,
+} from "../../global-tokens.stylex";
 
 const styles = stylex.create({
 	content: {
@@ -11,73 +19,53 @@ const styles = stylex.create({
 		paddingBottom: "24px",
 		display: "flex",
 		flexDirection: "column",
-		gap: spacing.sm,
+		gap: 0,
 	},
-	tabSkeletonRow: {
+	searchSkeleton: {
 		display: "flex",
-		gap: spacing.xxs,
-	},
-	tabSkeleton: {
-		height: "32px",
-		minWidth: "76px",
-		borderRadius: radius.lg,
-		backgroundColor: colors.bgSecondary,
-	},
-	listSkeleton: {
-		display: "flex",
-		flexDirection: "column",
-		gap: spacing.sm,
-	},
-	itemSkeleton: {
-		display: "flex",
-		gap: spacing.xs,
 		alignItems: "center",
-	},
-	thumbnail: {
-		width: "72px",
-		height: "72px",
-		borderRadius: radius.sm,
-		backgroundColor: colors.bgSecondary,
-	},
-	lines: {
-		flex: 1,
-		display: "flex",
-		flexDirection: "column",
 		gap: spacing.xxs,
-	},
-	line: {
-		height: "12px",
-		borderRadius: radius.xs,
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
+		borderRadius: radius.md,
+		borderWidth: 1,
+		borderStyle: "solid",
+		borderColor: colors.borderPrimary,
 		backgroundColor: colors.bgSecondary,
+		width: "100%",
 	},
-	lineWide: {
-		width: "80%",
+	searchContainer: {
+		marginBottom: spacing.sm,
 	},
-	lineNarrow: {
-		width: "60%",
+	searchIcon: {
+		width: "18px",
+		height: "18px",
+		borderRadius: radius.xs,
+		backgroundColor: colors.bgPrimary,
+	},
+	searchInput: {
+		height: `calc(${fontSize.md} * ${lineHeight.normal})`,
+		flex: 1,
+		borderRadius: radius.xs,
+		backgroundColor: colors.bgPrimary,
 	},
 });
 
 export default function Loading() {
 	return (
 		<div {...stylex.props(styles.content)}>
-			<div {...stylex.props(styles.tabSkeletonRow)}>
-				{Array.from({ length: 4 }).map((_, index) => (
-					<div key={index} {...stylex.props(styles.tabSkeleton)} />
-				))}
+			<CategoryTabsSection />
+
+			<div {...stylex.props(styles.searchContainer)}>
+				<div {...stylex.props(styles.searchSkeleton)}>
+					<div {...stylex.props(styles.searchIcon)} />
+					<div {...stylex.props(styles.searchInput)} />
+				</div>
 			</div>
 
-			<div {...stylex.props(styles.listSkeleton)}>
-				{Array.from({ length: 6 }).map((_, index) => (
-					<div key={index} {...stylex.props(styles.itemSkeleton)}>
-						<div {...stylex.props(styles.thumbnail)} />
-						<div {...stylex.props(styles.lines)}>
-							<div {...stylex.props(styles.line, styles.lineWide)} />
-							<div {...stylex.props(styles.line, styles.lineNarrow)} />
-						</div>
-					</div>
-				))}
-			</div>
+			<PostListSkeleton />
 		</div>
 	);
 }

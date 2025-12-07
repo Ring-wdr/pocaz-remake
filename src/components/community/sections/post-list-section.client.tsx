@@ -28,6 +28,7 @@ import {
 	fontSize,
 	fontWeight,
 	iconSize,
+	lineHeight,
 	radius,
 	size,
 	spacing,
@@ -127,6 +128,7 @@ const styles = stylex.create({
 	},
 	postContent: {
 		fontSize: "15px",
+		lineHeight: lineHeight.normal,
 		fontWeight: fontWeight.medium,
 		color: colors.textSecondary,
 		margin: 0,
@@ -140,6 +142,7 @@ const styles = stylex.create({
 		alignItems: "center",
 		gap: spacing.xxs,
 		fontSize: fontSize.sm,
+		lineHeight: lineHeight.normal,
 		color: colors.textPlaceholder,
 	},
 	metaItem: {
@@ -243,15 +246,16 @@ const styles = stylex.create({
 		gap: spacing.xxs,
 	},
 	skeletonLine: {
-		height: "12px",
+		height: `calc(15px * ${lineHeight.normal})`,
 		borderRadius: radius.xs,
 		backgroundColor: colors.bgSecondary,
 	},
 	skeletonLineWide: {
-		width: "80%",
+		width: "95%",
 	},
 	skeletonLineNarrow: {
-		width: "60%",
+		width: "70%",
+		height: `calc(${fontSize.sm} * ${lineHeight.normal})`,
 	},
 });
 
