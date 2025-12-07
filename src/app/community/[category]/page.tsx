@@ -2,12 +2,12 @@ import * as stylex from "@stylexjs/stylex";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PageHeader } from "@/components/community";
 import {
 	CategoryTabsSection,
 	PostListSection,
 } from "@/components/community/sections";
-import { Footer } from "@/components/home";
+import type { PostCategory } from "@/components/community/sections/types";
+import { POST_CATEGORIES } from "@/components/community/sections/types";
 import { createMetadata } from "@/lib/metadata";
 import { colors } from "../../global-tokens.stylex";
 
@@ -26,9 +26,6 @@ const styles = stylex.create({
 		paddingBottom: "24px",
 	},
 });
-
-const VALID_CATEGORIES = ["free", "boast", "info"] as const;
-type PostCategory = (typeof VALID_CATEGORIES)[number];
 
 const CATEGORY_META: Record<
 	PostCategory,
@@ -76,7 +73,7 @@ export async function generateMetadata({
 function parseCategoryParams(
 	category: string,
 ): asserts category is PostCategory {
-	if (!VALID_CATEGORIES.includes(category as PostCategory)) {
+	if (!POST_CATEGORIES.includes(category as PostCategory)) {
 		notFound();
 	}
 }
@@ -90,13 +87,9 @@ export default async function CategoryPage({
 	parseCategoryParams(category);
 
 	return (
-		<div {...stylex.props(styles.container)}>
-			<PageHeader />
-			<div {...stylex.props(styles.content)}>
-				<CategoryTabsSection />
-				<PostListSection />
-			</div>
-			<Footer />
+		<div {...stylex.props(styles.content)}>
+			<CategoryTabsSection />
+			<PostListSection category={category} />
 		</div>
 	);
 }
