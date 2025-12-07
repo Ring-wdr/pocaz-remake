@@ -7,7 +7,6 @@ import {
 	ChevronDown,
 	FileText,
 	Heart,
-	Loader2,
 	MessageCircle,
 	RefreshCw,
 	Search,
@@ -33,7 +32,7 @@ import {
 	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
-
+import LoadMoreSpinner from "./load-more-spinner";
 import { loadPostsAction } from "./load-posts-action";
 import type { PostCategory, PostListState } from "./types";
 
@@ -212,10 +211,17 @@ const styles = stylex.create({
 		cursor: "pointer",
 		color: colors.textMuted,
 		fontSize: fontSize.md,
+		lineHeight: lineHeight.normal,
 	},
 	loadMoreButtonDisabled: {
 		opacity: 0.6,
 		cursor: "not-allowed",
+	},
+	loadMoreContent: {
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.xxs,
+		minHeight: `calc(${fontSize.md} * ${lineHeight.normal})`,
 	},
 	searchResultInfo: {
 		fontSize: fontSize.sm,
@@ -265,6 +271,24 @@ interface PostListSectionClientProps {
 	limit: number;
 }
 
+const skeletonList = (
+	<div {...stylex.props(styles.skeletonList)}>
+		{Array.from({ length: 5 }).map((_, index) => (
+			<div key={index} {...stylex.props(styles.skeletonItem)}>
+				<div {...stylex.props(styles.skeletonThumb)} />
+				<div {...stylex.props(styles.skeletonLines)}>
+					<div
+						{...stylex.props(styles.skeletonLine, styles.skeletonLineWide)}
+					/>
+					<div
+						{...stylex.props(styles.skeletonLine, styles.skeletonLineNarrow)}
+					/>
+				</div>
+			</div>
+		))}
+	</div>
+);
+
 export function PostListSectionClient({
 	initialState,
 	category,
@@ -312,27 +336,6 @@ export function PostListSectionClient({
 	const handleClearSearch = () => {
 		setSearchKeyword("");
 	};
-
-	const skeletonList = useMemo(
-		() => (
-			<div {...stylex.props(styles.skeletonList)}>
-				{Array.from({ length: 5 }).map((_, index) => (
-					<div key={index} {...stylex.props(styles.skeletonItem)}>
-						<div {...stylex.props(styles.skeletonThumb)} />
-						<div {...stylex.props(styles.skeletonLines)}>
-							<div
-								{...stylex.props(styles.skeletonLine, styles.skeletonLineWide)}
-							/>
-							<div
-								{...stylex.props(styles.skeletonLine, styles.skeletonLineNarrow)}
-							/>
-						</div>
-					</div>
-				))}
-			</div>
-		),
-		[],
-	);
 
 	const showListSkeleton =
 		pending &&
@@ -442,12 +445,14 @@ export function PostListSectionClient({
 							)}
 						>
 							{pending ? (
-								<Loader2 size={16} className="animate-spin" />
+								<div {...stylex.props(styles.loadMoreContent)}>
+									<LoadMoreSpinner size={16} />
+								</div>
 							) : (
-								<>
+								<div {...stylex.props(styles.loadMoreContent)}>
 									<span>더보기</span>
 									<ChevronDown size={16} />
-								</>
+								</div>
 							)}
 						</button>
 					)}
