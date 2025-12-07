@@ -1,6 +1,13 @@
 import * as stylex from "@stylexjs/stylex";
 
-import { colors, radius, size, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	lineHeight,
+	radius,
+	size,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const shimmer = stylex.keyframes({
 	"0%": { backgroundPosition: "-200% 0" },
@@ -39,9 +46,10 @@ const styles = stylex.create({
 		minWidth: 0,
 	},
 	title: {
-		height: "20px",
+		height: `calc(15px * ${lineHeight.normal})`,
 		marginBottom: spacing.xxs,
 		borderRadius: radius.xs,
+		width: "92%",
 		backgroundColor: colors.skeletonBase,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
@@ -55,8 +63,7 @@ const styles = stylex.create({
 		gap: spacing.xxs,
 	},
 	metaItem: {
-		width: "60px",
-		height: "14px",
+		height: `calc(${fontSize.sm} * ${lineHeight.normal})`,
 		borderRadius: radius.xs,
 		backgroundColor: colors.skeletonBase,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
@@ -66,9 +73,24 @@ const styles = stylex.create({
 		animationTimingFunction: "ease-in-out",
 		animationIterationCount: "infinite",
 	},
+	metaItemWide: {
+		width: "32%",
+	},
+	metaItemMedium: {
+		width: "24%",
+	},
+	metaItemNarrow: {
+		width: "18%",
+	},
 });
 
 export default function PostListSkeleton() {
+	const metaWidths = [
+		styles.metaItemWide,
+		styles.metaItemMedium,
+		styles.metaItemNarrow,
+	];
+
 	return (
 		<div {...stylex.props(styles.container)}>
 			{Array.from({ length: 6 }).map((_, index) => (
@@ -77,9 +99,12 @@ export default function PostListSkeleton() {
 					<div {...stylex.props(styles.content)}>
 						<div {...stylex.props(styles.title)} />
 						<div {...stylex.props(styles.meta)}>
-							<div {...stylex.props(styles.metaItem)} />
-							<div {...stylex.props(styles.metaItem)} />
-							<div {...stylex.props(styles.metaItem)} />
+							{metaWidths.map((metaWidth, metaIndex) => (
+								<div
+									key={metaIndex}
+									{...stylex.props(styles.metaItem, metaWidth)}
+								/>
+							))}
 						</div>
 					</div>
 				</div>

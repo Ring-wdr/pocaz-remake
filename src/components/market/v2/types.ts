@@ -1,4 +1,5 @@
 export type MarketFilterValue = "all" | "available" | "reserved" | "sold";
+
 export type MarketSortValue = "latest" | "priceAsc" | "priceDesc";
 
 export type MarketListItem = {
@@ -27,4 +28,12 @@ export type MarketListResult = {
 
 export type MarketListState = MarketListResult & {
 	error: string | null;
+};
+
+export type MarketSearchFilters = {
+	keyword: string;
+	status: MarketFilterValue;
+	sort: MarketSortValue;
+	cursor: string | null;
+	limit?: number;
 };

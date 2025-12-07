@@ -16,6 +16,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { useControlledState } from "@/hooks/use-controlled-state";
 
 const styles = stylex.create({
 	container: {
@@ -58,16 +59,19 @@ const styles = stylex.create({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		padding: spacing.xxxs,
+		paddingTop: 0,
+		paddingBottom: 0,
+		paddingLeft: 0,
+		paddingRight: 0,
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",
-		color: colors.textPlaceholder,
+		color: colors.textSecondary,
 		fontSize: iconSize.sm,
 		lineHeight: lineHeight.tight,
-		transition: "color 0.15s ease",
+		transition: "opacity 0.15s ease",
 		":hover": {
-			color: colors.textSecondary,
+			opacity: 0.8,
 		},
 	},
 	// Size variants
@@ -109,31 +113,20 @@ export function SearchBar({
 	onClear,
 	autoFocus = false,
 }: SearchBarProps) {
-	const isControlled = controlledValue !== undefined;
-	const [internalValue, setInternalValue] = useState(defaultValue);
+	const [value, setValue] = useControlledState(
+		controlledValue,
+		defaultValue,
+		onChange,
+	);
 	const [isFocused, setIsFocused] = useState(false);
-
-	const value = isControlled ? controlledValue : internalValue;
-
-	useEffect(() => {
-		if (!isControlled) {
-			setInternalValue(defaultValue);
-		}
-	}, [defaultValue, isControlled]);
 
 	const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const newValue = e.target.value;
-		if (!isControlled) {
-			setInternalValue(newValue);
-		}
-		onChange?.(newValue);
+		setValue(newValue);
 	};
 
 	const handleClear = () => {
-		if (!isControlled) {
-			setInternalValue("");
-		}
-		onChange?.("");
+		setValue("");
 		onClear?.();
 	};
 
@@ -144,6 +137,8 @@ export function SearchBar({
 		}
 		if (e.key === "Escape" && value) {
 			handleClear();
+			e.currentTarget.blur();
+			setIsFocused(false);
 		}
 	};
 
@@ -158,7 +153,7 @@ export function SearchBar({
 			>
 				<Search size={18} {...stylex.props(styles.searchIcon)} aria-hidden />
 				<input
-					type="search"
+					type="url"
 					placeholder={placeholder}
 					value={value}
 					onChange={handleChange}
@@ -169,7 +164,7 @@ export function SearchBar({
 					aria-label={placeholder}
 					{...stylex.props(styles.input)}
 				/>
-				{value && (
+				{value && onClear && (
 					<button
 						type="button"
 						onClick={handleClear}

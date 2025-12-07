@@ -1,6 +1,12 @@
 import * as stylex from "@stylexjs/stylex";
 
-import { colors, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	lineHeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { layoutStyles } from "../layout-constants.stylex";
 
 const shimmer = stylex.keyframes({
@@ -13,8 +19,8 @@ const styles = stylex.create({
 		marginBottom: spacing.md,
 	},
 	titleSkeleton: {
-		width: "120px",
-		height: "28px",
+		width: "42%",
+		height: `calc(${fontSize.xl} * ${lineHeight.snug})`,
 		marginBottom: spacing.sm,
 		borderRadius: radius.xs,
 		backgroundColor: colors.skeletonBase,
@@ -37,7 +43,7 @@ const styles = stylex.create({
 	},
 	titleLine: {
 		flex: 1,
-		height: "18px",
+		height: `calc(${fontSize.md} * ${lineHeight.normal})`,
 		marginRight: spacing.sm,
 		borderRadius: radius.xs,
 		backgroundColor: colors.skeletonBase,
@@ -49,8 +55,8 @@ const styles = stylex.create({
 		animationIterationCount: "infinite",
 	},
 	dateLine: {
-		width: "80px",
-		height: "18px",
+		width: "28%",
+		height: `calc(${fontSize.md} * ${lineHeight.normal})`,
 		borderRadius: radius.xs,
 		backgroundColor: colors.skeletonBase,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,

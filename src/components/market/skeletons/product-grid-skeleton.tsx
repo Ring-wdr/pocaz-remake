@@ -1,5 +1,11 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	lineHeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const shimmer = stylex.keyframes({
 	"0%": { backgroundPosition: "-200% 0" },
@@ -10,7 +16,7 @@ const styles = stylex.create({
 	grid: {
 		display: "grid",
 		gridTemplateColumns: "repeat(2, 1fr)",
-		gap: "12px",
+		gap: spacing.xs,
 	},
 	item: {
 		display: "flex",
@@ -18,7 +24,7 @@ const styles = stylex.create({
 	},
 	image: {
 		aspectRatio: "1",
-		borderRadius: "8px",
+		borderRadius: radius.sm,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
@@ -27,12 +33,13 @@ const styles = stylex.create({
 		animationIterationCount: "infinite",
 	},
 	info: {
-		paddingTop: "8px",
+		paddingTop: spacing.xxs,
 	},
 	title: {
-		height: "16px",
-		marginBottom: "6px",
-		borderRadius: "4px",
+		height: `calc(${fontSize.md} * ${lineHeight.normal})`,
+		marginBottom: spacing.xxxs,
+		borderRadius: radius.xs,
+		width: "95%",
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
@@ -41,9 +48,9 @@ const styles = stylex.create({
 		animationIterationCount: "infinite",
 	},
 	price: {
-		width: "60px",
-		height: "18px",
-		borderRadius: "4px",
+		width: "70%",
+		height: `calc(${fontSize.base} * ${lineHeight.normal})`,
+		borderRadius: radius.xs,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,

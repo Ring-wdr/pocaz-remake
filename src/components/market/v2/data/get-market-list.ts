@@ -3,17 +3,17 @@ import type {
 	MarketFilterValue,
 	MarketListResult,
 	MarketSortValue,
-} from "./types";
+} from "../types";
 
-export interface MarketListQuery {
+export type MarketListQuery = {
 	keyword?: string;
 	status?: MarketFilterValue;
 	sort?: MarketSortValue;
 	cursor?: string | null;
 	limit?: number;
-}
+};
 
-export async function fetchMarketList({
+export async function getMarketList({
 	keyword,
 	status = "all",
 	sort = "latest",
@@ -55,7 +55,7 @@ export async function fetchMarketList({
 
 		return { data: response.data, error: null };
 	} catch (error) {
-		console.error("fetchMarketList failed", error);
+		console.error("getMarketList failed", error);
 		return { data: null, error: "상품을 불러오는 중 오류가 발생했습니다" };
 	}
 }

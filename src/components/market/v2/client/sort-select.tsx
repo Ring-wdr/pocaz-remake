@@ -1,8 +1,15 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
-import type { MarketSortValue } from "./types";
+
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
+import type { MarketSortValue } from "../types";
 
 const styles = stylex.create({
 	container: {
@@ -33,11 +40,11 @@ const styles = stylex.create({
 	},
 });
 
-interface SortSelectProps {
+type SortSelectProps = {
 	value?: MarketSortValue;
 	onChange?: (value: MarketSortValue) => void;
 	disabled?: boolean;
-}
+};
 
 export default function SortSelect({
 	value = "latest",

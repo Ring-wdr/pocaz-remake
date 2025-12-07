@@ -3,7 +3,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 import { colors, fontWeight, spacing } from "@/app/global-tokens.stylex";
-import type { MarketFilterValue } from "./types";
+import type { MarketFilterValue } from "../types";
 
 const filters: { id: MarketFilterValue; name: string }[] = [
 	{ id: "all", name: "전체" },
@@ -40,15 +40,15 @@ const styles = stylex.create({
 	},
 });
 
-interface FilterTabsSectionProps {
+type FilterTabsProps = {
 	value?: MarketFilterValue;
 	onFilterChange?: (filter: MarketFilterValue) => void;
-}
+};
 
-export default function FilterTabsSection({
+export default function FilterTabs({
 	value = "all",
 	onFilterChange,
-}: FilterTabsSectionProps) {
+}: FilterTabsProps) {
 	const [activeFilter, setActiveFilter] = useState<MarketFilterValue>(value);
 
 	useEffect(() => {

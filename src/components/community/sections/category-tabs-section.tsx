@@ -4,7 +4,14 @@ import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	lineHeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const categories = [
 	{ id: 0, name: "전체", slug: "" },
@@ -31,6 +38,7 @@ const styles = stylex.create({
 		paddingRight: spacing.sm,
 		borderRadius: radius.lg,
 		fontSize: fontSize.md,
+		lineHeight: lineHeight.snug,
 		fontWeight: fontWeight.medium,
 		textDecoration: "none",
 		whiteSpace: "nowrap",
