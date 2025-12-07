@@ -1,8 +1,5 @@
-import "server-only";
-
 import { api } from "@/utils/eden";
-
-import type { PostCategory, PostListQuery, PostListResult } from "./types";
+import type { PostCategory, PostListQuery, PostListResult } from "../types";
 
 const DEFAULT_LIMIT = 20;
 
@@ -11,7 +8,17 @@ function parseLimit(limit?: number): number {
 	return limit;
 }
 
-export async function fetchPostList({
+export function toCategory(value: string | null): PostCategory | undefined {
+	if (!value) return undefined;
+	const normalized = value.trim() as PostCategory;
+	return normalized === "free" ||
+		normalized === "boast" ||
+		normalized === "info"
+		? normalized
+		: undefined;
+}
+
+export async function getPostList({
 	category,
 	keyword,
 	cursor,
@@ -52,19 +59,9 @@ export async function fetchPostList({
 
 		return { data: response.data, error: null };
 	} catch (error) {
-		console.error("fetchPostList failed", error);
+		console.error("getPostList failed", error);
 		return { data: null, error: "게시글을 불러오는 중 오류가 발생했습니다." };
 	}
-}
-
-export function toCategory(value: string | null): PostCategory | undefined {
-	if (!value) return undefined;
-	const normalized = value.trim() as PostCategory;
-	return normalized === "free" ||
-		normalized === "boast" ||
-		normalized === "info"
-		? normalized
-		: undefined;
 }
 
 export { DEFAULT_LIMIT as POST_LIST_LIMIT };

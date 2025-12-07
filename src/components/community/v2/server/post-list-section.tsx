@@ -1,15 +1,15 @@
-import { fetchPostList, POST_LIST_LIMIT } from "./fetch-post-list";
-import { PostListSectionClient } from "./post-list-section.client";
-import type { PostCategory, PostListState } from "./types";
+import PostListClient from "../client/post-list-client";
+import { getPostList, POST_LIST_LIMIT } from "../data/get-post-list";
+import type { PostCategory, PostListState } from "../types";
 
-interface PostListSectionProps {
+type PostListSectionProps = {
 	category?: PostCategory;
-}
+};
 
 export default async function PostListSection({
 	category,
 }: PostListSectionProps) {
-	const { data, error } = await fetchPostList({
+	const { data, error } = await getPostList({
 		category,
 		limit: POST_LIST_LIMIT,
 	});
@@ -23,7 +23,7 @@ export default async function PostListSection({
 	};
 
 	return (
-		<PostListSectionClient
+		<PostListClient
 			initialState={initialState}
 			category={category}
 			limit={POST_LIST_LIMIT}

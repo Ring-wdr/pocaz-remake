@@ -9,18 +9,9 @@ import {
 	Heart,
 	MessageCircle,
 	RefreshCw,
-	Search,
-	X,
 } from "lucide-react";
 import Link from "next/link";
-import {
-	startTransition,
-	useActionState,
-	useDeferredValue,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
+import { useState, useTransition } from "react";
 
 import {
 	colors,
@@ -32,9 +23,10 @@ import {
 	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { SearchBar } from "@/components/ui";
+import { getPostList } from "../data/get-post-list";
+import type { PostCategory, PostListItem, PostListState } from "../types";
 import LoadMoreSpinner from "./load-more-spinner";
-import { loadPostsAction } from "./load-posts-action";
-import type { PostCategory, PostListState } from "./types";
 
 const styles = stylex.create({
 	container: {
@@ -43,68 +35,29 @@ const styles = stylex.create({
 	searchContainer: {
 		marginBottom: spacing.sm,
 	},
-	searchInputWrapper: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxs,
-		paddingTop: spacing.xs,
-		paddingBottom: spacing.xs,
-		paddingLeft: spacing.sm,
-		paddingRight: spacing.sm,
-		backgroundColor: colors.bgSecondary,
-		borderRadius: radius.md,
-		borderWidth: 1,
-		borderStyle: "solid",
-		borderColor: colors.borderPrimary,
-	},
-	searchIcon: {
-		color: colors.textPlaceholder,
-		flexShrink: 0,
-	},
-	searchInput: {
-		flex: 1,
-		backgroundColor: "transparent",
-		borderWidth: 0,
-		fontSize: fontSize.md,
-		color: colors.textPrimary,
-		outline: "none",
-	},
-	clearButton: {
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-		paddingTop: "4px",
-		paddingBottom: "4px",
-		paddingLeft: "4px",
-		paddingRight: "4px",
-		backgroundColor: "transparent",
-		borderWidth: 0,
-		cursor: "pointer",
-		color: colors.textMuted,
-	},
-	sortContainer: {
-		display: "flex",
-		justifyContent: "flex-end",
-		marginBottom: spacing.xs,
-	},
-	sortButton: {
-		display: "flex",
-		alignItems: "center",
-		gap: "4px",
-		paddingTop: spacing.xxxs,
-		paddingBottom: spacing.xxxs,
-		paddingLeft: spacing.xs,
-		paddingRight: spacing.xs,
-		backgroundColor: "transparent",
-		borderWidth: 0,
-		fontSize: fontSize.sm,
-		color: colors.textMuted,
-		cursor: "pointer",
-	},
-	item: {
+	searchActions: {
 		display: "flex",
 		alignItems: "center",
 		gap: spacing.xs,
+		marginTop: spacing.xxs,
+	},
+	searchButton: {
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
+		backgroundColor: colors.bgInverse,
+		color: colors.textInverse,
+		borderWidth: 0,
+		borderRadius: radius.sm,
+		fontSize: fontSize.sm,
+	fontWeight: fontWeight.medium,
+	cursor: "pointer",
+},
+item: {
+	display: "flex",
+	alignItems: "center",
+	gap: spacing.xs,
 		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
 		borderBottomWidth: 1,
@@ -127,7 +80,6 @@ const styles = stylex.create({
 	},
 	postContent: {
 		fontSize: "15px",
-		lineHeight: lineHeight.normal,
 		fontWeight: fontWeight.medium,
 		color: colors.textSecondary,
 		margin: 0,
@@ -141,7 +93,6 @@ const styles = stylex.create({
 		alignItems: "center",
 		gap: spacing.xxs,
 		fontSize: fontSize.sm,
-		lineHeight: lineHeight.normal,
 		color: colors.textPlaceholder,
 	},
 	metaItem: {
@@ -289,90 +240,111 @@ const skeletonList = (
 	</div>
 );
 
-export function PostListSectionClient({
+function mergeItems(existing: PostListItem[], incoming: PostListItem[]) {
+	const map = new Map<string, PostListItem>();
+	existing.forEach((item) => {
+		map.set(item.id, item);
+	});
+	incoming.forEach((item) => {
+		map.set(item.id, item);
+	});
+	return Array.from(map.values());
+}
+
+export default function PostListClient({
 	initialState,
 	category,
 	limit,
 }: PostListSectionClientProps) {
+	const [state, setState] = useState<PostListState>(initialState);
 	const [searchKeyword, setSearchKeyword] = useState(initialState.keyword);
-	const deferredKeyword = useDeferredValue(searchKeyword);
-
-	const [state, formAction, pending] = useActionState<PostListState, FormData>(
-		loadPostsAction,
-		initialState,
-	);
-
-	useEffect(() => {
-		if (deferredKeyword === state.keyword) return;
-		const formData = new FormData();
-		formData.set("keyword", deferredKeyword);
-		formData.set("category", category ?? "");
-		formData.set("limit", limit.toString());
-		startTransition(() => {
-			formAction(formData);
-		});
-	}, [deferredKeyword, state.keyword, category, limit, formAction]);
-
-	const handleLoadMore = () => {
-		if (!state.nextCursor) return;
-		const formData = new FormData();
-		formData.set("cursor", state.nextCursor);
-		formData.set("keyword", state.keyword);
-		formData.set("category", category ?? "");
-		formData.set("limit", limit.toString());
-		startTransition(() => {
-			formAction(formData);
-		});
-	};
-
-	const handleRetry = () => {
-		const formData = new FormData();
-		formData.set("keyword", state.keyword);
-		formData.set("category", category ?? "");
-		formData.set("limit", limit.toString());
-		formAction(formData);
-	};
-
-	const handleClearSearch = () => {
-		setSearchKeyword("");
-	};
-
-	const showListSkeleton =
-		pending &&
-		(state.items.length === 0 || deferredKeyword !== state.keyword) &&
-		!state.error;
+	const [isPending, startTransition] = useTransition();
 
 	const hasPosts = state.items.length > 0;
 	const hasKeyword = !!state.keyword;
 
+	const showListSkeleton =
+		isPending && state.items.length === 0 && !state.error;
+
+	const replaceList = (keyword: string) => {
+		startTransition(async () => {
+			const { data, error } = await getPostList({
+				category,
+				keyword,
+				cursor: null,
+				limit,
+			});
+
+			if (error || !data) {
+				setState((prev) => ({
+					...prev,
+					items: [],
+					nextCursor: null,
+					hasMore: false,
+					keyword,
+					error: error ?? "게시글을 불러올 수 없습니다",
+				}));
+				return;
+			}
+
+			setState({
+				items: data.items,
+				nextCursor: data.nextCursor,
+				hasMore: data.hasMore,
+				keyword,
+				error: null,
+			});
+		});
+	};
+
+	const appendList = () => {
+		if (!state.nextCursor || isPending) return;
+
+		startTransition(async () => {
+			const { data, error } = await getPostList({
+				category,
+				keyword: state.keyword,
+				cursor: state.nextCursor,
+				limit,
+			});
+
+			if (error || !data) {
+				setState((prev) => ({
+					...prev,
+					error: "게시글을 더 불러오지 못했습니다. 다시 시도해 주세요.",
+				}));
+				return;
+			}
+
+			setState((prev) => ({
+				items: mergeItems(prev.items, data.items),
+				nextCursor: data.nextCursor,
+				hasMore: data.hasMore,
+				keyword: prev.keyword,
+				error: null,
+			}));
+		});
+	};
+
+	const handleRetry = () => replaceList(state.keyword);
+
+	const handleSearchSubmit = () => replaceList(searchKeyword.trim());
+
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.searchContainer)}>
-				<div {...stylex.props(styles.searchInputWrapper)}>
-					<Search size={18} {...stylex.props(styles.searchIcon)} />
-					<input
-						type="text"
-						placeholder="게시글 검색..."
-						value={searchKeyword}
-						onChange={(event) => setSearchKeyword(event.target.value)}
-						{...stylex.props(styles.searchInput)}
-					/>
-					{searchKeyword && (
-						<button
-							type="button"
-							onClick={handleClearSearch}
-							{...stylex.props(styles.clearButton)}
-						>
-							<X size={16} />
-						</button>
-					)}
-				</div>
+				<SearchBar
+					value={searchKeyword}
+					onChange={setSearchKeyword}
+					placeholder="게시글 검색..."
+					onSearch={handleSearchSubmit}
+				/>
 			</div>
 
 			{hasKeyword && (
 				<p {...stylex.props(styles.searchResultInfo)}>
 					&quot;{state.keyword}&quot; 검색 결과 {state.items.length}개
-					{pending && " 불러오는 중..."}
+					{isPending && " 불러오는 중..."}
 				</p>
 			)}
 
@@ -437,14 +409,15 @@ export function PostListSectionClient({
 					{state.hasMore && (
 						<button
 							type="button"
-							onClick={handleLoadMore}
-							disabled={pending || !state.nextCursor}
+							onClick={appendList}
+							disabled={isPending || !state.nextCursor}
 							{...stylex.props(
 								styles.loadMoreButton,
-								(pending || !state.nextCursor) && styles.loadMoreButtonDisabled,
+								(isPending || !state.nextCursor) &&
+									styles.loadMoreButtonDisabled,
 							)}
 						>
-							{pending ? (
+							{isPending ? (
 								<div {...stylex.props(styles.loadMoreContent)}>
 									<LoadMoreSpinner size={16} />
 								</div>

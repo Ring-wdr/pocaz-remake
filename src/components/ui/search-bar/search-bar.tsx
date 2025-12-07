@@ -63,12 +63,12 @@ const styles = stylex.create({
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",
-		color: colors.textPlaceholder,
+		color: colors.textSecondary,
 		fontSize: iconSize.sm,
 		lineHeight: lineHeight.tight,
-		transition: "color 0.15s ease",
+		transition: "opacity 0.15s ease",
 		":hover": {
-			color: colors.textSecondary,
+			opacity: 0.8,
 		},
 	},
 	// Size variants
@@ -134,6 +134,8 @@ export function SearchBar({
 		}
 		if (e.key === "Escape" && value) {
 			handleClear();
+			e.currentTarget.blur();
+			setIsFocused(false);
 		}
 	};
 

@@ -2,12 +2,9 @@ import * as stylex from "@stylexjs/stylex";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import {
-	CategoryTabsSection,
-	PostListSection,
-} from "@/components/community/sections";
-import type { PostCategory } from "@/components/community/sections/types";
-import { POST_CATEGORIES } from "@/components/community/sections/types";
+import { CategoryTabsSection } from "@/components/community/sections";
+import type { PostCategory } from "@/components/community/v2";
+import { POST_CATEGORIES, PostListSection } from "@/components/community/v2";
 import { createMetadata } from "@/lib/metadata";
 import { colors } from "../../global-tokens.stylex";
 

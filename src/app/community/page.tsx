@@ -1,10 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
 
 import { PageHeader } from "@/components/community";
-import {
-	CategoryTabsSection,
-	PostListSection,
-} from "@/components/community/sections";
+import { CategoryTabsSection } from "@/components/community/sections";
+import { PostListSection } from "@/components/community/v2";
 import { Footer } from "@/components/home";
 import { createMetadata } from "@/lib/metadata";
 import { colors } from "../global-tokens.stylex";
