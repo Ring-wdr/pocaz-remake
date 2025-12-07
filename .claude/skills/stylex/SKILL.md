@@ -157,6 +157,7 @@ globalTokens.fontSans
 - [PATTERNS.md](./PATTERNS.md) - 스타일 패턴 및 예시
 - [CONSTRAINTS.md](./CONSTRAINTS.md) - StyleX 제약사항 및 우회 방법
 - [MIGRATION.md](./MIGRATION.md) - CSS Module 마이그레이션 가이드
+- [SKELETON.md](./SKELETON.md) - Skeleton Layout Stability 가이드
 
 ## File Conventions
 
