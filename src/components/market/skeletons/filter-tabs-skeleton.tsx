@@ -1,5 +1,11 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	lineHeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const shimmer = stylex.keyframes({
 	"0%": { backgroundPosition: "-200% 0" },
@@ -9,14 +15,13 @@ const shimmer = stylex.keyframes({
 const styles = stylex.create({
 	container: {
 		display: "flex",
-		gap: "8px",
-		marginBottom: "16px",
+		gap: spacing.xxs,
+		marginBottom: spacing.sm,
 		overflowX: "auto",
 	},
 	tab: {
-		width: "70px",
-		height: "32px",
-		borderRadius: "16px",
+		height: `calc(${fontSize.sm} * ${lineHeight.normal} + ${spacing.xxxs} * 2)`,
+		borderRadius: radius.lg,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
@@ -25,13 +30,29 @@ const styles = stylex.create({
 		animationIterationCount: "infinite",
 		flexShrink: 0,
 	},
+	tabWidthNarrow: {
+		width: "18%",
+	},
+	tabWidthMedium: {
+		width: "22%",
+	},
+	tabWidthWide: {
+		width: "26%",
+	},
 });
 
 export default function FilterTabsSkeleton() {
+	const tabWidths = [
+		styles.tabWidthMedium,
+		styles.tabWidthWide,
+		styles.tabWidthMedium,
+		styles.tabWidthNarrow,
+	];
+
 	return (
 		<div {...stylex.props(styles.container)}>
-			{Array.from({ length: 5 }).map((_, index) => (
-				<div key={index} {...stylex.props(styles.tab)} />
+			{tabWidths.map((widthStyle, index) => (
+				<div key={index} {...stylex.props(styles.tab, widthStyle)} />
 			))}
 		</div>
 	);

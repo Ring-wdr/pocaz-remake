@@ -1,5 +1,11 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	lineHeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const shimmer = stylex.keyframes({
 	"0%": { backgroundPosition: "-200% 0" },
@@ -10,9 +16,9 @@ const styles = stylex.create({
 	container: {
 		display: "flex",
 		alignItems: "center",
-		gap: "16px",
-		paddingBottom: "20px",
-		marginBottom: "20px",
+		gap: spacing.sm,
+		paddingBottom: spacing.sm,
+		marginBottom: spacing.sm,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
 		borderBottomColor: colors.borderPrimary,
@@ -20,7 +26,7 @@ const styles = stylex.create({
 	avatar: {
 		width: "72px",
 		height: "72px",
-		borderRadius: "36px",
+		borderRadius: radius.full,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
@@ -32,10 +38,10 @@ const styles = stylex.create({
 		flex: 1,
 	},
 	name: {
-		width: "120px",
-		height: "24px",
-		marginBottom: "8px",
-		borderRadius: "4px",
+		width: "64%",
+		height: `calc(20px * ${lineHeight.snug})`,
+		marginBottom: spacing.xxxs,
+		borderRadius: radius.xs,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
@@ -44,9 +50,9 @@ const styles = stylex.create({
 		animationIterationCount: "infinite",
 	},
 	email: {
-		width: "180px",
-		height: "16px",
-		borderRadius: "4px",
+		width: "70%",
+		height: `calc(${fontSize.md} * ${lineHeight.normal})`,
+		borderRadius: radius.xs,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,

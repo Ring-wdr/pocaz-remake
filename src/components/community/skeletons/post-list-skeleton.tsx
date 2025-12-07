@@ -49,6 +49,7 @@ const styles = stylex.create({
 		height: `calc(15px * ${lineHeight.normal})`,
 		marginBottom: spacing.xxs,
 		borderRadius: radius.xs,
+		width: "92%",
 		backgroundColor: colors.skeletonBase,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",

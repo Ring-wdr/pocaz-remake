@@ -1,6 +1,12 @@
 import * as stylex from "@stylexjs/stylex";
 
-import { colors, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	lineHeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const shimmer = stylex.keyframes({
 	"0%": { backgroundPosition: "-200% 0" },
@@ -33,7 +39,7 @@ const styles = stylex.create({
 		gap: spacing.xxs,
 	},
 	filterPill: {
-		height: "32px",
+		height: `calc(${fontSize.sm} * ${lineHeight.normal} + ${spacing.xxxs} * 2)`,
 		borderRadius: radius.md,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
@@ -43,13 +49,13 @@ const styles = stylex.create({
 		animationIterationCount: "infinite",
 	},
 	filterPillWide: {
-		width: "76px",
+		width: "30%",
 	},
 	filterPillMedium: {
-		width: "64px",
+		width: "24%",
 	},
 	filterPillNarrow: {
-		width: "70px",
+		width: "20%",
 	},
 	list: {
 		display: "flex",
@@ -58,12 +64,12 @@ const styles = stylex.create({
 	item: {
 		display: "flex",
 		alignItems: "center",
-		gap: "12px",
-		paddingTop: "16px",
-		paddingBottom: "16px",
+		gap: spacing.xs,
+		paddingTop: spacing.sm,
+		paddingBottom: spacing.sm,
 		borderBottomWidth: 1,
 		borderBottomStyle: "solid",
-		borderBottomColor: colors.bgTertiary,
+		borderBottomColor: colors.borderSecondary,
 	},
 	avatar: {
 		width: "52px",
@@ -85,12 +91,12 @@ const styles = stylex.create({
 		display: "flex",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: "6px",
+		marginBottom: spacing.xxxs,
 	},
 	name: {
-		width: "80px",
-		height: "18px",
-		borderRadius: "4px",
+		width: "64%",
+		height: `calc(${fontSize.md} * ${lineHeight.normal})`,
+		borderRadius: radius.xs,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
@@ -99,9 +105,9 @@ const styles = stylex.create({
 		animationIterationCount: "infinite",
 	},
 	time: {
-		width: "40px",
-		height: "12px",
-		borderRadius: "4px",
+		width: "22%",
+		height: `calc(${fontSize.sm} * ${lineHeight.normal})`,
+		borderRadius: radius.xs,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
@@ -110,8 +116,8 @@ const styles = stylex.create({
 		animationIterationCount: "infinite",
 	},
 	message: {
-		height: "16px",
-		borderRadius: "4px",
+		height: `calc(${fontSize.md} * ${lineHeight.normal})`,
+		borderRadius: radius.xs,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
 		animationName: shimmer,
