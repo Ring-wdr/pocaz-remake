@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { OverlayProvider } from "overlay-kit";
 import { Toaster } from "sonner";
 import { Layout } from "@/components/home";
+import { QueryProvider } from "@/components/providers/query-client-provider";
 import { pretendard } from "@/fonts/pretendard";
 import { createMetadata } from "@/lib/metadata";
 import { getBaseUrl } from "@/utils/url";
@@ -28,10 +29,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 			lang="ko"
 		>
 			<body {...stylex.props(styles.reset, styles.body)}>
-				<OverlayProvider>
-					<Toaster richColors position="top-center" />
-					<Layout>{children}</Layout>
-				</OverlayProvider>
+				<QueryProvider>
+					<OverlayProvider>
+						<Toaster richColors position="top-center" />
+						<Layout>{children}</Layout>
+					</OverlayProvider>
+				</QueryProvider>
 			</body>
 		</html>
 	);
