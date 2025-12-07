@@ -30,7 +30,6 @@ export default async function MarketListSection({
 
 	return (
 		<MarketListClient
-			key={`${keyword ?? ""}|${status}|${sort}`}
 			initialState={initialState}
 			initialFilters={{ keyword, status, sort }}
 			limit={limit}

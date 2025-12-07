@@ -15,6 +15,7 @@ import EmptyState from "./empty-state";
 import FilterBar from "./filter-bar";
 import LoadMoreForm from "./load-more-form";
 import MarketGrid from "./market-grid";
+import { updateMarketQueryString } from "./update-query-string";
 
 const styles = stylex.create({
 	errorText: {
@@ -66,6 +67,7 @@ export default function MarketListClient({
 		sort: MarketSortValue;
 	}) => {
 		setAppliedFilters(nextFilters);
+		updateMarketQueryString(nextFilters);
 		startTransition(async () => {
 			const { data, error } = await getMarketList({
 				...nextFilters,
@@ -133,19 +135,23 @@ export default function MarketListClient({
 	const hasItems = state.items.length > 0;
 	const loadMoreDisabled = isPending || !state.nextCursor;
 
+	const filterBar = (
+		<FilterBar
+			keyword={keywordInput}
+			status={status}
+			sort={sort}
+			onKeywordChange={setKeywordInput}
+			onKeywordSubmit={handleKeywordSubmit}
+			onStatusChange={handleStatusChange}
+			onSortChange={handleSortChange}
+			disabled={isPending}
+		/>
+	);
+
 	if (!hasItems) {
 		return (
 			<>
-				<FilterBar
-					keyword={keywordInput}
-					status={status}
-					sort={sort}
-					onKeywordChange={setKeywordInput}
-					onKeywordSubmit={handleKeywordSubmit}
-					onStatusChange={handleStatusChange}
-					onSortChange={handleSortChange}
-					disabled={isPending}
-				/>
+				{filterBar}
 				<EmptyState error={state.error} />
 			</>
 		);
@@ -153,16 +159,7 @@ export default function MarketListClient({
 
 	return (
 		<>
-			<FilterBar
-				keyword={keywordInput}
-				status={status}
-				sort={sort}
-				onKeywordChange={setKeywordInput}
-				onKeywordSubmit={handleKeywordSubmit}
-				onStatusChange={handleStatusChange}
-				onSortChange={handleSortChange}
-				disabled={isPending}
-			/>
+			{filterBar}
 
 			<MarketGrid items={state.items} pending={isPending} />
 

@@ -14,7 +14,6 @@
 ## 파일 역할
 - `data/search-params.ts` — URL searchParams를 안전하게 정규화.
 - `data/get-market-list.ts` — Eden API 호출로 서버에서 목록 fetch.
-- `actions/update-market-list.ts` — (구) useActionState용 서버 액션, append/replace 모드 처리. v2 클라이언트 fetch 전환 후 기본적으로 미사용.
 - `server/market-page-content.tsx` — 헤더/푸터 포함 페이지 컨테이너, Suspense 경계 포함.
 - `server/market-list-section.tsx` — 서버에서 초기 목록 fetch 후 클라이언트에 초기 상태 전달.
 - `client/market-list-client.tsx` — 상태 관리 + 필터/정렬/더보기 상호작용 (클라이언트 fetch + useTransition).
@@ -22,6 +21,7 @@
 - `client/market-grid.tsx` + `market-grid-item.tsx` — 상품 카드 리스트 렌더링.
 - `client/empty-state.tsx` — 결과 없음/오류 상태 노출.
 - `client/load-more-form.tsx` — 더보기 버튼.
+- `client/update-query-string.ts` — 필터/정렬/검색 값을 URL 쿼리로 동기화해 새로고침 시 초기 서버 페치 일관성 유지.
 
 ## Suspense 경계
 - `/market` 페이지에서 `MarketPageContent` 내 `Suspense`로 목록 영역만 감싸고 `ProductGridSkeleton`을 fallback으로 사용. 헤더/푸터는 즉시 렌더되어 초기 페인트가 빨라지고, 목록 데이터 지연 시에도 사용자 경험이 유지됩니다.

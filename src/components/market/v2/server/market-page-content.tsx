@@ -1,10 +1,12 @@
 import * as stylex from "@stylexjs/stylex";
 import { Suspense } from "react";
-
+import { colors } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
 import { PageHeader } from "@/components/market";
-import { ProductGridSkeleton } from "@/components/market/skeletons";
-import { colors } from "@/app/global-tokens.stylex";
+import {
+	FilterBarSkeleton,
+	ProductGridSkeleton,
+} from "@/components/market/skeletons";
 import type { MarketSearchFilters } from "../types";
 import MarketListSection from "./market-list-section";
 
@@ -33,7 +35,14 @@ export default function MarketPageContent({ filters }: MarketPageContentProps) {
 		<div {...stylex.props(styles.container)}>
 			<PageHeader />
 			<main {...stylex.props(styles.content)}>
-				<Suspense fallback={<ProductGridSkeleton />}>
+				<Suspense
+					fallback={
+						<>
+							<FilterBarSkeleton />
+							<ProductGridSkeleton />
+						</>
+					}
+				>
 					<MarketListSection {...filters} />
 				</Suspense>
 			</main>
