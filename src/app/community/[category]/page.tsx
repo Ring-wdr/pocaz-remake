@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import * as stylex from "@stylexjs/stylex";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/community";
@@ -30,21 +30,23 @@ const styles = stylex.create({
 const VALID_CATEGORIES = ["free", "boast", "info"] as const;
 type PostCategory = (typeof VALID_CATEGORIES)[number];
 
-const CATEGORY_META: Record<PostCategory, { label: string; description: string }> =
-	{
-		free: {
-			label: "자유게시판",
-			description: "잡담과 소통을 나누는 포카즈 자유 게시판입니다.",
-		},
-		boast: {
-			label: "포카 자랑",
-			description: "소장 중인 포토카드를 자랑하고 공유해 보세요.",
-		},
-		info: {
-			label: "정보 공유",
-			description: "거래 팁과 정보를 나누는 커뮤니티 게시판입니다.",
-		},
-	};
+const CATEGORY_META: Record<
+	PostCategory,
+	{ label: string; description: string }
+> = {
+	free: {
+		label: "자유게시판",
+		description: "잡담과 소통을 나누는 포카즈 자유 게시판입니다.",
+	},
+	boast: {
+		label: "포카 자랑",
+		description: "소장 중인 포토카드를 자랑하고 공유해 보세요.",
+	},
+	info: {
+		label: "정보 공유",
+		description: "거래 팁과 정보를 나누는 커뮤니티 게시판입니다.",
+	},
+};
 
 export async function generateMetadata({
 	params,
@@ -71,16 +73,21 @@ export async function generateMetadata({
 	});
 }
 
+function parseCategoryParams(
+	category: string,
+): asserts category is PostCategory {
+	if (!VALID_CATEGORIES.includes(category as PostCategory)) {
+		notFound();
+	}
+}
+
 export default async function CategoryPage({
 	params,
 }: {
 	params: Promise<{ category: string }>;
 }) {
 	const { category } = await params;
-
-	if (!VALID_CATEGORIES.includes(category as PostCategory)) {
-		notFound();
-	}
+	parseCategoryParams(category);
 
 	return (
 		<div {...stylex.props(styles.container)}>
