@@ -16,6 +16,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { useControlledState } from "@/hooks/use-controlled-state";
 
 const styles = stylex.create({
 	container: {
@@ -109,31 +110,20 @@ export function SearchBar({
 	onClear,
 	autoFocus = false,
 }: SearchBarProps) {
-	const isControlled = controlledValue !== undefined;
-	const [internalValue, setInternalValue] = useState(defaultValue);
+	const [value, setValue] = useControlledState(
+		controlledValue,
+		defaultValue,
+		onChange,
+	);
 	const [isFocused, setIsFocused] = useState(false);
-
-	const value = isControlled ? controlledValue : internalValue;
-
-	useEffect(() => {
-		if (!isControlled) {
-			setInternalValue(defaultValue);
-		}
-	}, [defaultValue, isControlled]);
 
 	const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const newValue = e.target.value;
-		if (!isControlled) {
-			setInternalValue(newValue);
-		}
-		onChange?.(newValue);
+		setValue(newValue);
 	};
 
 	const handleClear = () => {
-		if (!isControlled) {
-			setInternalValue("");
-		}
-		onChange?.("");
+		setValue("");
 		onClear?.();
 	};
 
@@ -169,7 +159,7 @@ export function SearchBar({
 					aria-label={placeholder}
 					{...stylex.props(styles.input)}
 				/>
-				{value && (
+				{value && onClear && (
 					<button
 						type="button"
 						onClick={handleClear}
