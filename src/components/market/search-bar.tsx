@@ -24,6 +24,7 @@ export default function SearchBar({
 			placeholder="아티스트, 앨범, 포카 이름 검색"
 			onChange={onChange}
 			onSearch={onSearch}
+			onClear={() => onChange?.("")}
 		/>
 	);
 }

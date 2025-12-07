@@ -51,13 +51,13 @@ const styles = stylex.create({
 		borderWidth: 0,
 		borderRadius: radius.sm,
 		fontSize: fontSize.sm,
-	fontWeight: fontWeight.medium,
-	cursor: "pointer",
-},
-item: {
-	display: "flex",
-	alignItems: "center",
-	gap: spacing.xs,
+		fontWeight: fontWeight.medium,
+		cursor: "pointer",
+	},
+	item: {
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.xs,
 		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
 		borderBottomWidth: 1,
@@ -338,6 +338,7 @@ export default function PostListClient({
 					onChange={setSearchKeyword}
 					placeholder="게시글 검색..."
 					onSearch={handleSearchSubmit}
+					onClear={() => setSearchKeyword("")}
 				/>
 			</div>
 

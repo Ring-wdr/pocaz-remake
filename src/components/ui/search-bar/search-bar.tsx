@@ -59,7 +59,10 @@ const styles = stylex.create({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		padding: spacing.xxxs,
+		paddingTop: 0,
+		paddingBottom: 0,
+		paddingLeft: 0,
+		paddingRight: 0,
 		backgroundColor: "transparent",
 		borderWidth: 0,
 		cursor: "pointer",
@@ -150,7 +153,7 @@ export function SearchBar({
 			>
 				<Search size={18} {...stylex.props(styles.searchIcon)} aria-hidden />
 				<input
-					type="search"
+					type="url"
 					placeholder={placeholder}
 					value={value}
 					onChange={handleChange}
