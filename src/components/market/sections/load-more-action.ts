@@ -22,16 +22,18 @@ function mergeItems(
 	return Array.from(map.values());
 }
 
-export async function loadMoreMarkets(
-	prevState: MarketListState,
-	formData: FormData,
-): Promise<MarketListState> {
-	const cursor = prevState.nextCursor ?? formData.get("cursor")?.toString();
-	if (!cursor) {
-		return { ...prevState, hasMore: false, nextCursor: null };
-	}
+type MarketActionMode = "append" | "replace";
 
-	const keyword = formData.get("keyword")?.toString() ?? "";
+const APPEND_ERROR_MESSAGE = "상품을 더 불러오지 못했습니다. 다시 시도해 주세요.";
+const REPLACE_ERROR_MESSAGE = "상품을 불러오는 중 문제가 발생했습니다.";
+
+function getActionMode(value: string | null): MarketActionMode {
+	if (value === "append") return "append";
+	return "replace";
+}
+
+function parseFilters(formData: FormData) {
+	const keyword = formData.get("keyword")?.toString().trim() ?? "";
 	const status =
 		(formData.get("status")?.toString() as MarketFilterValue | undefined) ??
 		"all";
@@ -40,6 +42,22 @@ export async function loadMoreMarkets(
 		"latest";
 	const limit =
 		Number.parseInt(formData.get("limit")?.toString() ?? "20", 10) || 20;
+
+	return { keyword, status, sort, limit };
+}
+
+export async function updateMarketList(
+	prevState: MarketListState,
+	formData: FormData,
+): Promise<MarketListState> {
+	const mode = getActionMode(formData.get("mode")?.toString() ?? null);
+	const cursorInput = formData.get("cursor")?.toString() ?? undefined;
+	const cursor = mode === "append" ? cursorInput ?? prevState.nextCursor : null;
+	const { keyword, status, sort, limit } = parseFilters(formData);
+
+	if (mode === "append" && !cursor) {
+		return { ...prevState, hasMore: false, nextCursor: null };
+	}
 
 	try {
 		const { data, error: fetchError } = await fetchMarketList({
@@ -51,25 +69,40 @@ export async function loadMoreMarkets(
 		});
 
 		if (fetchError || !data) {
+			const errorMessage =
+				mode === "append" ? APPEND_ERROR_MESSAGE : REPLACE_ERROR_MESSAGE;
+
 			return {
 				...prevState,
-				error: "상품을 더 불러오지 못했습니다. 다시 시도해 주세요.",
+				error: errorMessage,
 			};
 		}
 
-		const mergedItems = mergeItems(prevState.items, data.items);
+		if (mode === "append") {
+			const mergedItems = mergeItems(prevState.items, data.items);
+
+			return {
+				items: mergedItems,
+				nextCursor: data.nextCursor,
+				hasMore: data.hasMore,
+				error: null,
+			};
+		}
 
 		return {
-			items: mergedItems,
+			items: data.items,
 			nextCursor: data.nextCursor,
 			hasMore: data.hasMore,
 			error: null,
 		};
 	} catch (error) {
-		console.error("Failed to load more markets:", error);
+		console.error("Failed to update markets:", error);
 		return {
 			...prevState,
-			error: "상품을 불러오는 중 문제가 발생했습니다.",
+			error:
+				mode === "append"
+					? APPEND_ERROR_MESSAGE
+					: "상품을 불러오는 중 문제가 발생했습니다.",
 		};
 	}
 }

@@ -5,16 +5,22 @@
 import { SearchBar as UISearchBar } from "@/components/ui/search-bar";
 
 interface SearchBarProps {
+	value?: string;
 	initialValue?: string;
-	onSearch?: (query: string) => void;
+	onChange?: (query: string) => void;
 }
 
-export default function SearchBar({ initialValue = "", onSearch }: SearchBarProps) {
+export default function SearchBar({
+	value,
+	initialValue = "",
+	onChange,
+}: SearchBarProps) {
 	return (
 		<UISearchBar
-			defaultValue={initialValue}
+			value={value}
+			defaultValue={value === undefined ? initialValue : undefined}
 			placeholder="아티스트, 앨범, 포카 이름 검색"
-			onChange={onSearch}
+			onChange={onChange}
 		/>
 	);
 }

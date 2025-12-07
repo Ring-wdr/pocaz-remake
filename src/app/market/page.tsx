@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Suspense } from "react";
 import { Footer } from "@/components/home";
-import { MarketFilters, PageHeader } from "@/components/market";
+import { PageHeader } from "@/components/market";
 import { ProductGridSection } from "@/components/market/sections";
 import type {
 	MarketFilterValue,
@@ -78,7 +78,6 @@ export default async function MarketPage({
 		<div {...stylex.props(styles.container)}>
 			<PageHeader />
 			<div {...stylex.props(styles.content)}>
-				<MarketFilters keyword={keyword} status={status} sort={sort} />
 				<Suspense fallback={<ProductGridSkeleton />}>
 					<ProductGridSection
 						keyword={keyword}

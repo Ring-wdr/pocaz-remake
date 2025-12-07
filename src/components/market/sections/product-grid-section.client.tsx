@@ -3,7 +3,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Store } from "lucide-react";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 
 import {
 	colors,
@@ -12,10 +12,11 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
-import { loadMoreMarkets } from "./load-more-action";
+import { useDebounce } from "@/hooks/use-debounce";
+import MarketFilters from "../filters";
+import { updateMarketList } from "./load-more-action";
 import type {
 	MarketFilterValue,
-	MarketListItem,
 	MarketListState,
 	MarketSortValue,
 } from "./types";
@@ -162,37 +163,91 @@ function formatPrice(price: number | null) {
 
 interface ProductGridClientProps {
 	initialState: MarketListState;
-	status: MarketFilterValue;
-	keyword: string;
-	sort: MarketSortValue;
+	initialStatus: MarketFilterValue;
+	initialKeyword: string;
+	initialSort: MarketSortValue;
 	limit: number;
 }
 
 export default function ProductGridClient({
 	initialState,
-	status,
-	keyword,
-	sort,
+	initialStatus,
+	initialKeyword,
+	initialSort,
 	limit,
 }: ProductGridClientProps) {
 	const [state, formAction, pending] = useActionState<
 		MarketListState,
 		FormData
-	>(loadMoreMarkets, initialState);
+	>(updateMarketList, initialState);
+	const [status, setStatus] = useState<MarketFilterValue>(initialStatus);
+	const [sort, setSort] = useState<MarketSortValue>(initialSort);
+	const [keywordInput, setKeywordInput] = useState(initialKeyword);
+	const [appliedFilters, setAppliedFilters] = useState({
+		keyword: initialKeyword,
+		status: initialStatus,
+		sort: initialSort,
+	});
+	const debouncedKeyword = useDebounce(keywordInput.trim());
+	const isFirstUpdateRef = useRef(true);
+	const filters = (
+		<MarketFilters
+			keyword={keywordInput}
+			status={status}
+			sort={sort}
+			onKeywordChange={setKeywordInput}
+			onStatusChange={setStatus}
+			onSortChange={setSort}
+			isPending={pending}
+		/>
+	);
+
+	const submitFilters = useCallback(
+		(nextFilters: {
+			keyword: string;
+			status: MarketFilterValue;
+			sort: MarketSortValue;
+		}) => {
+			setAppliedFilters(nextFilters);
+			const formData = new FormData();
+			formData.set("mode", "replace");
+			formData.set("keyword", nextFilters.keyword);
+			formData.set("status", nextFilters.status);
+			formData.set("sort", nextFilters.sort);
+			formData.set("limit", limit.toString());
+			formAction(formData);
+		},
+		[formAction, limit],
+	);
+
+	useEffect(() => {
+		if (isFirstUpdateRef.current) {
+			isFirstUpdateRef.current = false;
+			return;
+		}
+
+		submitFilters({ keyword: debouncedKeyword, status, sort });
+	}, [debouncedKeyword, sort, status, submitFilters]);
 
 	const hasItems = state.items.length > 0;
+	const loadMoreDisabled = pending || !state.nextCursor;
 
 	if (!hasItems) {
 		return (
-			<div {...stylex.props(styles.emptyState)}>
-				<Store size={48} {...stylex.props(styles.emptyIcon)} />
-				<p {...stylex.props(styles.emptyText)}>조건에 맞는 상품이 없습니다</p>
-			</div>
+			<>
+				{filters}
+				<div {...stylex.props(styles.emptyState)}>
+					<Store size={48} {...stylex.props(styles.emptyIcon)} />
+					<p {...stylex.props(styles.emptyText)}>조건에 맞는 상품이 없습니다</p>
+					{state.error && <p {...stylex.props(styles.errorText)}>{state.error}</p>}
+				</div>
+			</>
 		);
 	}
 
 	return (
 		<>
+			{filters}
 			<div {...stylex.props(styles.grid)}>
 				{state.items.map((item) => {
 					const statusKey = (item.status as MarketStatus) ?? "available";
@@ -240,19 +295,20 @@ export default function ProductGridClient({
 			{state.hasMore && (
 				<div {...stylex.props(styles.loadMoreWrap)}>
 					<form action={formAction}>
-						<input type="hidden" name="keyword" value={keyword} />
-						<input type="hidden" name="status" value={status} />
-						<input type="hidden" name="sort" value={sort} />
-						<input type="hidden" name="limit" value={limit} />
-						<input type="hidden" name="cursor" value={state.nextCursor ?? ""} />
-						<button
-							type="submit"
-							disabled={pending || !state.nextCursor}
-							{...stylex.props(
-								styles.loadMoreButton,
-								(pending || !state.nextCursor) && styles.loadMoreDisabled,
-							)}
-						>
+						<input type="hidden" name="mode" value="append" />
+						<input type="hidden" name="keyword" value={appliedFilters.keyword} />
+						<input type="hidden" name="status" value={appliedFilters.status} />
+					<input type="hidden" name="sort" value={appliedFilters.sort} />
+					<input type="hidden" name="limit" value={limit} />
+					<input type="hidden" name="cursor" value={state.nextCursor ?? ""} />
+					<button
+						type="submit"
+						disabled={loadMoreDisabled}
+						{...stylex.props(
+							styles.loadMoreButton,
+							loadMoreDisabled && styles.loadMoreDisabled,
+						)}
+					>
 							{pending ? "불러오는 중..." : "더 보기"}
 						</button>
 					</form>
