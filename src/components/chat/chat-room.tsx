@@ -15,8 +15,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { toast } from "sonner";
-
 import {
 	colors,
 	fontSize,
@@ -27,13 +27,12 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { confirmAction } from "@/components/ui";
-import {
-	preCacheUsers,
-	useChatPresence,
-	useChatRealtime,
-} from "@/lib/hooks/use-chat-realtime";
+import type { ChatMessageView } from "@/lib/hooks/use-chat-messages";
+import { useChatMessages } from "@/lib/hooks/use-chat-messages";
+import { preCacheUsers, useChatPresence } from "@/lib/hooks/use-chat-realtime";
 import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
 import { api } from "@/utils/eden";
+import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
 import { openChatRoomMenu } from "./open-chat-room-menu";
 
@@ -181,11 +180,16 @@ const styles = stylex.create({
 	messages: {
 		flex: 1,
 		minHeight: 0,
-		overflowY: "auto",
+		display: "flex",
 		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
 		paddingLeft: spacing.xs,
 		paddingRight: spacing.xs,
+	},
+	messagesList: {
+		flex: 1,
+		minHeight: 0,
+		width: "100%",
 	},
 	dateGroup: {
 		textAlign: "center",
@@ -372,6 +376,7 @@ interface ChatRoomProps {
 }
 
 const MAX_RETRY_COUNT = 3;
+const NEW_MESSAGE_BADGE_HEIGHT = 32;
 
 export default function ChatRoom({
 	roomId,
@@ -382,14 +387,33 @@ export default function ChatRoom({
 	currentUserId,
 }: ChatRoomProps) {
 	const router = useRouter();
-	const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-	const [pendingMessages, setPendingMessages] = useState<
-		ChatMessageWithStatus[]
-	>([]);
 	const [inputValue, setInputValue] = useState("");
 	const [isSending, setIsSending] = useState(false);
 	const [isLeaving, setIsLeaving] = useState(false);
-	const messagesRef = useRef<HTMLDivElement | null>(null);
+	const messagesRef = useRef<VirtuosoHandle | null>(null);
+
+	const {
+		items: messages,
+		hasPrev,
+		isFetchingPrev,
+		fetchPrev,
+		isAtBottom,
+		setIsAtBottom,
+		newMessageCount,
+		resetNewMessageCount,
+		appendLocal,
+		markAsSent,
+		markAsFailed,
+		removePending,
+	} = useChatMessages({
+		roomId,
+		initialPage: {
+			messages: initialMessages,
+			nextCursor: null,
+			hasMore: true,
+		},
+		currentUserId,
+	});
 
 	const currentUser = members.find((m) => m.id === currentUserId) ?? members[0];
 
@@ -397,43 +421,11 @@ export default function ChatRoom({
 	const partner = members.find((m) => m.id !== currentUserId) ?? members[0];
 	const displayName = roomName || partner?.nickname || "채팅방";
 
-	const scrollToBottom = useCallback(() => {
-		const el = messagesRef.current;
-		if (!el) return;
-		requestAnimationFrame(() => {
-			el.scrollTop = el.scrollHeight;
-		});
-	}, []);
-
 	/** 메시지 전송 함수 (재시도 포함) */
 	const sendMessage = useCallback(
-		async (content: string, existingTempId?: string, retryCount = 0) => {
-			const tempId = existingTempId || `temp-${Date.now()}`;
-			const clientId = existingTempId ? undefined : crypto.randomUUID();
-
-			// 새 메시지인 경우 optimistic 추가
-			if (!existingTempId) {
-				const optimisticMessage: ChatMessageWithStatus = {
-					id: tempId,
-					content,
-					createdAt: new Date().toISOString(),
-					user: {
-						id: currentUser.id,
-						nickname: currentUser.nickname,
-						profileImage: currentUser.profileImage,
-					},
-					status: "sending",
-					retryCount: 0,
-					clientId,
-				};
-				setPendingMessages((prev) => [...prev, optimisticMessage]);
-			} else {
-				setPendingMessages((prev) =>
-					prev.map((msg) =>
-						msg.id === tempId ? { ...msg, status: "sending", retryCount } : msg,
-					),
-				);
-			}
+		async (content: string, clientId?: string, retryCount = 0) => {
+			const isRetry = Boolean(clientId);
+			const targetClientId = clientId ?? appendLocal(content).clientId;
 
 			try {
 				const { data, error } = await api.chat
@@ -449,30 +441,20 @@ export default function ChatRoom({
 					!("id" in messageData)
 				) {
 					toast.error("메시지 전송 실패");
+					markAsFailed(targetClientId);
 					return;
 				}
 
-				setPendingMessages((prev) =>
-					prev.filter((msg) => msg.id !== tempId && msg.clientId !== clientId),
-				);
-				setMessages((prev) => {
-					const exists = prev.some((msg) => msg.id === messageData.id);
-					if (exists) return prev;
-					return [...prev, messageData];
-				});
+				markAsSent(targetClientId, messageData);
 			} catch (err) {
 				console.error("Message send error:", err);
-				setPendingMessages((prev) =>
-					prev.map((msg) =>
-						msg.id === tempId ? { ...msg, status: "failed", retryCount } : msg,
-					),
-				);
-				if (retryCount === 0) {
+				markAsFailed(targetClientId);
+				if (!isRetry) {
 					toast.error("메시지 전송에 실패했습니다. 다시 시도해주세요.");
 				}
 			}
 		},
-		[roomId, currentUser],
+		[roomId, appendLocal, markAsFailed, markAsSent],
 	);
 
 	const handleSend = () => {
@@ -484,27 +466,14 @@ export default function ChatRoom({
 		sendMessage(content).finally(() => setIsSending(false));
 	};
 
-	/** 실패한 메시지 재시도 */
-	const handleRetry = useCallback(
-		(message: ChatMessageWithStatus) => {
-			const newRetryCount = (message.retryCount ?? 0) + 1;
-
-			if (newRetryCount > MAX_RETRY_COUNT) {
-				toast.error("최대 재시도 횟수를 초과했습니다. 메시지를 삭제해주세요.");
-				return;
-			}
-
-			toast.info(`재시도 중... (${newRetryCount}/${MAX_RETRY_COUNT})`);
-			sendMessage(message.content, message.id, newRetryCount);
-		},
-		[sendMessage],
-	);
-
 	/** 실패한 메시지 삭제 */
-	const handleDeleteFailed = useCallback((messageId: string) => {
-		setPendingMessages((prev) => prev.filter((msg) => msg.id !== messageId));
-		toast.success("메시지가 삭제되었습니다.");
-	}, []);
+	const handleDeleteFailed = useCallback(
+		(clientId: string) => {
+			removePending(clientId);
+			toast.success("메시지가 삭제되었습니다.");
+		},
+		[removePending],
+	);
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" && !e.shiftKey) {
@@ -512,20 +481,6 @@ export default function ChatRoom({
 			handleSend();
 		}
 	};
-
-	const handleIncomingMessage = useCallback(
-		(message: ChatMessage) => {
-			// 내 메시지 에코는 낙관/응답 흐름에서 처리하므로 무시
-			if (message.user.id === currentUser.id) return;
-
-			setMessages((prev) => {
-				const exists = prev.some((m) => m.id === message.id);
-				if (exists) return prev;
-				return [...prev, message];
-			});
-		},
-		[currentUser.id],
-	);
 
 	/** 메뉴 열기 */
 	const handleOpenMenu = async () => {
@@ -572,8 +527,6 @@ export default function ChatRoom({
 		profileImage: currentUser?.profileImage ?? null,
 	});
 
-	useChatRealtime(roomId, handleIncomingMessage);
-
 	// 채팅방 멤버를 캐시에 미리 등록 (realtime 메시지 수신 시 추가 fetch 방지)
 	useEffect(() => {
 		preCacheUsers(
@@ -584,19 +537,6 @@ export default function ChatRoom({
 			})),
 		);
 	}, [members]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: message change by realtime api
-	useEffect(() => {
-		scrollToBottom();
-	}, [scrollToBottom, pendingMessages.length, messages.length]);
-
-	const renderedMessages = [
-		...messages.map<ChatMessageWithStatus>((msg) => ({
-			...msg,
-			status: "sent",
-		})),
-		...pendingMessages,
-	];
 
 	return (
 		<div data-chat-container {...stylex.props(styles.container)}>
@@ -657,90 +597,100 @@ export default function ChatRoom({
 				)}
 			</div>
 
-			<div
-				ref={messagesRef}
-				data-chat-messages
-				{...stylex.props(styles.messages)}
-			>
-				<div {...stylex.props(styles.dateGroup)}>
-					<span {...stylex.props(styles.dateBadge)}>오늘</span>
-				</div>
-				{renderedMessages.map((message) => {
-					const isMine = message.user.id === currentUserId;
-					const isFailed = message.status === "failed";
-					const isSendingMsg = message.status === "sending";
-
-					return (
-						<div key={message.id}>
-							<div
-								{...stylex.props(
-									styles.messageRow,
-									isMine ? styles.messageRowMine : styles.messageRowTheirs,
-									isFailed && styles.failedMessageContainer,
-								)}
-							>
-								<div
-									{...stylex.props(
-										styles.messageBubble,
-										isMine ? styles.bubbleMine : styles.bubbleTheirs,
-										isFailed && styles.failedBubble,
-									)}
-								>
-									{message.content}
-								</div>
+			<div data-chat-messages {...stylex.props(styles.messages)}>
+				<div {...stylex.props(styles.messagesList)}>
+					<ChatMessageList
+						ref={messagesRef}
+						messages={messages}
+						onStartReached={fetchPrev}
+						hasPrev={hasPrev}
+						isFetchingPrev={isFetchingPrev}
+						followOutput={(atBottom) => (atBottom ? "smooth" : false)}
+						onAtBottomChange={(atBottom) => {
+							setIsAtBottom(atBottom);
+							if (atBottom) {
+								resetNewMessageCount();
+							}
+						}}
+						renderHeader={() => (
+							<div {...stylex.props(styles.dateGroup)}>
+								<span {...stylex.props(styles.dateBadge)}>오늘</span>
 							</div>
+						)}
+						renderMessage={(message) => {
+							const isMine = message.user.id === currentUserId;
+							const isFailed = message.status === "failed";
+							const isSendingMsg = message.status === "sending";
 
-							{/* 전송 중 표시 */}
-							{isSendingMsg && isMine && (
-								<div
-									{...stylex.props(styles.messageTime, styles.messageTimeMine)}
-								>
-									<span {...stylex.props(styles.sendingIndicator)}>
-										전송 중...
-									</span>
-								</div>
-							)}
-
-							{/* 실패 메시지 액션 */}
-							{isFailed && isMine && (
-								<div {...stylex.props(styles.failedActions)}>
-									<span {...stylex.props(styles.failedText)}>
-										<AlertCircle size={12} />
-										전송 실패
-									</span>
-									<button
-										type="button"
-										onClick={() => handleRetry(message)}
-										{...stylex.props(styles.retryButton)}
+							return (
+								<div key={message.id}>
+									<div
+										{...stylex.props(
+											styles.messageRow,
+											isMine ? styles.messageRowMine : styles.messageRowTheirs,
+											isFailed && styles.failedMessageContainer,
+										)}
 									>
-										<RefreshCw size={12} />
-										재시도
-									</button>
-									<button
-										type="button"
-										onClick={() => handleDeleteFailed(message.id)}
-										{...stylex.props(styles.retryButton)}
-									>
-										<X size={12} />
-										삭제
-									</button>
-								</div>
-							)}
+										<div
+											{...stylex.props(
+												styles.messageBubble,
+												isMine ? styles.bubbleMine : styles.bubbleTheirs,
+												isFailed && styles.failedBubble,
+											)}
+										>
+											{message.content}
+										</div>
+									</div>
 
-							{/* 일반 메시지 시간 표시 */}
-							{!isSendingMsg && !isFailed && (
-								<div
-									{...stylex.props(
-										styles.messageTime,
-										isMine ? styles.messageTimeMine : styles.messageTimeTheirs,
+									{isSendingMsg && isMine && (
+										<div
+											{...stylex.props(
+												styles.messageTime,
+												styles.messageTimeMine,
+											)}
+										>
+											<span {...stylex.props(styles.sendingIndicator)}>
+												전송 중...
+											</span>
+										</div>
 									)}
-								>
-									{dayjs(message.createdAt).format("HH:mm")}
+
+									{isFailed && isMine && (
+										<div {...stylex.props(styles.failedActions)}>
+											<span {...stylex.props(styles.failedText)}>
+												<AlertCircle size={12} />
+												전송 실패
+											</span>
+											<button
+												type="button"
+												onClick={() =>
+													handleDeleteFailed(message.clientId ?? "")
+												}
+												{...stylex.props(styles.retryButton)}
+											>
+												<X size={12} />
+												삭제
+											</button>
+										</div>
+									)}
+
+									{!isSendingMsg && !isFailed && (
+										<div
+											{...stylex.props(
+												styles.messageTime,
+												isMine
+													? styles.messageTimeMine
+													: styles.messageTimeTheirs,
+											)}
+										>
+											{dayjs(message.createdAt).format("HH:mm")}
+										</div>
+									)}
 								</div>
-							)}
-						</div>
-					);
-				})}
+							);
+						}}
+					/>
+				</div>
 			</div>
 
 			<div data-chat-input {...stylex.props(styles.inputArea)}>
