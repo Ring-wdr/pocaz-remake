@@ -170,6 +170,12 @@ export function ChatListItem({ room }: ChatListItemProps) {
 	const isTrading = !!room.market;
 	const isLoading = isPending || isNavigating;
 
+	const formatLastMessage = (content: string | null | undefined) => {
+		if (!content) return "대화를 시작해보세요";
+		if (content.startsWith("image:")) return "[사진]";
+		return content;
+	};
+
 	const handleClick = () => {
 		if (isLoading) return;
 		setIsNavigating(true);
@@ -221,7 +227,7 @@ export function ChatListItem({ room }: ChatListItemProps) {
 				</div>
 				<div {...stylex.props(styles.messageWrap)}>
 					<p {...stylex.props(styles.message)}>
-						{room.lastMessage?.content || "대화를 시작해보세요"}
+						{formatLastMessage(room.lastMessage?.content)}
 					</p>
 				</div>
 			</div>

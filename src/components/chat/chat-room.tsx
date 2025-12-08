@@ -39,6 +39,8 @@ import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
 import { openChatRoomMenu } from "./open-chat-room-menu";
 
+const IMAGE_PREFIX = "image:";
+
 const styles = stylex.create({
 	container: {
 		display: "flex",
@@ -383,6 +385,17 @@ const styles = stylex.create({
 		gap: spacing.xs,
 		alignItems: "center",
 	},
+	imagePreview: {
+		maxWidth: "240px",
+		maxHeight: "240px",
+		borderRadius: radius.md,
+		objectFit: "cover",
+		display: "block",
+		backgroundColor: colors.bgTertiary,
+	},
+	hiddenInput: {
+		display: "none",
+	},
 });
 
 interface ChatRoomProps {
@@ -408,6 +421,7 @@ export default function ChatRoom({
 	const [isLeaving, setIsLeaving] = useState(false);
 	const messagesRef = useRef<VirtuosoHandle | null>(null);
 	const newMessageBadgeRef = useRef<HTMLButtonElement | null>(null);
+	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	const {
 		items: messages,
@@ -485,6 +499,10 @@ export default function ChatRoom({
 		return () => window.removeEventListener("keydown", onKeyDown);
 	}, [scrollToBottom]);
 
+	const handlePickImage = () => {
+		fileInputRef.current?.click();
+	};
+
 	/** 메시지 전송 함수 (재시도 포함) */
 	const sendMessage = useCallback(
 		async (content: string, clientId?: string) => {
@@ -521,6 +539,66 @@ export default function ChatRoom({
 		setInputValue("");
 		setIsSending(true);
 		sendMessage(content).finally(() => setIsSending(false));
+	};
+
+	const uploadImageAndSend = async (file: File) => {
+		setIsSending(true);
+		try {
+			const { data, error } = await api.storage.upload.file.post({
+				bucket: "images",
+				file,
+			});
+
+			if (error || !data || !("uploaded" in data) || !data.uploaded?.[0]) {
+				toast.error("이미지 업로드에 실패했어요.");
+				return;
+			}
+
+			const imageUrl = data.uploaded[0].publicUrl;
+			const content = `${IMAGE_PREFIX}${imageUrl}`;
+			const { clientId } = appendLocal(content);
+
+			const { data: messageData, error: messageError } = await api.chat
+				.rooms({ id: roomId })
+				.messages.post({ content });
+
+			if (messageError || !messageData) {
+				toast.error("이미지 전송에 실패했어요.");
+				markAsFailed(clientId);
+				return;
+			}
+
+			markAsSent(clientId, messageData);
+		} catch (err) {
+			console.error("Image send error:", err);
+			toast.error("이미지 전송에 실패했어요.");
+		} finally {
+			setIsSending(false);
+			if (fileInputRef.current) {
+				fileInputRef.current.value = "";
+			}
+		}
+	};
+
+	const handleFileChange = async (
+		event: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		if (!file.type.startsWith("image/")) {
+			toast.error("이미지 파일만 업로드할 수 있어요.");
+			event.target.value = "";
+			return;
+		}
+
+		if (file.size > 20 * 1024 * 1024) {
+			toast.error("최대 20MB까지 업로드할 수 있어요.");
+			event.target.value = "";
+			return;
+		}
+
+		await uploadImageAndSend(file);
 	};
 
 	/** 실패한 메시지 삭제 */
@@ -673,6 +751,10 @@ export default function ChatRoom({
 							const isMine = message.user.id === currentUserId;
 							const isFailed = message.status === "failed";
 							const isSendingMsg = message.status === "sending";
+							const isImage = message.content.startsWith(IMAGE_PREFIX);
+							const imageUrl = isImage
+								? message.content.replace(IMAGE_PREFIX, "")
+								: null;
 
 							return (
 								<div key={message.id}>
@@ -690,7 +772,15 @@ export default function ChatRoom({
 												isFailed && styles.failedBubble,
 											)}
 										>
-											{message.content}
+											{isImage && imageUrl ? (
+												<img
+													src={imageUrl}
+													alt="전송한 이미지"
+													{...stylex.props(styles.imagePreview)}
+												/>
+											) : (
+												message.content
+											)}
 										</div>
 									</div>
 
@@ -759,7 +849,18 @@ export default function ChatRoom({
 			</div>
 
 			<div data-chat-input {...stylex.props(styles.inputArea)}>
-				<button type="button" {...stylex.props(styles.attachButton)}>
+				<button
+					type="button"
+					onClick={handlePickImage}
+					{...stylex.props(styles.attachButton)}
+				>
+					<input
+						ref={fileInputRef}
+						type="file"
+						accept="image/*"
+						onChange={handleFileChange}
+						{...stylex.props(styles.hiddenInput)}
+					/>
 					<Plus size={20} />
 				</button>
 				<div {...stylex.props(styles.inputWrap)}>
