@@ -38,6 +38,7 @@ const styles = stylex.create({
 		borderRightWidth: 0,
 		width: "100%",
 		textAlign: "left",
+		position: "relative",
 	},
 	itemLoading: {
 		opacity: 0.7,
@@ -108,6 +109,7 @@ const styles = stylex.create({
 	time: {
 		fontSize: fontSize.sm,
 		color: colors.textPlaceholder,
+		flexShrink: 0,
 	},
 	messageWrap: {
 		display: "flex",
@@ -123,13 +125,10 @@ const styles = stylex.create({
 		textOverflow: "ellipsis",
 		whiteSpace: "nowrap",
 	},
-	loadingOverlay: {
+	rightInfo: {
 		display: "flex",
 		alignItems: "center",
-		justifyContent: "center",
-		width: "24px",
-		height: "24px",
-		flexShrink: 0,
+		gap: spacing.xxs,
 	},
 	spinner: {
 		animationName: spinKeyframes,
@@ -169,6 +168,12 @@ export function ChatListItem({ room }: ChatListItemProps) {
 	const roomName = room.name || displayMember?.nickname || "채팅방";
 	const isTrading = !!room.market;
 	const isLoading = isPending || isNavigating;
+
+	const formatLastMessage = (content: string | null | undefined) => {
+		if (!content) return "대화를 시작해보세요";
+		if (content.startsWith("image:")) return "[사진]";
+		return content;
+	};
 
 	const handleClick = () => {
 		if (isLoading) return;
@@ -213,23 +218,23 @@ export function ChatListItem({ room }: ChatListItemProps) {
 							</span>
 						)}
 					</div>
-					{room.lastMessage && (
-						<span {...stylex.props(styles.time)}>
-							{formatTime(room.lastMessage.createdAt)}
-						</span>
-					)}
+					<div {...stylex.props(styles.rightInfo)}>
+						{room.lastMessage && (
+							<span {...stylex.props(styles.time)}>
+								{formatTime(room.lastMessage.createdAt)}
+							</span>
+						)}
+						{isLoading && (
+							<Loader2 size={16} {...stylex.props(styles.spinner)} />
+						)}
+					</div>
 				</div>
 				<div {...stylex.props(styles.messageWrap)}>
 					<p {...stylex.props(styles.message)}>
-						{room.lastMessage?.content || "대화를 시작해보세요"}
+						{formatLastMessage(room.lastMessage?.content)}
 					</p>
 				</div>
 			</div>
-			{isLoading && (
-				<div {...stylex.props(styles.loadingOverlay)}>
-					<Loader2 size={20} {...stylex.props(styles.spinner)} />
-				</div>
-			)}
 		</button>
 	);
 }

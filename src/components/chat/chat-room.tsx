@@ -2,21 +2,13 @@
 
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
-import {
-	AlertCircle,
-	ArrowLeft,
-	MoreVertical,
-	Plus,
-	RefreshCw,
-	Send,
-	X,
-} from "lucide-react";
+import { AlertCircle, ArrowLeft, MoreVertical, Send, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { VirtuosoHandle } from "react-virtuoso";
 import { toast } from "sonner";
-
 import {
 	colors,
 	fontSize,
@@ -27,22 +19,22 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { confirmAction } from "@/components/ui";
-import {
-	preCacheUsers,
-	useChatPresence,
-	useChatRealtime,
-} from "@/lib/hooks/use-chat-realtime";
-import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
+import { useCallbackRef } from "@/hooks/use-callback-ref";
+import { useEventListener } from "@/hooks/use-event-listener";
+import { useChatMessages } from "@/lib/hooks/use-chat-messages";
+import { preCacheUsers, useChatPresence } from "@/lib/hooks/use-chat-realtime";
+import type {
+	ChatMarketInfo,
+	ChatMember,
+	PaginatedMessages,
+} from "@/types/entities";
 import { api } from "@/utils/eden";
+import { ChatImageUploadButton } from "./chat-image-upload-button";
+import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
 import { openChatRoomMenu } from "./open-chat-room-menu";
 
-/** 실패한 메시지 추적을 위한 확장 타입 */
-interface ChatMessageWithStatus extends ChatMessage {
-	status?: "sending" | "sent" | "failed";
-	retryCount?: number;
-	clientId?: string;
-}
+const IMAGE_PREFIX = "image:";
 
 const styles = stylex.create({
 	container: {
@@ -181,11 +173,17 @@ const styles = stylex.create({
 	messages: {
 		flex: 1,
 		minHeight: 0,
-		overflowY: "auto",
+		display: "flex",
 		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
 		paddingLeft: spacing.xs,
 		paddingRight: spacing.xs,
+		position: "relative",
+	},
+	messagesList: {
+		flex: 1,
+		minHeight: 0,
+		width: "100%",
 	},
 	dateGroup: {
 		textAlign: "center",
@@ -221,6 +219,9 @@ const styles = stylex.create({
 		borderRadius: "16px",
 		fontSize: fontSize.md,
 		lineHeight: lineHeight.normal,
+		whiteSpace: "pre-wrap",
+		wordBreak: "break-word",
+		overflowWrap: "anywhere",
 	},
 	bubbleMine: {
 		backgroundColor: colors.bgInverse,
@@ -262,19 +263,6 @@ const styles = stylex.create({
 		borderTopStyle: "solid",
 		borderTopColor: colors.borderPrimary,
 		zIndex: 10,
-	},
-	attachButton: {
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-		width: size.touchTarget,
-		height: size.touchTarget,
-		backgroundColor: colors.bgTertiary,
-		borderRadius: radius.lg,
-		borderWidth: 0,
-		cursor: "pointer",
-		color: colors.textMuted,
-		fontSize: "20px",
 	},
 	inputWrap: {
 		flex: 1,
@@ -360,6 +348,38 @@ const styles = stylex.create({
 		color: colors.textPlaceholder,
 		fontStyle: "italic",
 	},
+	newMessageBadge: {
+		position: "absolute",
+		left: "50%",
+		transform: "translateX(-50%)",
+		bottom: spacing.sm,
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
+		borderRadius: radius.sm,
+		borderWidth: 1,
+		borderStyle: "solid",
+		borderColor: colors.borderPrimary,
+		backgroundColor: colors.bgPrimary,
+		color: colors.textPrimary,
+		boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+		fontWeight: fontWeight.semibold,
+		cursor: "pointer",
+		display: "flex",
+		gap: spacing.xs,
+		alignItems: "center",
+	},
+	imagePreview: {
+		maxWidth: "240px",
+		maxHeight: "240px",
+		minHeight: "160px",
+		width: "100%",
+		borderRadius: radius.md,
+		objectFit: "cover",
+		display: "block",
+		backgroundColor: colors.bgTertiary,
+	},
 });
 
 interface ChatRoomProps {
@@ -367,29 +387,53 @@ interface ChatRoomProps {
 	roomName: string | null;
 	members: ChatMember[];
 	market: ChatMarketInfo | null;
-	initialMessages: ChatMessage[];
+	initialPage: PaginatedMessages;
 	currentUserId: string;
 }
-
-const MAX_RETRY_COUNT = 3;
 
 export default function ChatRoom({
 	roomId,
 	roomName,
 	members,
 	market,
-	initialMessages,
+	initialPage,
 	currentUserId,
 }: ChatRoomProps) {
 	const router = useRouter();
-	const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-	const [pendingMessages, setPendingMessages] = useState<
-		ChatMessageWithStatus[]
-	>([]);
 	const [inputValue, setInputValue] = useState("");
 	const [isSending, setIsSending] = useState(false);
 	const [isLeaving, setIsLeaving] = useState(false);
-	const messagesRef = useRef<HTMLDivElement | null>(null);
+	const messagesRef = useRef<VirtuosoHandle | null>(null);
+	const newMessageBadgeRef = useRef<HTMLButtonElement | null>(null);
+
+	const {
+		items: messages,
+		hasPrev,
+		isFetchingPrev,
+		fetchPrev,
+		isAtBottom,
+		setIsAtBottom,
+		newMessageCount,
+		resetNewMessageCount,
+		appendLocal,
+		markAsSent,
+		markAsFailed,
+		removePending,
+	} = useChatMessages({
+		roomId,
+		initialPage,
+		currentUserId,
+	});
+	const resetNewMessageCountRef = useCallbackRef(resetNewMessageCount);
+
+	useEffect(() => {
+		if (isAtBottom && messagesRef.current) {
+			messagesRef.current.scrollToIndex({
+				index: Math.max(messages.length - 1, 0),
+				behavior: "auto",
+			});
+		}
+	}, [messages.length, isAtBottom]);
 
 	const currentUser = members.find((m) => m.id === currentUserId) ?? members[0];
 
@@ -397,82 +441,69 @@ export default function ChatRoom({
 	const partner = members.find((m) => m.id !== currentUserId) ?? members[0];
 	const displayName = roomName || partner?.nickname || "채팅방";
 
-	const scrollToBottom = useCallback(() => {
-		const el = messagesRef.current;
-		if (!el) return;
-		requestAnimationFrame(() => {
-			el.scrollTop = el.scrollHeight;
-		});
-	}, []);
+	const scrollToBottom = useCallback(
+		(behavior: "auto" | "smooth" = "smooth") => {
+			if (!messagesRef.current) return;
+			messagesRef.current.scrollToIndex({
+				index: Math.max(messages.length - 1, 0),
+				behavior,
+			});
+			resetNewMessageCountRef();
+		},
+		[messages.length, resetNewMessageCountRef],
+	);
+
+	useEventListener("keydown", (event) => {
+		const target = event.target;
+		if (
+			!(target instanceof HTMLElement) ||
+			target.tagName === "INPUT" ||
+			target.tagName === "TEXTAREA" ||
+			target.isContentEditable
+		) {
+			return;
+		}
+
+		if (event.altKey && event.key === "ArrowDown") {
+			event.preventDefault();
+			scrollToBottom("smooth");
+		}
+
+		if (event.altKey && event.key.toLowerCase() === "n") {
+			if (newMessageBadgeRef.current) {
+				event.preventDefault();
+				newMessageBadgeRef.current.focus();
+			}
+		}
+	});
 
 	/** 메시지 전송 함수 (재시도 포함) */
 	const sendMessage = useCallback(
-		async (content: string, existingTempId?: string, retryCount = 0) => {
-			const tempId = existingTempId || `temp-${Date.now()}`;
-			const clientId = existingTempId ? undefined : crypto.randomUUID();
-
-			// 새 메시지인 경우 optimistic 추가
-			if (!existingTempId) {
-				const optimisticMessage: ChatMessageWithStatus = {
-					id: tempId,
-					content,
-					createdAt: new Date().toISOString(),
-					user: {
-						id: currentUser.id,
-						nickname: currentUser.nickname,
-						profileImage: currentUser.profileImage,
-					},
-					status: "sending",
-					retryCount: 0,
-					clientId,
-				};
-				setPendingMessages((prev) => [...prev, optimisticMessage]);
-			} else {
-				setPendingMessages((prev) =>
-					prev.map((msg) =>
-						msg.id === tempId ? { ...msg, status: "sending", retryCount } : msg,
-					),
-				);
-			}
+		async (content: string, clientId?: string) => {
+			const isRetry = Boolean(clientId);
+			const targetClientId = clientId ?? appendLocal(content).clientId;
 
 			try {
 				const { data, error } = await api.chat
 					.rooms({ id: roomId })
 					.messages.post({ content });
 
-				const messageData = data as ChatMessage | undefined;
-
-				if (
-					error ||
-					!messageData ||
-					typeof messageData !== "object" ||
-					!("id" in messageData)
-				) {
+				if (error || !data || typeof data !== "object" || !data.id) {
 					toast.error("메시지 전송 실패");
+					markAsFailed(targetClientId);
 					return;
 				}
 
-				setPendingMessages((prev) =>
-					prev.filter((msg) => msg.id !== tempId && msg.clientId !== clientId),
-				);
-				setMessages((prev) => {
-					const exists = prev.some((msg) => msg.id === messageData.id);
-					if (exists) return prev;
-					return [...prev, messageData];
-				});
+				markAsSent(targetClientId, data);
 			} catch (err) {
 				console.error("Message send error:", err);
-				setPendingMessages((prev) =>
-					prev.map((msg) =>
-						msg.id === tempId ? { ...msg, status: "failed", retryCount } : msg,
-					),
-				);
-				if (retryCount === 0) {
+				markAsFailed(targetClientId);
+				if (!isRetry) {
 					toast.error("메시지 전송에 실패했습니다. 다시 시도해주세요.");
 				}
 			}
 		},
-		[roomId, currentUser],
+		[roomId, appendLocal, markAsFailed, markAsSent],
 	);
 
 	const handleSend = () => {
@@ -484,27 +515,42 @@ export default function ChatRoom({
 		sendMessage(content).finally(() => setIsSending(false));
 	};
 
-	/** 실패한 메시지 재시도 */
-	const handleRetry = useCallback(
-		(message: ChatMessageWithStatus) => {
-			const newRetryCount = (message.retryCount ?? 0) + 1;
+	const sendImageMessage = useCallback(
+		async (imageUrl: string) => {
+			setIsSending(true);
+			try {
+				const content = `${IMAGE_PREFIX}${imageUrl}`;
+				const { clientId } = appendLocal(content);
 
-			if (newRetryCount > MAX_RETRY_COUNT) {
-				toast.error("최대 재시도 횟수를 초과했습니다. 메시지를 삭제해주세요.");
-				return;
+				const { data: messageData, error: messageError } = await api.chat
+					.rooms({ id: roomId })
+					.messages.post({ content });
+
+				if (messageError || !messageData) {
+					toast.error("이미지 전송에 실패했어요.");
+					markAsFailed(clientId);
+					return;
+				}
+
+				markAsSent(clientId, messageData);
+			} catch (err) {
+				console.error("Image send error:", err);
+				toast.error("이미지 전송에 실패했어요.");
+			} finally {
+				setIsSending(false);
 			}
-
-			toast.info(`재시도 중... (${newRetryCount}/${MAX_RETRY_COUNT})`);
-			sendMessage(message.content, message.id, newRetryCount);
 		},
-		[sendMessage],
+		[appendLocal, markAsFailed, markAsSent, roomId],
 	);
 
 	/** 실패한 메시지 삭제 */
-	const handleDeleteFailed = useCallback((messageId: string) => {
-		setPendingMessages((prev) => prev.filter((msg) => msg.id !== messageId));
-		toast.success("메시지가 삭제되었습니다.");
-	}, []);
+	const handleDeleteFailed = useCallback(
+		(clientId: string) => {
+			removePending(clientId);
+			toast.success("메시지가 삭제되었습니다.");
+		},
+		[removePending],
+	);
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" && !e.shiftKey) {
@@ -512,20 +558,6 @@ export default function ChatRoom({
 			handleSend();
 		}
 	};
-
-	const handleIncomingMessage = useCallback(
-		(message: ChatMessage) => {
-			// 내 메시지 에코는 낙관/응답 흐름에서 처리하므로 무시
-			if (message.user.id === currentUser.id) return;
-
-			setMessages((prev) => {
-				const exists = prev.some((m) => m.id === message.id);
-				if (exists) return prev;
-				return [...prev, message];
-			});
-		},
-		[currentUser.id],
-	);
 
 	/** 메뉴 열기 */
 	const handleOpenMenu = async () => {
@@ -572,8 +604,6 @@ export default function ChatRoom({
 		profileImage: currentUser?.profileImage ?? null,
 	});
 
-	useChatRealtime(roomId, handleIncomingMessage);
-
 	// 채팅방 멤버를 캐시에 미리 등록 (realtime 메시지 수신 시 추가 fetch 방지)
 	useEffect(() => {
 		preCacheUsers(
@@ -584,19 +614,6 @@ export default function ChatRoom({
 			})),
 		);
 	}, [members]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: message change by realtime api
-	useEffect(() => {
-		scrollToBottom();
-	}, [scrollToBottom, pendingMessages.length, messages.length]);
-
-	const renderedMessages = [
-		...messages.map<ChatMessageWithStatus>((msg) => ({
-			...msg,
-			status: "sent",
-		})),
-		...pendingMessages,
-	];
 
 	return (
 		<div data-chat-container {...stylex.props(styles.container)}>
@@ -657,96 +674,127 @@ export default function ChatRoom({
 				)}
 			</div>
 
-			<div
-				ref={messagesRef}
-				data-chat-messages
-				{...stylex.props(styles.messages)}
-			>
-				<div {...stylex.props(styles.dateGroup)}>
-					<span {...stylex.props(styles.dateBadge)}>오늘</span>
+			<div data-chat-messages {...stylex.props(styles.messages)}>
+				<div {...stylex.props(styles.messagesList)}>
+					<ChatMessageList
+						ref={messagesRef}
+						messages={messages}
+						onStartReached={fetchPrev}
+						hasPrev={hasPrev}
+						isFetchingPrev={isFetchingPrev}
+						followOutput={isAtBottom ? "smooth" : false}
+						onAtBottomChange={(atBottom) => {
+							setIsAtBottom(atBottom);
+							if (atBottom) {
+								resetNewMessageCount();
+							}
+						}}
+						renderMessage={(message) => {
+							const isMine = message.user.id === currentUserId;
+							const isFailed = message.status === "failed";
+							const isSendingMsg = message.status === "sending";
+							const isImage = message.content.startsWith(IMAGE_PREFIX);
+							const imageUrl = isImage
+								? message.content.replace(IMAGE_PREFIX, "")
+								: null;
+
+							return (
+								<div key={message.id}>
+									<div
+										{...stylex.props(
+											styles.messageRow,
+											isMine ? styles.messageRowMine : styles.messageRowTheirs,
+											isFailed && styles.failedMessageContainer,
+										)}
+									>
+										<div
+											{...stylex.props(
+												styles.messageBubble,
+												isMine ? styles.bubbleMine : styles.bubbleTheirs,
+												isFailed && styles.failedBubble,
+											)}
+										>
+											{isImage && imageUrl ? (
+												<img
+													src={imageUrl}
+													alt="전송한 이미지"
+													{...stylex.props(styles.imagePreview)}
+												/>
+											) : (
+												message.content
+											)}
+										</div>
+									</div>
+
+									{isSendingMsg && isMine && (
+										<div
+											{...stylex.props(
+												styles.messageTime,
+												styles.messageTimeMine,
+											)}
+										>
+											<span {...stylex.props(styles.sendingIndicator)}>
+												전송 중...
+											</span>
+										</div>
+									)}
+
+									{isFailed && isMine && (
+										<div {...stylex.props(styles.failedActions)}>
+											<span {...stylex.props(styles.failedText)}>
+												<AlertCircle size={12} />
+												전송 실패
+											</span>
+											<button
+												type="button"
+												onClick={() =>
+													handleDeleteFailed(message.clientId ?? "")
+												}
+												{...stylex.props(styles.retryButton)}
+											>
+												<X size={12} />
+												삭제
+											</button>
+										</div>
+									)}
+
+									{!isSendingMsg && !isFailed && (
+										<div
+											{...stylex.props(
+												styles.messageTime,
+												isMine
+													? styles.messageTimeMine
+													: styles.messageTimeTheirs,
+											)}
+										>
+											{dayjs(message.createdAt).format("HH:mm")}
+										</div>
+									)}
+								</div>
+							);
+						}}
+					/>
 				</div>
-				{renderedMessages.map((message) => {
-					const isMine = message.user.id === currentUserId;
-					const isFailed = message.status === "failed";
-					const isSendingMsg = message.status === "sending";
 
-					return (
-						<div key={message.id}>
-							<div
-								{...stylex.props(
-									styles.messageRow,
-									isMine ? styles.messageRowMine : styles.messageRowTheirs,
-									isFailed && styles.failedMessageContainer,
-								)}
-							>
-								<div
-									{...stylex.props(
-										styles.messageBubble,
-										isMine ? styles.bubbleMine : styles.bubbleTheirs,
-										isFailed && styles.failedBubble,
-									)}
-								>
-									{message.content}
-								</div>
-							</div>
-
-							{/* 전송 중 표시 */}
-							{isSendingMsg && isMine && (
-								<div
-									{...stylex.props(styles.messageTime, styles.messageTimeMine)}
-								>
-									<span {...stylex.props(styles.sendingIndicator)}>
-										전송 중...
-									</span>
-								</div>
-							)}
-
-							{/* 실패 메시지 액션 */}
-							{isFailed && isMine && (
-								<div {...stylex.props(styles.failedActions)}>
-									<span {...stylex.props(styles.failedText)}>
-										<AlertCircle size={12} />
-										전송 실패
-									</span>
-									<button
-										type="button"
-										onClick={() => handleRetry(message)}
-										{...stylex.props(styles.retryButton)}
-									>
-										<RefreshCw size={12} />
-										재시도
-									</button>
-									<button
-										type="button"
-										onClick={() => handleDeleteFailed(message.id)}
-										{...stylex.props(styles.retryButton)}
-									>
-										<X size={12} />
-										삭제
-									</button>
-								</div>
-							)}
-
-							{/* 일반 메시지 시간 표시 */}
-							{!isSendingMsg && !isFailed && (
-								<div
-									{...stylex.props(
-										styles.messageTime,
-										isMine ? styles.messageTimeMine : styles.messageTimeTheirs,
-									)}
-								>
-									{dayjs(message.createdAt).format("HH:mm")}
-								</div>
-							)}
-						</div>
-					);
-				})}
+				{!isAtBottom && newMessageCount > 0 && (
+					<button
+						type="button"
+						ref={newMessageBadgeRef}
+						onClick={() => {
+							scrollToBottom("smooth");
+						}}
+						{...stylex.props(styles.newMessageBadge)}
+					>
+						새 메시지 {newMessageCount}개
+					</button>
+				)}
 			</div>
 
 			<div data-chat-input {...stylex.props(styles.inputArea)}>
-				<button type="button" {...stylex.props(styles.attachButton)}>
-					<Plus size={20} />
-				</button>
+				<ChatImageUploadButton
+					onUploaded={sendImageMessage}
+					disabled={isSending}
+				/>
 				<div {...stylex.props(styles.inputWrap)}>
 					<input
 						type="text"
