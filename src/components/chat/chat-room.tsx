@@ -7,15 +7,14 @@ import {
 	ArrowLeft,
 	MoreVertical,
 	Plus,
-	RefreshCw,
 	Send,
 	X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { VirtuosoHandle } from "react-virtuoso";
 import { toast } from "sonner";
 import {
 	colors,
@@ -27,21 +26,17 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { confirmAction } from "@/components/ui";
-import type { ChatMessageView } from "@/lib/hooks/use-chat-messages";
 import { useChatMessages } from "@/lib/hooks/use-chat-messages";
 import { preCacheUsers, useChatPresence } from "@/lib/hooks/use-chat-realtime";
-import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
+import type {
+	ChatMarketInfo,
+	ChatMember,
+	PaginatedMessages,
+} from "@/types/entities";
 import { api } from "@/utils/eden";
 import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
 import { openChatRoomMenu } from "./open-chat-room-menu";
-
-/** 실패한 메시지 추적을 위한 확장 타입 */
-interface ChatMessageWithStatus extends ChatMessage {
-	status?: "sending" | "sent" | "failed";
-	retryCount?: number;
-	clientId?: string;
-}
 
 const styles = stylex.create({
 	container: {
@@ -185,6 +180,7 @@ const styles = stylex.create({
 		paddingBottom: spacing.sm,
 		paddingLeft: spacing.xs,
 		paddingRight: spacing.xs,
+		position: "relative",
 	},
 	messagesList: {
 		flex: 1,
@@ -364,6 +360,28 @@ const styles = stylex.create({
 		color: colors.textPlaceholder,
 		fontStyle: "italic",
 	},
+	newMessageBadge: {
+		position: "absolute",
+		left: "50%",
+		transform: "translateX(-50%)",
+		bottom: spacing.sm,
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
+		borderRadius: radius.full,
+		borderWidth: 1,
+		borderStyle: "solid",
+		borderColor: colors.borderPrimary,
+		backgroundColor: colors.bgPrimary,
+		color: colors.textPrimary,
+		boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+		fontWeight: fontWeight.semibold,
+		cursor: "pointer",
+		display: "flex",
+		gap: spacing.xs,
+		alignItems: "center",
+	},
 });
 
 interface ChatRoomProps {
@@ -371,19 +389,16 @@ interface ChatRoomProps {
 	roomName: string | null;
 	members: ChatMember[];
 	market: ChatMarketInfo | null;
-	initialMessages: ChatMessage[];
+	initialPage: PaginatedMessages;
 	currentUserId: string;
 }
-
-const MAX_RETRY_COUNT = 3;
-const NEW_MESSAGE_BADGE_HEIGHT = 32;
 
 export default function ChatRoom({
 	roomId,
 	roomName,
 	members,
 	market,
-	initialMessages,
+	initialPage,
 	currentUserId,
 }: ChatRoomProps) {
 	const router = useRouter();
@@ -407,13 +422,18 @@ export default function ChatRoom({
 		removePending,
 	} = useChatMessages({
 		roomId,
-		initialPage: {
-			messages: initialMessages,
-			nextCursor: null,
-			hasMore: true,
-		},
+		initialPage,
 		currentUserId,
 	});
+
+	useEffect(() => {
+		if (isAtBottom && messagesRef.current) {
+			messagesRef.current.scrollToIndex({
+				index: Math.max(messages.length - 1, 0),
+				behavior: "auto",
+			});
+		}
+	}, [messages.length, isAtBottom]);
 
 	const currentUser = members.find((m) => m.id === currentUserId) ?? members[0];
 
@@ -423,7 +443,7 @@ export default function ChatRoom({
 
 	/** 메시지 전송 함수 (재시도 포함) */
 	const sendMessage = useCallback(
-		async (content: string, clientId?: string, retryCount = 0) => {
+		async (content: string, clientId?: string) => {
 			const isRetry = Boolean(clientId);
 			const targetClientId = clientId ?? appendLocal(content).clientId;
 
@@ -432,20 +452,13 @@ export default function ChatRoom({
 					.rooms({ id: roomId })
 					.messages.post({ content });
 
-				const messageData = data as ChatMessage | undefined;
-
-				if (
-					error ||
-					!messageData ||
-					typeof messageData !== "object" ||
-					!("id" in messageData)
-				) {
+				if (error || !data || typeof data !== "object" || !data.id) {
 					toast.error("메시지 전송 실패");
 					markAsFailed(targetClientId);
 					return;
 				}
 
-				markAsSent(targetClientId, messageData);
+				markAsSent(targetClientId, data);
 			} catch (err) {
 				console.error("Message send error:", err);
 				markAsFailed(targetClientId);
@@ -691,6 +704,23 @@ export default function ChatRoom({
 						}}
 					/>
 				</div>
+
+				{!isAtBottom && newMessageCount > 0 && (
+					<button
+						type="button"
+						onClick={() => {
+							if (!messagesRef.current) return;
+							messagesRef.current.scrollToIndex({
+								index: Math.max(messages.length - 1, 0),
+								behavior: "smooth",
+							});
+							resetNewMessageCount();
+						}}
+						{...stylex.props(styles.newMessageBadge)}
+					>
+						새 메시지 {newMessageCount}개
+					</button>
+				)}
 			</div>
 
 			<div data-chat-input {...stylex.props(styles.inputArea)}>

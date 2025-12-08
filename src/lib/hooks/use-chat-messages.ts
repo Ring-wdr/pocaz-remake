@@ -39,6 +39,62 @@ interface UseChatMessagesResult {
 
 const queryKey = (roomId: string) => ["chat", roomId, "messages"];
 
+const sortByCreatedAtAsc = (a: { createdAt: string }, b: { createdAt: string }) =>
+	new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+
+function useRoomMessagesInfiniteQuery({
+	roomId,
+	initialPage,
+	pageSize = 50,
+}: Pick<UseChatMessagesOptions, "roomId" | "initialPage" | "pageSize">) {
+	return useInfiniteQuery<
+		PaginatedMessages,
+		Error,
+		InfiniteData<PaginatedMessages>,
+		ReturnType<typeof queryKey>,
+		PageParam
+	>({
+		queryKey: queryKey(roomId),
+		queryFn: async ({ pageParam }) => {
+			const { data: messagesData, error } = await api.chat
+				.rooms({ id: roomId })
+				.messages.get({
+					query: {
+						cursor: pageParam ?? undefined,
+						limit: String(pageSize),
+					},
+				});
+
+			if (error || !messagesData) {
+				throw new Error("Failed to fetch messages");
+			}
+
+			return messagesData;
+		},
+		getNextPageParam: (lastPage) => lastPage.nextCursor ?? null,
+		initialPageParam: null,
+		initialData: initialPage
+			? { pages: [initialPage], pageParams: [null] }
+			: undefined,
+		refetchOnWindowFocus: false,
+	});
+}
+
+function useRoomMessagesRealtime({
+	roomId,
+	currentUserId,
+	onMessage,
+}: {
+	roomId: string;
+	currentUserId: string;
+	onMessage: (message: ChatMessage) => void;
+}) {
+	useChatRealtime(roomId, (message) => {
+		if (message.user.id === currentUserId) return;
+		onMessage(message);
+	});
+}
+
 export function useChatMessages({
 	roomId,
 	initialPage,
@@ -56,37 +112,7 @@ export function useChatMessages({
 	}, [isAtBottom]);
 
 	const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-		useInfiniteQuery<
-			PaginatedMessages,
-			Error,
-			InfiniteData<PaginatedMessages>,
-			ReturnType<typeof queryKey>,
-			PageParam
-		>({
-			queryKey: queryKey(roomId),
-			queryFn: async ({ pageParam }) => {
-				const { data: messagesData, error } = await api.chat
-					.rooms({ id: roomId })
-					.messages.get({
-						query: {
-							cursor: pageParam ?? undefined,
-							limit: String(pageSize),
-						},
-					});
-
-				if (error || !messagesData) {
-					throw new Error("Failed to fetch messages");
-				}
-
-				return messagesData;
-			},
-			getNextPageParam: (lastPage) => lastPage.nextCursor ?? null,
-			initialPageParam: null,
-			initialData: initialPage
-				? { pages: [initialPage], pageParams: [null] }
-				: undefined,
-			refetchOnWindowFocus: false,
-		});
+		useRoomMessagesInfiniteQuery({ roomId, initialPage, pageSize });
 
 	const addIncomingMessageToCache = (message: ChatMessage) => {
 		queryClient.setQueryData<InfiniteData<PaginatedMessages>>(
@@ -113,12 +139,15 @@ export function useChatMessages({
 		);
 	};
 
-	useChatRealtime(roomId, (message) => {
-		if (message.user.id === currentUserId) return;
-		addIncomingMessageToCache(message);
-		if (!isAtBottomRef.current) {
-			setNewMessageCount((count) => count + 1);
-		}
+	useRoomMessagesRealtime({
+		roomId,
+		currentUserId,
+		onMessage: (message) => {
+			addIncomingMessageToCache(message);
+			if (!isAtBottomRef.current) {
+				setNewMessageCount((count) => count + 1);
+			}
+		},
 	});
 
 	const items = useMemo<ChatMessageView[]>(() => {
@@ -132,12 +161,7 @@ export function useChatMessages({
 
 		const merged = [...fetchedMessages, ...pendingMessages];
 
-		return merged
-			.slice()
-			.sort(
-				(a, b) =>
-					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-			);
+		return merged.slice().sort(sortByCreatedAtAsc);
 	}, [data?.pages, pendingMessages]);
 
 	const appendLocal = (content: string) => {
@@ -197,3 +221,5 @@ export function useChatMessages({
 		removePending,
 	};
 }
+
+export { useRoomMessagesInfiniteQuery, useRoomMessagesRealtime };

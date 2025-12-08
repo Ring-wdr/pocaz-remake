@@ -4,7 +4,12 @@ import { notFound } from "next/navigation";
 import { ChatRoom } from "@/components/chat";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
-import type { ChatMarketInfo, ChatMember, ChatMessage } from "@/types/entities";
+import type {
+	ChatMarketInfo,
+	ChatMember,
+	ChatMessage,
+	PaginatedMessages,
+} from "@/types/entities";
 import { api } from "@/utils/eden";
 
 async function getChatRoomData(roomId: string, currentUserId: string) {
@@ -17,14 +22,12 @@ async function getChatRoomData(roomId: string, currentUserId: string) {
 		return null;
 	}
 
-	// 메시지 목록 조회
 	const { data: messagesData } = await api.chat
 		.rooms({ id: roomId })
 		.messages.get({
 			query: { limit: "50" },
 		});
 
-	// API 응답을 entity 타입으로 변환
 	const members: ChatMember[] = roomData.members.map((m) => ({
 		id: m.id,
 		nickname: m.nickname,
@@ -55,12 +58,18 @@ async function getChatRoomData(roomId: string, currentUserId: string) {
 			},
 		})) ?? [];
 
+	const messagesPage: PaginatedMessages = {
+		messages,
+		nextCursor: messagesData?.nextCursor ?? null,
+		hasMore: messagesData?.hasMore ?? false,
+	};
+
 	return {
 		roomId: roomData.id,
 		roomName: roomData.name,
 		members,
 		market,
-		messages,
+		messagesPage,
 		currentUserId,
 	};
 }
@@ -111,7 +120,7 @@ export default async function ChatRoomPage({
 			roomName={data.roomName}
 			members={data.members}
 			market={data.market}
-			initialMessages={data.messages}
+			initialPage={data.messagesPage}
 			currentUserId={data.currentUserId}
 		/>
 	);

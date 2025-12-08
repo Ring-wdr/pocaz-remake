@@ -2,8 +2,8 @@
 
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentProps, ReactNode } from "react";
-import { useEffect, useState } from "react";
-import { Virtuoso } from "react-virtuoso";
+import { useEffect, useRef, useState } from "react";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 
 import type { ChatMessageView } from "@/lib/hooks/use-chat-messages";
 
@@ -12,10 +12,10 @@ interface ChatMessageListProps extends ComponentProps<typeof Virtuoso> {
 	onStartReached: () => void;
 	hasPrev: boolean;
 	isFetchingPrev: boolean;
-	followOutput: ((isAtBottom: boolean) => false | "smooth" | "auto") | false;
 	onAtBottomChange: (isAtBottom: boolean) => void;
 	renderMessage: (message: ChatMessageView) => ReactNode;
 	renderHeader?: () => ReactNode;
+	virtuosoRef?: React.Ref<VirtuosoHandle>;
 }
 
 const styles = stylex.create({
@@ -39,6 +39,7 @@ export function ChatMessageList({
 	onAtBottomChange,
 	renderMessage,
 	renderHeader,
+	virtuosoRef,
 	...props
 }: ChatMessageListProps) {
 	const [mounted, setMounted] = useState(false);
@@ -62,9 +63,9 @@ export function ChatMessageList({
 				if (hasPrev && !isFetchingPrev) onStartReached();
 			}}
 			atBottomStateChange={onAtBottomChange}
-			itemContent={(_, item) => renderMessage(item)}
+			itemContent={(_index, item) => renderMessage(item)}
 			components={{
-				Header: renderHeader,
+				Header: () => (renderHeader ? renderHeader() : null),
 				Footer: () => null,
 			}}
 		/>

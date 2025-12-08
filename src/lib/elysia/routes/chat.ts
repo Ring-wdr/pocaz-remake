@@ -104,7 +104,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				search: query.search,
 				filter: query.filter as "all" | "trading" | "general" | undefined,
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit) : 20,
+				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
 			});
 
 			return {
@@ -598,7 +598,6 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				userId: user.id,
 			});
 
-			set.status = 201;
 			return {
 				id: message.id,
 				content: message.content,
@@ -614,7 +613,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				content: t.String({ minLength: 1 }),
 			}),
 			response: {
-				201: MessageSchema,
+				200: MessageSchema,
 				403: ErrorSchema,
 			},
 			detail: {
