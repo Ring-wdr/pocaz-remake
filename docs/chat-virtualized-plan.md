@@ -1,158 +1,44 @@
-## 목표
-- Supabase Realtime + TanStack Query v5 기반으로 채팅 메시지를 무한 스크롤/실시간 처리하면서 react-virtuoso로 가변 높이 리스트를 안정적으로 렌더링한다.
-- 스크롤 튐 없이 새 메시지 따라가기, 위로 스크롤 시 과거 메시지 로드, 새 메시지 배지/읽지 않음 경계 등을 지원한다.
+## 채팅 가상화/실시간 구현 요약 (최신)
 
-## 현재 상태 파악
-- `src/app/chat/[roomId]/page.tsx`에서 최근 50개 메시지를 서버에서 받아 `ChatRoom`(client)로 넘김.
-- `ChatRoom`(`src/components/chat/chat-room.tsx`)은 내부 state로 메시지/pending 메시지를 관리하며 단순 `overflow: auto` 리스트만 사용 → 가상화·무한 스크롤 없음, 새 메시지 배지 없음.
-- 실시간 수신은 `useChatRealtime`(`src/lib/hooks/use-chat-realtime.ts`)로 Supabase Postgres Changes 구독. followOutput이나 unread 기준은 미구현.
-- TanStack Query, react-virtuoso 의존성은 현재 패키지에 없음.
+### 개요
+- Supabase Realtime + TanStack Query v5 + react-virtuoso 기반으로 가변 높이 채팅 리스트를 구현했다.
+- 위로 스크롤 시 과거 로드, 바닥일 때만 새 메시지 자동 스크롤, 바닥이 아닐 때는 배지로 안내.
+- 날짜 배지/읽지 않음 경계/접근성(role="log")을 포함한 프로덕션 스크롤 UX를 구성했다.
 
-## 선택: react-virtuoso 우선
-- 가변 높이를 자동 측정해 주고, `startReached`/`endReached`로 양방향 로드, `followOutput`으로 “맨 아래일 때만 자동 스크롤”을 쉽게 처리할 수 있음.
-- 역방향(위로 과거 로드) 채팅 UX를 다루는 예제가 풍부하며, 별도 측정기 없이 이미지/멀티라인 메시지도 안정적으로 처리.
-- TanStack Virtual로도 구현 가능하나, 높이 측정/스크롤 보정/새 메시지 follow 로직을 직접 작성해야 해서 현재 리소스에선 Virtuoso가 적합.
+### 현재 코드 스냅샷
+- 리스트: `src/components/chat/chat-message-list.tsx`
+  - Virtuoso + `firstItemIndex`로 prepend 시 스크롤 튐 방지, `computeItemKey`에 id 사용.
+  - 날짜 배지: 첫 메시지 및 날짜 변경 지점마다 오늘/어제/날짜(YYYY.MM.DD) 표시.
+  - 읽음 경계: `lastReadMessageId` 또는 `lastReadAt`가 주어지면 첫 미읽음 앞에 “여기까지 읽음” 구분선.
+  - 접근성: `role="log" aria-live="polite" aria-relevant="additions text"`.
+  - Props: `messages`, `hasPrev`, `isFetchingPrev`, `onStartReached`, `onAtBottomChange`, `renderMessage`, optional `virtuosoRef`, `lastReadMessageId`, `lastReadAt`.
+- 데이터/실시간: `src/lib/hooks/use-chat-messages.ts`
+  - `useRoomMessagesInfiniteQuery`: cursor=id 기반 페이지네이션(fetchPrev).
+  - `useRoomMessagesRealtime`: Supabase INSERT 구독 → 마지막 페이지 append + 오프-바텀 시 `newMessageCount` 증가(자기 메시지는 무시).
+  - `useChatMessages`: pending/failed/sent 병합 정렬(오름차순), `isAtBottom`/`newMessageCount` 상태 제공, 낙관 전송 헬퍼 포함.
+- 페이지 통합: `src/app/chat/[roomId]/page.tsx`가 `PaginatedMessages` 형태로 초기 페이지 전달. `ChatRoom`(`src/components/chat/chat-room.tsx`)이 훅과 리스트를 사용하며 새 메시지 배지/단축키(Alt+ArrowDown 맨 아래, Alt+N 배지 포커스)를 제공.
 
-## 인터페이스 정의 (초안)
-```ts
-// 공통 엔티티 확장 (pending/실패 상태 포함)
-export interface ChatMessageView extends ChatMessage {
-  status?: "sending" | "sent" | "failed";
-  clientId?: string; // 낙관적 메시지 구분용
-}
+### 데이터/스크롤 흐름 (텍스트)
+- SSR: `ChatRoomPage` → `initialPage (PaginatedMessages)` 주입
+- 클라이언트: `ChatRoom` → `useChatMessages`
+  - `useRoomMessagesInfiniteQuery` ← Eden GET `/chat/rooms/:id/messages` (cursor=id)
+  - `useRoomMessagesRealtime` ← Supabase INSERT → cache append, 바닥 아닐 때 배지 카운트
+  - pending/failed → merged items (createdAt 오름차순)
+- 리스트: `ChatMessageList`
+  - `startReached` → `fetchPrev` (guard: `hasPrev && !isFetchingPrev`)
+  - prepend 시 `firstItemIndex += delta`로 위치 유지
+  - `atBottomStateChange` → 상위에서 followOutput/배지 제어
+  - 날짜 배지/읽음 경계/메시지 버블 렌더
 
-// useChatMessages 훅 (Query + Realtime + 낙관 상태 관리)
-interface UseChatMessagesOptions {
-  roomId: string;
-  initialPage: PaginatedMessages; // SSR에서 내려준 최근 페이지
-  currentUserId: string;
-}
-interface UseChatMessagesResult {
-  items: ChatMessageView[];        // 시간 오름차순
-  fetchPrev: () => Promise<void>;  // startReached에서 호출
-  hasPrev: boolean;
-  isFetchingPrev: boolean;
-  appendLocal: (content: string) => void; // 낙관 전송
-  retry: (clientId: string) => void;
-  removePending: (clientId: string) => void;
-  isAtBottom: boolean;
-  setAtBottom: (v: boolean) => void;
-  newMessageCount: number;        // 바닥이 아닐 때 누적
-  consumeNewMessages: () => void; // 배지 클릭 시 초기화 및 스크롤
-}
+### UX 체크리스트 (구현됨)
+- 과거 로딩: startReached → onStartReached; prepend 보정(firstItemIndex), item key=id.
+- 새 메시지: 바닥일 때만 followOutput("smooth"); 바닥이 아니면 “새 메시지 N개” 배지 + 클릭/Alt+N→Enter로 스크롤/리셋.
+- 읽음 경계: lastReadMessageId/lastReadAt로 “여기까지 읽음” 표시.
+- 날짜 라벨: 날짜 변경마다 자동 배지(오늘/어제/날짜).
+- 접근성: role="log", aria-live="polite"; 배지 버튼 포커스 가능; 단축키는 입력 요소 포커스 시 무시.
 
-// Virtualized 리스트 컴포넌트
-interface ChatMessageListProps {
-  messages: ChatMessageView[];
-  onStartReached: () => void; // 과거 로드
-  hasPrev: boolean;
-  isFetchingPrev: boolean;
-  followOutput: "smooth" | false;
-  onAtBottomChange: (atBottom: boolean) => void;
-  renderMessage: (msg: ChatMessageView) => React.ReactNode;
-  renderDaySeparator?: (date: string) => React.ReactNode;
-}
-```
-
-## 구현 스케치
-> 의존성: `react-virtuoso`, `@tanstack/react-query` (provider를 `RootLayout`에 추가 필요), dayjs(이미 있음).
-
-```tsx
-// src/components/chat/chat-message-list.tsx (신규)
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-
-export function ChatMessageList({
-  messages,
-  onStartReached,
-  hasPrev,
-  isFetchingPrev,
-  followOutput,
-  onAtBottomChange,
-  renderMessage,
-  renderDaySeparator,
-}: ChatMessageListProps) {
-  const virtuosoRef = useRef<VirtuosoHandle | null>(null);
-  const data = useMemo(() => messages, [messages]);
-
-  return (
-    <Virtuoso
-      ref={virtuosoRef}
-      data={data}
-      totalCount={data.length}
-      initialTopMostItemIndex={data.length - 1} // 최신 메시지 기준
-      startReached={() => {
-        if (hasPrev && !isFetchingPrev) onStartReached();
-      }}
-      atBottomStateChange={onAtBottomChange}
-      followOutput={followOutput} // (isAtBottom) => isAtBottom ? "smooth" : false 도 가능
-      itemContent={(index, item) => renderMessage(item)}
-      components={{
-        Header: () =>
-          isFetchingPrev ? <Spinner /> : hasPrev ? <div /> : null,
-        Footer: () => null,
-      }}
-    />
-  );
-}
-```
-
-```tsx
-// src/lib/hooks/use-chat-messages.ts (신규)
-export function useChatMessages(opts: UseChatMessagesOptions): UseChatMessagesResult {
-  const queryClient = useQueryClient();
-  const {
-    data,
-    fetchNextPage, // 이전 메시지 로드 (cursor를 이전 페이지의 nextCursor로 사용)
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["chat", opts.roomId, "messages"],
-    queryFn: async ({ pageParam }) =>
-      api.chat.rooms({ id: opts.roomId }).messages.get({
-        query: { cursor: pageParam ?? undefined, limit: "50" },
-      }).then((r) => r.data!),
-    initialPageParam: null,
-    getNextPageParam: (last) => last.nextCursor,
-    initialData: { pages: [opts.initialPage], pageParams: [null] },
-  });
-
-  // 낙관 메시지 관리 + realtime push
-  // ...pending state reducer...
-
-  // 새 메시지 배지
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const [newMessageCount, setNewMessageCount] = useState(0);
-  useChatRealtime(opts.roomId, (message) => {
-    queryClient.setQueryData<InfiniteData<PaginatedMessages>>(
-      ["chat", opts.roomId, "messages"],
-      (prev) => prev
-        ? { ...prev, pages: [...prev.pages, { messages: [message], nextCursor: null, hasMore: true }] }
-        : prev,
-    );
-    setNewMessageCount((c) => (isAtBottom ? 0 : c + 1));
-  });
-
-  return { /* ...see 인터페이스 정의 */ };
-}
-```
-
-### 읽지 않음/새 메시지 UX
-- `atBottomStateChange`로 바닥 여부를 추적. 새 메시지 수신 시 바닥이 아니면 `newMessageCount` 증가, 배지를 표시.
-- 배지 클릭 → `scrollToIndex(data.length - 1, { behavior: "smooth" })` 후 `newMessageCount` 리셋.
-- “읽지 않음 경계”는 서버에서 lastReadAt을 내려주면 `renderMessage`에서 첫 unread 앞에 divider를 그리도록 확장.
-
-### 이미지/가변 높이 고려
-- Virtuoso가 이미지 높이를 lazy 측정하므로 `img`에 `loading="lazy"`를 사용하고, 로딩 중 깜빡임을 줄이기 위해 CSS에서 `min-height`/`background-color`를 주면 충분.
-- 긴 텍스트는 `white-space: pre-wrap` + `word-break: break-word`로 처리.
-
-### ChatRoom 연결 방식
-1. `page.tsx`에서 `initialMessages`를 `PaginatedMessages` 형태(rooms/messages API shape)로 내려줌.
-2. `ChatRoom`에서 `useChatMessages` 훅으로 상태/RT/낙관 전송을 통합 관리.
-3. 메시지 영역을 `ChatMessageList`로 교체하고, `renderMessage`에 기존 버블 UI를 분리한 `ChatMessageBubble` 컴포넌트를 전달.
-4. 입력창 로직은 기존을 재사용하되 `appendLocal` → API 전송 → 실패 시 상태 업데이트 패턴으로 변경.
-
-## 다음 단계
-1. 의존성 추가: `bun add react-virtuoso @tanstack/react-query` (provider 설치 포함) + Query Devtools 선택적.
-2. `RootLayout`에 QueryClientProvider/Suspense 바인딩 추가, 기존 `ChatRoom`를 `useChatMessages + ChatMessageList`로 교체.
-3. 새 메시지 배지/읽지 않음 경계 UI 컴포넌트 배치 후 모바일 스크롤 튐 검증 (iOS/Android).
-4. 이미지 포함 메시지, 빠른 스크롤, Realtime 재접속 시 메시지 중복 여부를 집중적으로 QA.
+### 남은 작업/QA 포인트
+- lastRead 값을 서버/클라이언트에서 주입해 divider를 실제 활성화.
+- 모바일(iOS/Android)에서 prepend 연속 호출 시 스크롤 점프 여부 검증.
+- 새 메시지 배지/단축키를 UI 도움말로 안내할지 결정.
+- Realtime 재접속/중복 삽입 여부 확인, 필요 시 dedupe 강화.
