@@ -11,6 +11,7 @@ import { useChatRealtime } from "./use-chat-realtime";
 export interface ChatMessageView extends ChatMessage {
 	status?: "sending" | "sent" | "failed";
 	clientId?: string;
+	receivedAt?: number;
 }
 
 type PageParam = string | null;
@@ -39,8 +40,19 @@ interface UseChatMessagesResult {
 
 const queryKey = (roomId: string) => ["chat", roomId, "messages"];
 
-const sortByCreatedAtAsc = (a: { createdAt: string }, b: { createdAt: string }) =>
-	new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+const getEffectiveTime = (item: { createdAt: string; receivedAt?: number }) => {
+	const created = new Date(item.createdAt).getTime();
+	return Math.max(created, item.receivedAt ?? created);
+};
+
+const sortByEffectiveAsc = (
+	a: { createdAt: string; receivedAt?: number; id: string },
+	b: { createdAt: string; receivedAt?: number; id: string },
+) => {
+	const diff = getEffectiveTime(a) - getEffectiveTime(b);
+	if (diff !== 0) return diff;
+	return a.id.localeCompare(b.id);
+};
 
 function useRoomMessagesInfiniteQuery({
 	roomId,
@@ -87,13 +99,20 @@ function useRoomMessagesRealtime({
 }: {
 	roomId: string;
 	currentUserId: string;
-	onMessage: (message: ChatMessage) => void;
+	onMessage: (message: ChatMessage & { receivedAt?: number }) => void;
 }) {
 	useChatRealtime(roomId, (message) => {
 		if (message.user.id === currentUserId) return;
-		onMessage(message);
+		onMessage({ ...message, receivedAt: Date.now() });
 	});
 }
+
+const withReceivedAt = (
+	message: ChatMessage,
+): ChatMessage & { receivedAt: number } => ({
+	...message,
+	receivedAt: Date.now(),
+});
 
 export function useChatMessages({
 	roomId,
@@ -131,7 +150,12 @@ export function useChatMessages({
 
 				updatedPages[lastIndex] = {
 					...lastPage,
-					messages: [...lastPage.messages, message],
+					messages: [
+						...lastPage.messages,
+						withReceivedAt(message) as PaginatedMessages["messages"][number] & {
+							receivedAt?: number;
+						},
+					],
 				};
 
 				return { ...prev, pages: updatedPages };
@@ -153,15 +177,23 @@ export function useChatMessages({
 	const items = useMemo<ChatMessageView[]>(() => {
 		const fetchedMessages =
 			data?.pages.flatMap((page) =>
-				page.messages.map<ChatMessageView>((msg) => ({
-					...msg,
-					status: "sent",
-				})),
+				page.messages.map<ChatMessageView>((msg) => {
+					const received =
+						"receivedAt" in msg && typeof msg.receivedAt === "number"
+							? (msg as ChatMessage & { receivedAt: number }).receivedAt
+							: new Date(msg.createdAt).getTime();
+
+					return {
+						...msg,
+						status: "sent",
+						receivedAt: received,
+					};
+				}),
 			) ?? [];
 
 		const merged = [...fetchedMessages, ...pendingMessages];
 
-		return merged.slice().sort(sortByCreatedAtAsc);
+		return merged.slice().sort(sortByEffectiveAsc);
 	}, [data?.pages, pendingMessages]);
 
 	const appendLocal = (content: string) => {
@@ -171,6 +203,7 @@ export function useChatMessages({
 			clientId,
 			content,
 			createdAt: new Date().toISOString(),
+			receivedAt: Date.now(),
 			user: {
 				id: currentUserId,
 				nickname: "",

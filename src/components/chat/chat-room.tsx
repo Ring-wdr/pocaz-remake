@@ -2,14 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
-import {
-	AlertCircle,
-	ArrowLeft,
-	MoreVertical,
-	Plus,
-	Send,
-	X,
-} from "lucide-react";
+import { AlertCircle, ArrowLeft, MoreVertical, Send, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -27,6 +20,7 @@ import {
 } from "@/app/global-tokens.stylex";
 import { confirmAction } from "@/components/ui";
 import { useCallbackRef } from "@/hooks/use-callback-ref";
+import { useEventListener } from "@/hooks/use-event-listener";
 import { useChatMessages } from "@/lib/hooks/use-chat-messages";
 import { preCacheUsers, useChatPresence } from "@/lib/hooks/use-chat-realtime";
 import type {
@@ -35,6 +29,7 @@ import type {
 	PaginatedMessages,
 } from "@/types/entities";
 import { api } from "@/utils/eden";
+import { ChatImageUploadButton } from "./chat-image-upload-button";
 import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
 import { openChatRoomMenu } from "./open-chat-room-menu";
@@ -266,19 +261,6 @@ const styles = stylex.create({
 		borderTopColor: colors.borderPrimary,
 		zIndex: 10,
 	},
-	attachButton: {
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-		width: size.touchTarget,
-		height: size.touchTarget,
-		backgroundColor: colors.bgTertiary,
-		borderRadius: radius.lg,
-		borderWidth: 0,
-		cursor: "pointer",
-		color: colors.textMuted,
-		fontSize: "20px",
-	},
 	inputWrap: {
 		flex: 1,
 		display: "flex",
@@ -372,7 +354,7 @@ const styles = stylex.create({
 		paddingBottom: spacing.xs,
 		paddingLeft: spacing.sm,
 		paddingRight: spacing.sm,
-		borderRadius: radius.full,
+		borderRadius: radius.sm,
 		borderWidth: 1,
 		borderStyle: "solid",
 		borderColor: colors.borderPrimary,
@@ -392,9 +374,6 @@ const styles = stylex.create({
 		objectFit: "cover",
 		display: "block",
 		backgroundColor: colors.bgTertiary,
-	},
-	hiddenInput: {
-		display: "none",
 	},
 });
 
@@ -421,7 +400,6 @@ export default function ChatRoom({
 	const [isLeaving, setIsLeaving] = useState(false);
 	const messagesRef = useRef<VirtuosoHandle | null>(null);
 	const newMessageBadgeRef = useRef<HTMLButtonElement | null>(null);
-	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	const {
 		items: messages,
@@ -470,38 +448,29 @@ export default function ChatRoom({
 		[messages.length, resetNewMessageCountRef],
 	);
 
-	useEffect(() => {
-		const onKeyDown = (event: KeyboardEvent) => {
-			const target = event.target;
-			if (!(target instanceof HTMLElement)) return;
-			if (
-				target.tagName === "INPUT" ||
-				target.tagName === "TEXTAREA" ||
-				target.isContentEditable
-			) {
-				return;
-			}
+	useEventListener("keydown", (event) => {
+		const target = event.target;
+		if (
+			!(target instanceof HTMLElement) ||
+			target.tagName === "INPUT" ||
+			target.tagName === "TEXTAREA" ||
+			target.isContentEditable
+		) {
+			return;
+		}
 
-			if (event.altKey && event.key === "ArrowDown") {
+		if (event.altKey && event.key === "ArrowDown") {
+			event.preventDefault();
+			scrollToBottom("smooth");
+		}
+
+		if (event.altKey && event.key.toLowerCase() === "n") {
+			if (newMessageBadgeRef.current) {
 				event.preventDefault();
-				scrollToBottom("smooth");
+				newMessageBadgeRef.current.focus();
 			}
-
-			if (event.altKey && event.key.toLowerCase() === "n") {
-				if (newMessageBadgeRef.current) {
-					event.preventDefault();
-					newMessageBadgeRef.current.focus();
-				}
-			}
-		};
-
-		window.addEventListener("keydown", onKeyDown);
-		return () => window.removeEventListener("keydown", onKeyDown);
-	}, [scrollToBottom]);
-
-	const handlePickImage = () => {
-		fileInputRef.current?.click();
-	};
+		}
+	});
 
 	/** 메시지 전송 함수 (재시도 포함) */
 	const sendMessage = useCallback(
@@ -541,65 +510,33 @@ export default function ChatRoom({
 		sendMessage(content).finally(() => setIsSending(false));
 	};
 
-	const uploadImageAndSend = async (file: File) => {
-		setIsSending(true);
-		try {
-			const { data, error } = await api.storage.upload.file.post({
-				bucket: "images",
-				file,
-			});
+	const sendImageMessage = useCallback(
+		async (imageUrl: string) => {
+			setIsSending(true);
+			try {
+				const content = `${IMAGE_PREFIX}${imageUrl}`;
+				const { clientId } = appendLocal(content);
 
-			if (error || !data || !("uploaded" in data) || !data.uploaded?.[0]) {
-				toast.error("이미지 업로드에 실패했어요.");
-				return;
-			}
+				const { data: messageData, error: messageError } = await api.chat
+					.rooms({ id: roomId })
+					.messages.post({ content });
 
-			const imageUrl = data.uploaded[0].publicUrl;
-			const content = `${IMAGE_PREFIX}${imageUrl}`;
-			const { clientId } = appendLocal(content);
+				if (messageError || !messageData) {
+					toast.error("이미지 전송에 실패했어요.");
+					markAsFailed(clientId);
+					return;
+				}
 
-			const { data: messageData, error: messageError } = await api.chat
-				.rooms({ id: roomId })
-				.messages.post({ content });
-
-			if (messageError || !messageData) {
+				markAsSent(clientId, messageData);
+			} catch (err) {
+				console.error("Image send error:", err);
 				toast.error("이미지 전송에 실패했어요.");
-				markAsFailed(clientId);
-				return;
+			} finally {
+				setIsSending(false);
 			}
-
-			markAsSent(clientId, messageData);
-		} catch (err) {
-			console.error("Image send error:", err);
-			toast.error("이미지 전송에 실패했어요.");
-		} finally {
-			setIsSending(false);
-			if (fileInputRef.current) {
-				fileInputRef.current.value = "";
-			}
-		}
-	};
-
-	const handleFileChange = async (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		const file = event.target.files?.[0];
-		if (!file) return;
-
-		if (!file.type.startsWith("image/")) {
-			toast.error("이미지 파일만 업로드할 수 있어요.");
-			event.target.value = "";
-			return;
-		}
-
-		if (file.size > 20 * 1024 * 1024) {
-			toast.error("최대 20MB까지 업로드할 수 있어요.");
-			event.target.value = "";
-			return;
-		}
-
-		await uploadImageAndSend(file);
-	};
+		},
+		[appendLocal, markAsFailed, markAsSent, roomId],
+	);
 
 	/** 실패한 메시지 삭제 */
 	const handleDeleteFailed = useCallback(
@@ -740,7 +677,7 @@ export default function ChatRoom({
 						onStartReached={fetchPrev}
 						hasPrev={hasPrev}
 						isFetchingPrev={isFetchingPrev}
-						followOutput={(atBottom) => (atBottom ? "smooth" : false)}
+						followOutput={isAtBottom ? "smooth" : false}
 						onAtBottomChange={(atBottom) => {
 							setIsAtBottom(atBottom);
 							if (atBottom) {
@@ -849,20 +786,10 @@ export default function ChatRoom({
 			</div>
 
 			<div data-chat-input {...stylex.props(styles.inputArea)}>
-				<button
-					type="button"
-					onClick={handlePickImage}
-					{...stylex.props(styles.attachButton)}
-				>
-					<input
-						ref={fileInputRef}
-						type="file"
-						accept="image/*"
-						onChange={handleFileChange}
-						{...stylex.props(styles.hiddenInput)}
-					/>
-					<Plus size={20} />
-				</button>
+				<ChatImageUploadButton
+					onUploaded={sendImageMessage}
+					disabled={isSending}
+				/>
 				<div {...stylex.props(styles.inputWrap)}>
 					<input
 						type="text"
