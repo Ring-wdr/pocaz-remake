@@ -26,6 +26,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { confirmAction } from "@/components/ui";
+import { useCallbackRef } from "@/hooks/use-callback-ref";
 import { useChatMessages } from "@/lib/hooks/use-chat-messages";
 import { preCacheUsers, useChatPresence } from "@/lib/hooks/use-chat-realtime";
 import type {
@@ -406,6 +407,7 @@ export default function ChatRoom({
 	const [isSending, setIsSending] = useState(false);
 	const [isLeaving, setIsLeaving] = useState(false);
 	const messagesRef = useRef<VirtuosoHandle | null>(null);
+	const newMessageBadgeRef = useRef<HTMLButtonElement | null>(null);
 
 	const {
 		items: messages,
@@ -425,6 +427,7 @@ export default function ChatRoom({
 		initialPage,
 		currentUserId,
 	});
+	const resetNewMessageCountRef = useCallbackRef(resetNewMessageCount);
 
 	useEffect(() => {
 		if (isAtBottom && messagesRef.current) {
@@ -440,6 +443,47 @@ export default function ChatRoom({
 	// 상대방 찾기 (1:1 채팅 기준)
 	const partner = members.find((m) => m.id !== currentUserId) ?? members[0];
 	const displayName = roomName || partner?.nickname || "채팅방";
+
+	const scrollToBottom = useCallback(
+		(behavior: "auto" | "smooth" = "smooth") => {
+			if (!messagesRef.current) return;
+			messagesRef.current.scrollToIndex({
+				index: Math.max(messages.length - 1, 0),
+				behavior,
+			});
+			resetNewMessageCountRef();
+		},
+		[messages.length, resetNewMessageCountRef],
+	);
+
+	useEffect(() => {
+		const onKeyDown = (event: KeyboardEvent) => {
+			const target = event.target;
+			if (!(target instanceof HTMLElement)) return;
+			if (
+				target.tagName === "INPUT" ||
+				target.tagName === "TEXTAREA" ||
+				target.isContentEditable
+			) {
+				return;
+			}
+
+			if (event.altKey && event.key === "ArrowDown") {
+				event.preventDefault();
+				scrollToBottom("smooth");
+			}
+
+			if (event.altKey && event.key.toLowerCase() === "n") {
+				if (newMessageBadgeRef.current) {
+					event.preventDefault();
+					newMessageBadgeRef.current.focus();
+				}
+			}
+		};
+
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [scrollToBottom]);
 
 	/** 메시지 전송 함수 (재시도 포함) */
 	const sendMessage = useCallback(
@@ -708,13 +752,9 @@ export default function ChatRoom({
 				{!isAtBottom && newMessageCount > 0 && (
 					<button
 						type="button"
+						ref={newMessageBadgeRef}
 						onClick={() => {
-							if (!messagesRef.current) return;
-							messagesRef.current.scrollToIndex({
-								index: Math.max(messages.length - 1, 0),
-								behavior: "smooth",
-							});
-							resetNewMessageCount();
+							scrollToBottom("smooth");
 						}}
 						{...stylex.props(styles.newMessageBadge)}
 					>
