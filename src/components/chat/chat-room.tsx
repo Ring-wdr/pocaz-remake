@@ -219,6 +219,9 @@ const styles = stylex.create({
 		borderRadius: "16px",
 		fontSize: fontSize.md,
 		lineHeight: lineHeight.normal,
+		whiteSpace: "pre-wrap",
+		wordBreak: "break-word",
+		overflowWrap: "anywhere",
 	},
 	bubbleMine: {
 		backgroundColor: colors.bgInverse,
@@ -370,6 +373,8 @@ const styles = stylex.create({
 	imagePreview: {
 		maxWidth: "240px",
 		maxHeight: "240px",
+		minHeight: "160px",
+		width: "100%",
 		borderRadius: radius.md,
 		objectFit: "cover",
 		display: "block",
