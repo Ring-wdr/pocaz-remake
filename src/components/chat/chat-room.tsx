@@ -669,11 +669,6 @@ export default function ChatRoom({
 								resetNewMessageCount();
 							}
 						}}
-						renderHeader={() => (
-							<div {...stylex.props(styles.dateGroup)}>
-								<span {...stylex.props(styles.dateBadge)}>오늘</span>
-							</div>
-						)}
 						renderMessage={(message) => {
 							const isMine = message.user.id === currentUserId;
 							const isFailed = message.status === "failed";

@@ -1,10 +1,11 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import dayjs from "dayjs";
 import type { ComponentProps, ReactNode, Ref } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
-import { colors, spacing, text } from "@/app/global-tokens.stylex";
+import { colors, radius, spacing, text } from "@/app/global-tokens.stylex";
 
 import type { ChatMessageView } from "@/lib/hooks/use-chat-messages";
 
@@ -43,7 +44,30 @@ const styles = stylex.create({
 	unreadDividerLabel: {
 		whiteSpace: "nowrap",
 	},
+	dateGroup: {
+		textAlign: "center",
+		marginBottom: spacing.sm,
+	},
+	dateBadge: {
+		display: "inline-block",
+		fontSize: text.sm,
+		color: colors.textMuted,
+		backgroundColor: colors.borderPrimary,
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		borderRadius: radius.md,
+	},
 });
+
+const formatDateLabel = (date: string) => {
+	const target = dayjs(date);
+	const today = dayjs();
+	if (target.isSame(today, "day")) return "오늘";
+	if (target.isSame(today.subtract(1, "day"), "day")) return "어제";
+	return target.format("YYYY.MM.DD");
+};
 
 /**
  * 가변 높이 메시지 리스트 (react-virtuoso)
@@ -113,6 +137,17 @@ export function ChatMessageList({
 		return false;
 	};
 
+	const shouldRenderDateLabel = (index: number) => {
+		if (index === 0) return true;
+		const prev = messages[index - 1];
+		const current = messages[index];
+		if (!prev || !current) return false;
+
+		const prevDate = dayjs(prev.createdAt).format("YYYY-MM-DD");
+		const currDate = dayjs(current.createdAt).format("YYYY-MM-DD");
+		return prevDate !== currDate;
+	};
+
 	return (
 		<Virtuoso
 			ref={virtuosoRef ?? internalRef}
@@ -133,6 +168,13 @@ export function ChatMessageList({
 			atBottomStateChange={onAtBottomChange}
 			itemContent={(index, item) => (
 				<div>
+					{shouldRenderDateLabel(index) && (
+						<div {...stylex.props(styles.dateGroup)}>
+							<span {...stylex.props(styles.dateBadge)}>
+								{formatDateLabel(item.createdAt)}
+							</span>
+						</div>
+					)}
 					{shouldRenderUnreadDivider(index) && (
 						<div {...stylex.props(styles.unreadDivider)}>
 							<span {...stylex.props(styles.unreadDividerLine)} aria-hidden />
