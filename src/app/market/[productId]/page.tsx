@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { User } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { Footer } from "@/components/home";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
@@ -38,11 +39,17 @@ function buildProductDescription({
 		: description;
 }
 
+const getMarket = cache(async (id: string) => {
+	const { data, error } = await api.markets({ id }).get();
+	if (error || !data) return null;
+	return data;
+});
+
 export async function generateMetadata({
 	params,
 }: PageProps<"/market/[productId]">): Promise<Metadata> {
 	const { productId } = await params;
-	const { data } = await api.markets({ id: productId }).get();
+	const data = await getMarket(productId);
 
 	if (!data) {
 		return createMetadata({
@@ -81,15 +88,13 @@ export default async function MarketDetailPage({
 	params,
 }: PageProps<"/market/[productId]">) {
 	const { productId } = await params;
-	const [marketResult, currentUser, likeStatus] = await Promise.all([
-		api.markets({ id: productId }).get(),
+	const [data, currentUser, likeStatus] = await Promise.all([
+		getMarket(productId),
 		getCurrentUser(),
 		getMarketLikeStatus(productId),
 	]);
 
-	const { data, error } = marketResult;
-
-	if (error || !data) {
+	if (!data) {
 		notFound();
 	}
 
