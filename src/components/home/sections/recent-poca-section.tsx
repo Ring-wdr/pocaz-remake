@@ -49,6 +49,7 @@ const styles = stylex.create({
 async function getRecentPocaItems(): Promise<MarketItem[]> {
 	const { data, error } = await api.markets.get({
 		query: { limit: "5" },
+		fetch: { next: { revalidate: 120 } },
 	});
 
 	if (error || !data) {

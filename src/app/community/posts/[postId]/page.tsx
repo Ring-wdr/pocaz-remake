@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
 import { ArrowLeft, MessageCircle } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import {
 	colors,
@@ -133,13 +134,13 @@ const styles = stylex.create({
 	},
 });
 
-async function getPost(postId: string) {
+const getPost = cache(async (postId: string) => {
 	const { data, error } = await api.posts({ id: postId }).get();
 	if (error || !data) {
 		return null;
 	}
 	return data;
-}
+});
 
 async function getLikeStatus(postId: string) {
 	try {
@@ -193,16 +194,16 @@ export default async function PostDetailPage({
 }: PageProps<"/community/posts/[postId]">) {
 	const { postId } = await params;
 
-	const [post, currentUser] = await Promise.all([
+	const [post, currentUser, likeStatus] = await Promise.all([
 		getPost(postId),
 		getCurrentUser(),
+		getLikeStatus(postId),
 	]);
 
 	if (!post) {
 		notFound();
 	}
 
-	const likeStatus = currentUser ? await getLikeStatus(postId) : null;
 	const isOwner = currentUser?.id === post.user.id;
 
 	return (
