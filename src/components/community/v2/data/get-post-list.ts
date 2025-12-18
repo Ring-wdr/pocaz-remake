@@ -49,7 +49,7 @@ export async function getPostList({
 					category,
 					cursor: cursor ?? undefined,
 				},
-				fetch: { cache: "no-store" },
+				fetch: { next: { revalidate: 30 } },
 			});
 		}
 

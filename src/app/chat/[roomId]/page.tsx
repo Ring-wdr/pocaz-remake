@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 import { ChatRoom } from "@/components/chat";
 import { getCurrentUser } from "@/lib/auth/actions";
@@ -12,21 +13,62 @@ import type {
 } from "@/types/entities";
 import { api } from "@/utils/eden";
 
-async function getChatRoomData(roomId: string, currentUserId: string) {
-	// 채팅방 상세 정보 조회
-	const { data: roomData, error: roomError } = await api.chat
-		.rooms({ id: roomId })
-		.get();
+const getChatRoom = cache(async (roomId: string) => {
+	const { data, error } = await api.chat.rooms({ id: roomId }).get();
+	if (error || !data) return null;
+	return data;
+});
 
-	if (roomError || !roomData) {
-		return null;
+async function getInitialMessages(roomId: string) {
+	const { data } = await api.chat.rooms({ id: roomId }).messages.get({
+		query: { limit: "50" },
+	});
+	return data;
+}
+
+export async function generateMetadata({
+	params,
+}: PageProps<"/chat/[roomId]">): Promise<Metadata> {
+	const { roomId } = await params;
+	const data = await getChatRoom(roomId);
+	const roomName = data?.name ?? "채팅";
+	const participant =
+		data?.members
+			?.map((member) => member.nickname)
+			.filter(Boolean)
+			.slice(0, 2)
+			.join(", ") ?? null;
+
+	const description = participant
+		? `${participant}과 나눈 채팅을 이어가세요.`
+		: "거래와 소통을 이어가는 채팅방입니다.";
+
+	return createMetadata({
+		title: `${roomName} | POCAZ 채팅`,
+		description,
+		path: `/chat/${roomId}`,
+		ogTitle: roomName,
+	});
+}
+
+export default async function ChatRoomPage({
+	params,
+}: PageProps<"/chat/[roomId]">) {
+	const { roomId } = await params;
+
+	const currentUser = await getCurrentUser();
+	if (!currentUser) {
+		notFound();
 	}
 
-	const { data: messagesData } = await api.chat
-		.rooms({ id: roomId })
-		.messages.get({
-			query: { limit: "50" },
-		});
+	const [roomData, messagesData] = await Promise.all([
+		getChatRoom(roomId),
+		getInitialMessages(roomId),
+	]);
+
+	if (!roomData) {
+		notFound();
+	}
 
 	const members: ChatMember[] = roomData.members.map((m) => ({
 		id: m.id,
@@ -64,64 +106,14 @@ async function getChatRoomData(roomId: string, currentUserId: string) {
 		hasMore: messagesData?.hasMore ?? false,
 	};
 
-	return {
-		roomId: roomData.id,
-		roomName: roomData.name,
-		members,
-		market,
-		messagesPage,
-		currentUserId,
-	};
-}
-
-export async function generateMetadata({
-	params,
-}: PageProps<"/chat/[roomId]">): Promise<Metadata> {
-	const { roomId } = await params;
-	const { data } = await api.chat.rooms({ id: roomId }).get();
-	const roomName = data?.name ?? "채팅";
-	const participant =
-		data?.members
-			?.map((member) => member.nickname)
-			.filter(Boolean)
-			.slice(0, 2)
-			.join(", ") ?? null;
-
-	const description = participant
-		? `${participant}과 나눈 채팅을 이어가세요.`
-		: "거래와 소통을 이어가는 채팅방입니다.";
-
-	return createMetadata({
-		title: `${roomName} | POCAZ 채팅`,
-		description,
-		path: `/chat/${roomId}`,
-		ogTitle: roomName,
-	});
-}
-
-export default async function ChatRoomPage({
-	params,
-}: PageProps<"/chat/[roomId]">) {
-	const { roomId } = await params;
-
-	const currentUser = await getCurrentUser();
-	if (!currentUser) {
-		notFound();
-	}
-
-	const data = await getChatRoomData(roomId, currentUser.id);
-	if (!data) {
-		notFound();
-	}
-
 	return (
 		<ChatRoom
-			roomId={data.roomId}
-			roomName={data.roomName}
-			members={data.members}
-			market={data.market}
-			initialPage={data.messagesPage}
-			currentUserId={data.currentUserId}
+			roomId={roomData.id}
+			roomName={roomData.name}
+			members={members}
+			market={market}
+			initialPage={messagesPage}
+			currentUserId={currentUser.id}
 		/>
 	);
 }
