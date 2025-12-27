@@ -11,6 +11,7 @@ import {
 	X,
 } from "lucide-react";
 import { useDeferredValue, useRef, useState } from "react";
+import { useDebounceValue } from "usehooks-ts";
 
 import {
 	colors,
@@ -188,7 +189,8 @@ function ChatListAllContentInner({
 export function ChatListAllContent() {
 	const [keyword, setKeyword] = useState("");
 	const [filter, setFilter] = useState<FilterType>("all");
-	const deferredKeyword = useDeferredValue(keyword);
+	const [debouncedKeyword] = useDebounceValue(keyword, 300);
+	const deferredKeyword = useDeferredValue(debouncedKeyword);
 
 	return (
 		<div {...stylex.props(styles.container)}>
