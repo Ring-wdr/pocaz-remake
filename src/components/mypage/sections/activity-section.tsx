@@ -1,8 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import { colors, fontWeight } from "@/app/global-tokens.stylex";
 import { formatDateTime } from "@/utils/date";
-import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -88,26 +87,6 @@ const styles = stylex.create({
 		backgroundColor: colors.bgTertiary,
 		fontWeight: fontWeight.semibold,
 	},
-	errorBox: {
-		paddingTop: spacing.sm,
-		paddingBottom: spacing.sm,
-		textAlign: "center",
-		color: colors.textMuted,
-		backgroundColor: colors.bgSecondary,
-		borderRadius: radius.sm,
-	},
-	errorText: {
-		margin: 0,
-		fontSize: fontSize.sm,
-		color: colors.textSecondary,
-		fontWeight: fontWeight.semibold,
-	},
-	errorSubText: {
-		margin: 0,
-		marginTop: spacing.xxxs,
-		fontSize: fontSize.sm,
-		color: colors.textMuted,
-	},
 	emptyState: {
 		textAlign: "center",
 		paddingTop: "32px",
@@ -138,30 +117,20 @@ const typeStyles: Record<ActivityType, keyof typeof styles> = {
 	market: "badgeMarket",
 };
 
-export default async function ActivitySection() {
-	const { data, error } = await api.users.me.activity.get({
-		query: { limit: "5" },
-	});
+interface Activity {
+	id: string;
+	text: string;
+	target?: string | null;
+	targetHref?: string | null;
+	type: string;
+	time: string;
+}
 
-	if (error) {
-		return (
-			<div {...stylex.props(styles.container)}>
-				<div {...stylex.props(styles.header)}>
-					<h3 {...stylex.props(styles.title)}>최근 활동</h3>
-					<Link href="/mypage/activity" {...stylex.props(styles.moreLink)}>
-						전체보기
-					</Link>
-				</div>
-				<div {...stylex.props(styles.errorBox)}>
-					<p {...stylex.props(styles.errorText)}>활동 내역을 불러오지 못했습니다</p>
-					<p {...stylex.props(styles.errorSubText)}>잠시 후 다시 시도해주세요</p>
-				</div>
-			</div>
-		);
-	}
+interface ActivitySectionProps {
+	activities: Activity[];
+}
 
-	const activities = data ? data.items : [];
-
+export function ActivitySection({ activities }: ActivitySectionProps) {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.header)}>

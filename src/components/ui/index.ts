@@ -25,6 +25,8 @@ export { BottomSheet } from "./bottom-sheet";
 export type { ButtonProps, ButtonSize, ButtonVariant } from "./button";
 // Button
 export { Button } from "./button";
+// FixedPageHeader
+export { FixedPageHeader, fixedHeaderStyles } from "./fixed-page-header";
 export type { InputProps, InputSize } from "./input";
 // Input
 export { Input } from "./input";
@@ -56,5 +58,3 @@ export {
 	SkeletonCard,
 	SkeletonText,
 } from "./skeleton";
-// FixedPageHeader
-export { FixedPageHeader, fixedHeaderStyles } from "./fixed-page-header";
