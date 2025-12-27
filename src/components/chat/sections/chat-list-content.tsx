@@ -12,9 +12,14 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { MarketInfoSection } from "@/components/chat/sections/market-info-section";
+import { ChatListSkeleton } from "@/components/chat/skeletons";
 import { MarketInfoSkeleton } from "@/components/chat/skeletons/market-info-skeleton";
 import { QueryErrorBoundary } from "@/components/providers/query-error-boundary";
-import { marketInfoQueryOptions } from "@/lib/queries/markets";
+import {
+	chatListMarketQueryOptions,
+	marketInfoQueryOptions,
+} from "@/lib/queries/markets";
+import ChatListSection from "./chat-list-section";
 
 const styles = stylex.create({
 	errorContainer: {
@@ -63,21 +68,47 @@ interface ChatListContentProps {
 
 export function ChatListContent({ marketId }: ChatListContentProps) {
 	return (
-		<QueryErrorBoundary
-			fallback={() => (
-				<ErrorFallback
-					title="마켓 정보를 불러오지 못했습니다"
-					description="잠시 후 다시 시도해주세요"
-				/>
-			)}
-		>
-			<Suspense clientOnly fallback={<MarketInfoSkeleton />}>
-				<SuspenseQuery {...marketInfoQueryOptions(marketId)}>
-					{({ data: marketInfo }) => (
-						<MarketInfoSection marketInfo={marketInfo} />
-					)}
-				</SuspenseQuery>
-			</Suspense>
-		</QueryErrorBoundary>
+		<>
+			<QueryErrorBoundary
+				fallback={() => (
+					<ErrorFallback
+						title="마켓 정보를 불러오지 못했습니다"
+						description="잠시 후 다시 시도해주세요"
+					/>
+				)}
+			>
+				<Suspense clientOnly fallback={<MarketInfoSkeleton />}>
+					<SuspenseQuery {...marketInfoQueryOptions(marketId)}>
+						{({ data: marketInfo }) => (
+							<MarketInfoSection marketInfo={marketInfo} />
+						)}
+					</SuspenseQuery>
+				</Suspense>
+			</QueryErrorBoundary>
+			<QueryErrorBoundary
+				fallback={() => (
+					<ErrorFallback
+						title="채팅방을 불러오지 못했습니다"
+						description="잠시 후 다시 시도해주세요"
+					/>
+				)}
+			>
+				<Suspense
+					clientOnly
+					fallback={<ChatListSkeleton showFilters={false} />}
+				>
+					<SuspenseQuery {...chatListMarketQueryOptions(marketId)}>
+						{({ data: rooms }) => (
+							<ChatListSection
+								initialRooms={rooms}
+								initialHasMore={false}
+								initialCursor={null}
+								marketId={marketId}
+							/>
+						)}
+					</SuspenseQuery>
+				</Suspense>
+			</QueryErrorBoundary>
+		</>
 	);
 }

@@ -1,11 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { Suspense } from "react";
-
-import { ChatListSection } from "@/components/chat/sections";
+import { ChatListAllContent } from "@/components/chat/sections/chat-list-all-content";
 import { ChatListContent } from "@/components/chat/sections/chat-list-content";
-import { ChatListSkeleton } from "@/components/chat/skeletons";
 import { Footer } from "@/components/home";
 import { FixedPageHeader, fixedHeaderStyles } from "@/components/ui";
 import { createMetadata } from "@/lib/metadata";
@@ -56,11 +53,11 @@ export default async function ChatListPage({
 				}
 			/>
 			<div {...stylex.props(styles.content)}>
-				{firstMarketId && <ChatListContent marketId={firstMarketId} />}
-
-				<Suspense fallback={<ChatListSkeleton showFilters={!firstMarketId} />}>
-					<ChatListSection marketId={firstMarketId} />
-				</Suspense>
+				{firstMarketId ? (
+					<ChatListContent marketId={firstMarketId} />
+				) : (
+					<ChatListAllContent />
+				)}
 			</div>
 			<Footer />
 		</div>
