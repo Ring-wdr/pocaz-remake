@@ -1,8 +1,8 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { Suspense } from "@suspensive/react";
 import { SuspenseQuery } from "@suspensive/react-query";
-import { Suspense } from "react";
 import {
 	colors,
 	fontSize,
@@ -123,7 +123,7 @@ export function MyPageContent() {
 					/>
 				)}
 			>
-				<Suspense fallback={<ProfileSkeleton />}>
+				<Suspense clientOnly fallback={<ProfileSkeleton />}>
 					<SuspenseQuery {...userProfileQueryOptions()}>
 						{({ data: profile }) => <ProfileSection profile={profile} />}
 					</SuspenseQuery>
@@ -139,7 +139,7 @@ export function MyPageContent() {
 					/>
 				)}
 			>
-				<Suspense fallback={<StatsSkeleton />}>
+				<Suspense clientOnly fallback={<StatsSkeleton />}>
 					<SuspenseQuery {...userStatsQueryOptions()}>
 						{({ data }) => (
 							<StatsSection
@@ -163,7 +163,7 @@ export function MyPageContent() {
 					/>
 				)}
 			>
-				<Suspense fallback={<ActivitySkeleton />}>
+				<Suspense clientOnly fallback={<ActivitySkeleton />}>
 					<SuspenseQuery {...userActivityQueryOptions()}>
 						{({ data }) => <ActivitySection activities={data?.items ?? []} />}
 					</SuspenseQuery>
