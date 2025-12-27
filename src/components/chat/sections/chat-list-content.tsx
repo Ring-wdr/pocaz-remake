@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { Suspense } from "@suspensive/react";
-import { SuspenseQuery } from "@suspensive/react-query";
+import { SuspenseQuery } from "@suspensive/react-query-5";
 
 import {
 	colors,
@@ -19,7 +19,7 @@ import {
 	chatListMarketQueryOptions,
 	marketInfoQueryOptions,
 } from "@/lib/queries/markets";
-import ChatListSection from "./chat-list-section";
+import { ChatListClientView } from "./chat-list-section.client";
 
 const styles = stylex.create({
 	errorContainer: {
@@ -99,11 +99,10 @@ export function ChatListContent({ marketId }: ChatListContentProps) {
 				>
 					<SuspenseQuery {...chatListMarketQueryOptions(marketId)}>
 						{({ data: rooms }) => (
-							<ChatListSection
-								initialRooms={rooms}
-								initialHasMore={false}
-								initialCursor={null}
-								marketId={marketId}
+							<ChatListClientView
+								rooms={rooms}
+								isLoadingMore={false}
+								hasMore={false}
 							/>
 						)}
 					</SuspenseQuery>

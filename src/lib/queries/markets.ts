@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import type { MarketSummary } from "@/types/entities";
 import { api } from "@/utils/eden";
 
@@ -32,31 +32,48 @@ export const chatListMarketQueryOptions = (marketId: string) =>
 	});
 
 /**
- * 사용자의 모든 채팅방 목록 쿼리 옵션
+ * 사용자의 모든 채팅방 목록 무한 쿼리 옵션
  * - staleTime: 1분 (일반 채팅도 실시간으로 변함)
  * - gcTime: 10분
  * - 페이지네이션 지원 (cursor 기반)
+ * - 검색 및 필터 지원
  */
-export const chatListAllQueryOptions = (cursor?: string | null) =>
-	queryOptions({
-		queryKey: ["chat", "rooms", "all", cursor ?? "initial"] as const,
-		queryFn: async () => {
+type ChatRoomPage = {
+	rooms: NonNullable<
+		Awaited<ReturnType<typeof api.chat.rooms.get>>["data"]
+	>["rooms"];
+	hasMore: boolean;
+	nextCursor: string | null;
+};
+
+export const chatListAllInfiniteQueryOptions = (
+	search = "",
+	filter = "all",
+) => {
+	return infiniteQueryOptions({
+		queryKey: ["chat", "rooms", "all", search, filter] as const,
+		initialPageParam: null,
+		queryFn: async ({ pageParam }): Promise<ChatRoomPage> => {
 			const { data, error } = await api.chat.rooms.get({
-				query: { limit: "20", ...(cursor ? { cursor } : {}) },
+				query: {
+					limit: "20",
+					...(pageParam ? { cursor: pageParam } : null),
+					...(search ? { search } : null),
+					...(filter ? { filter } : null),
+				},
 			});
 			if (error || !data) {
 				throw new Error("Failed to fetch chat rooms");
 			}
-			return {
-				rooms: data.rooms,
-				hasMore: data.hasMore ?? false,
-				nextCursor: data.nextCursor ?? null,
-			};
+			return data;
 		},
+		getNextPageParam: (lastPage: ChatRoomPage) =>
+			lastPage.hasMore ? lastPage.nextCursor : null,
 		staleTime: 1 * 60 * 1000,
 		gcTime: 10 * 60 * 1000,
 		refetchOnWindowFocus: true,
 	});
+};
 
 export const marketInfoQueryOptions = (marketId: string) =>
 	queryOptions({

@@ -1,15 +1,8 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import {
-	Filter,
-	Loader2,
-	MessageCircleHeart,
-	Search,
-	ShoppingBag,
-	X,
-} from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Loader2, MessageCircleHeart } from "lucide-react";
+import { useEffect, useRef } from "react";
 import {
 	colors,
 	fontSize,
@@ -19,7 +12,6 @@ import {
 } from "@/app/global-tokens.stylex";
 import { ChatListItem } from "@/components/chat/chat-list-item";
 import type { ChatRoomListItem } from "@/types/entities";
-import { api } from "@/utils/eden";
 
 const styles = stylex.create({
 	container: {
@@ -139,130 +131,31 @@ const spinnerStyle = stylex.create({
 	},
 });
 
-type FilterType = "all" | "trading" | "general";
-
-interface ChatListClientProps {
-	initialRooms: ChatRoomListItem[];
-	initialHasMore: boolean;
-	initialCursor: string | null;
-	marketId?: string;
+export interface ChatListClientViewProps {
+	rooms: ChatRoomListItem[];
+	isLoadingMore: boolean;
+	hasMore: boolean;
+	onLoadMore?: () => void;
+	loadMoreRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-export default function ChatListClient({
-	initialRooms,
-	initialHasMore,
-	initialCursor,
-	marketId,
-}: ChatListClientProps) {
-	const [rooms, setRooms] = useState(initialRooms);
-	const [hasMore, setHasMore] = useState(initialHasMore);
-	const [cursor, setCursor] = useState(initialCursor);
-	const [isLoading, setIsLoading] = useState(false);
-	const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-	const [searchQuery, setSearchQuery] = useState("");
-	const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-	const [debouncedSearch, setDebouncedSearch] = useState("");
-
-	const loadMoreRef = useRef<HTMLDivElement>(null);
-	const searchTimeoutRef = useRef<NodeJS.Timeout>(undefined);
-
-	// 검색어 디바운스
-	useEffect(() => {
-		if (searchTimeoutRef.current) {
-			clearTimeout(searchTimeoutRef.current);
-		}
-		searchTimeoutRef.current = setTimeout(() => {
-			setDebouncedSearch(searchQuery);
-		}, 300);
-
-		return () => {
-			if (searchTimeoutRef.current) {
-				clearTimeout(searchTimeoutRef.current);
-			}
-		};
-	}, [searchQuery]);
-
-	// 필터 또는 검색어 변경시 새로 로드
-	const fetchRooms = useCallback(
-		async (isLoadMore = false) => {
-			if (isLoadMore) {
-				setIsLoadingMore(true);
-			} else {
-				setIsLoading(true);
-			}
-
-			try {
-				const { data, error } = marketId
-					? await api.chat.rooms.market({ marketId }).get()
-					: await api.chat.rooms.get({
-							query: {
-								search: debouncedSearch || undefined,
-								filter: activeFilter !== "all" ? activeFilter : undefined,
-								cursor: isLoadMore ? (cursor ?? undefined) : undefined,
-								limit: "20",
-							},
-						});
-
-				if (error || !data) {
-					return;
-				}
-
-				const newRooms: ChatRoomListItem[] = data.rooms.map((room) => ({
-					id: room.id,
-					name: room.name,
-					createdAt: room.createdAt,
-					members: room.members,
-					lastMessage: room.lastMessage,
-					messageCount: room.messageCount,
-					market: room.market,
-				}));
-
-				if (isLoadMore) {
-					setRooms((prev) => [...prev, ...newRooms]);
-				} else {
-					setRooms(newRooms);
-				}
-
-				// 페이지네이션 정보 업데이트
-				const paginatedData = data as {
-					rooms: typeof data.rooms;
-					hasMore?: boolean;
-					nextCursor?: string | null;
-				};
-				if (
-					"hasMore" in paginatedData &&
-					typeof paginatedData.hasMore === "boolean"
-				) {
-					setHasMore(paginatedData.hasMore);
-					setCursor(paginatedData.nextCursor ?? null);
-				} else {
-					setHasMore(false);
-					setCursor(null);
-				}
-			} finally {
-				setIsLoading(false);
-				setIsLoadingMore(false);
-			}
-		},
-		[debouncedSearch, activeFilter, cursor, marketId],
-	);
-
-	// 필터/검색 변경시 새로 로드
-	useEffect(() => {
-		if (!marketId) {
-			fetchRooms(false);
-		}
-	}, [fetchRooms, marketId]);
-
+export function ChatListClientView({
+	rooms,
+	isLoadingMore,
+	hasMore,
+	onLoadMore,
+	loadMoreRef: externalRef,
+}: ChatListClientViewProps) {
+	const internalRef = useRef<HTMLDivElement>(null);
+	const loadMoreRef = externalRef || internalRef;
 	// 무한 스크롤 관찰
 	useEffect(() => {
-		if (!hasMore || isLoadingMore) return;
+		if (!hasMore || isLoadingMore || !onLoadMore) return;
 
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-					fetchRooms(true);
+					onLoadMore();
 				}
 			},
 			{ threshold: 0.1 },
@@ -273,105 +166,16 @@ export default function ChatListClient({
 		}
 
 		return () => observer.disconnect();
-	}, [hasMore, isLoadingMore, fetchRooms]);
-
-	const handleFilterChange = (filter: FilterType) => {
-		setActiveFilter(filter);
-		setCursor(null);
-	};
-
-	const clearSearch = () => {
-		setSearchQuery("");
-		setDebouncedSearch("");
-	};
-
-	if (isLoading && rooms.length === 0) {
-		return (
-			<div {...stylex.props(styles.loadingMore)}>
-				<Loader2 size={24} {...stylex.props(spinnerStyle.spinner)} />
-			</div>
-		);
-	}
+	}, [hasMore, isLoadingMore, onLoadMore, loadMoreRef]);
 
 	if (rooms.length === 0) {
 		return (
 			<div {...stylex.props(styles.container)}>
-				{/* 검색 및 필터 (마켓 채팅이 아닌 경우만) */}
-				{!marketId && (
-					<>
-						<div {...stylex.props(styles.searchBar)}>
-							<Search size={18} {...stylex.props(styles.searchIcon)} />
-							<input
-								type="text"
-								placeholder="채팅방 검색"
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-								{...stylex.props(styles.searchInput)}
-							/>
-							{searchQuery && (
-								<button
-									type="button"
-									onClick={clearSearch}
-									{...stylex.props(styles.clearButton)}
-								>
-									<X size={14} />
-								</button>
-							)}
-						</div>
-
-						<div {...stylex.props(styles.filterTabs)}>
-							<button
-								type="button"
-								onClick={() => handleFilterChange("all")}
-								{...stylex.props(
-									styles.filterTab,
-									activeFilter === "all" && styles.filterTabActive,
-								)}
-							>
-								<Filter size={14} />
-								전체
-							</button>
-							<button
-								type="button"
-								onClick={() => handleFilterChange("trading")}
-								{...stylex.props(
-									styles.filterTab,
-									activeFilter === "trading" && styles.filterTabActive,
-								)}
-							>
-								<ShoppingBag size={14} />
-								거래
-							</button>
-							<button
-								type="button"
-								onClick={() => handleFilterChange("general")}
-								{...stylex.props(
-									styles.filterTab,
-									activeFilter === "general" && styles.filterTabActive,
-								)}
-							>
-								<MessageCircleHeart size={14} />
-								일반
-							</button>
-						</div>
-					</>
-				)}
-
 				<div {...stylex.props(styles.emptyState)}>
 					<MessageCircleHeart size={56} {...stylex.props(styles.emptyIcon)} />
-					<h3 {...stylex.props(styles.emptyTitle)}>
-						{searchQuery
-							? "검색 결과가 없습니다"
-							: marketId
-								? "거래 채팅이 없습니다"
-								: "채팅방이 없습니다"}
-					</h3>
+					<h3 {...stylex.props(styles.emptyTitle)}>채팅방이 없습니다</h3>
 					<p {...stylex.props(styles.emptyText)}>
-						{searchQuery
-							? "다른 검색어로 시도해보세요"
-							: marketId
-								? "아직 이 상품에 대한 문의가 없습니다"
-								: "마켓에서 상품을 둘러보고 대화를 시작해보세요"}
+						마켓에서 상품을 둘러보고 대화를 시작해보세요
 					</p>
 				</div>
 			</div>
@@ -380,81 +184,17 @@ export default function ChatListClient({
 
 	return (
 		<div {...stylex.props(styles.container)}>
-			{/* 검색 및 필터 (마켓 채팅이 아닌 경우만) */}
-			{!marketId && (
-				<>
-					<div {...stylex.props(styles.searchBar)}>
-						<Search size={18} {...stylex.props(styles.searchIcon)} />
-						<input
-							type="text"
-							placeholder="채팅방 검색"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							{...stylex.props(styles.searchInput)}
-						/>
-						{searchQuery && (
-							<button
-								type="button"
-								onClick={clearSearch}
-								{...stylex.props(styles.clearButton)}
-							>
-								<X size={14} />
-							</button>
-						)}
-					</div>
-
-					<div {...stylex.props(styles.filterTabs)}>
-						<button
-							type="button"
-							onClick={() => handleFilterChange("all")}
-							{...stylex.props(
-								styles.filterTab,
-								activeFilter === "all" && styles.filterTabActive,
-							)}
-						>
-							<Filter size={14} />
-							전체
-						</button>
-						<button
-							type="button"
-							onClick={() => handleFilterChange("trading")}
-							{...stylex.props(
-								styles.filterTab,
-								activeFilter === "trading" && styles.filterTabActive,
-							)}
-						>
-							<ShoppingBag size={14} />
-							거래
-						</button>
-						<button
-							type="button"
-							onClick={() => handleFilterChange("general")}
-							{...stylex.props(
-								styles.filterTab,
-								activeFilter === "general" && styles.filterTabActive,
-							)}
-						>
-							<MessageCircleHeart size={14} />
-							일반
-						</button>
-					</div>
-				</>
-			)}
-
 			<div {...stylex.props(styles.list)}>
 				{rooms.map((room) => (
 					<ChatListItem key={room.id} room={room} />
 				))}
 			</div>
 
-			{/* 더 보기 로딩 */}
-			{hasMore && (
-				<div ref={loadMoreRef} {...stylex.props(styles.loadingMore)}>
-					{isLoadingMore && (
-						<Loader2 size={24} {...stylex.props(spinnerStyle.spinner)} />
-					)}
-				</div>
-			)}
+			<div ref={loadMoreRef} {...stylex.props(styles.loadingMore)}>
+				{isLoadingMore && (
+					<Loader2 size={24} {...stylex.props(spinnerStyle.spinner)} />
+				)}
+			</div>
 		</div>
 	);
 }
