@@ -1,8 +1,13 @@
 import * as stylex from "@stylexjs/stylex";
 import { User } from "lucide-react";
 import Link from "next/link";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
-import { api } from "@/utils/eden";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {
@@ -60,47 +65,17 @@ const styles = stylex.create({
 		textDecoration: "none",
 		transition: "background-color 0.2s ease",
 	},
-	loginPrompt: {
-		textAlign: "center",
-		paddingTop: spacing.sm,
-		paddingBottom: spacing.sm,
-	},
-	loginText: {
-		fontSize: fontSize.md,
-		color: colors.textMuted,
-		marginBottom: spacing.xs,
-	},
-	loginButton: {
-		display: "inline-block",
-		paddingTop: spacing.xxs,
-		paddingBottom: spacing.xxs,
-		paddingLeft: spacing.md,
-		paddingRight: spacing.md,
-		fontSize: fontSize.md,
-		fontWeight: fontWeight.semibold,
-		color: colors.textInverse,
-		backgroundColor: colors.bgInverse,
-		borderRadius: radius.sm,
-		textDecoration: "none",
-	},
 });
 
-export default async function ProfileSection() {
-	const { data: profile, error } = await api.users.me.get();
+interface ProfileSectionProps {
+	profile: {
+		nickname: string;
+		email?: string | null;
+		profileImage?: string | null;
+	};
+}
 
-	if (error || !profile) {
-		return (
-			<div {...stylex.props(styles.loginPrompt)}>
-				<p {...stylex.props(styles.loginText)}>
-					로그인하고 포카즈의 모든 기능을 이용해보세요
-				</p>
-				<Link href="/login" {...stylex.props(styles.loginButton)}>
-					로그인
-				</Link>
-			</div>
-		);
-	}
-
+export function ProfileSection({ profile }: ProfileSectionProps) {
 	return (
 		<div {...stylex.props(styles.container)}>
 			{profile.profileImage ? (

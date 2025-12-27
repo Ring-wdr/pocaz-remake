@@ -1,3 +1,3 @@
-export { default as ProfileSection } from "./profile-section";
-export { default as StatsSection } from "./stats-section";
-export { default as ActivitySection } from "./activity-section";
+export { ProfileSection } from "./profile-section";
+export { StatsSection } from "./stats-section";
+export { ActivitySection } from "./activity-section";

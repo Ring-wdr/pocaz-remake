@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import * as stylex from "@stylexjs/stylex";
+import type { ReactNode } from "react";
 
 import {
 	colors,
@@ -83,7 +83,9 @@ export function FixedPageHeader({
 					{leading}
 					<h1 {...stylex.props(styles.title)}>{title}</h1>
 				</div>
-				{trailing ? <div {...stylex.props(styles.trailing)}>{trailing}</div> : null}
+				{trailing ? (
+					<div {...stylex.props(styles.trailing)}>{trailing}</div>
+				) : null}
 			</div>
 		</header>
 	);
