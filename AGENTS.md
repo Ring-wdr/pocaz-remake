@@ -10,6 +10,7 @@ Pocaz is a K-pop photocard marketplace and community with a Korean UI. Next.js 1
 - `bun run check` — Biome lint and format check (`bun run format` rewrites formatting)
 - `bun test` — unit and API tests (the Elysia app is called in-process; `test/setup.ts` fakes Supabase auth via an `x-test-user` header). DB-backed tests run only when `TEST_DATABASE_URL` points to a database whose name contains `test`; web sessions get one from `.claude/hooks/session-start.sh`, and locally you migrate it with `DIRECT_URL=$TEST_DATABASE_URL bunx prisma migrate deploy`.
 - `bun run db:generate` — regenerate the Prisma client
+- CI (`.github/workflows/ci.yml`) runs typecheck, check, `bun test` with a Postgres service, and `bun run build` on every pull request and on pushes to `main`.
 
 ## What the agent is good at
 - Editing and creating files in this repo (Next.js, Elysia API, Prisma, Supabase). 
