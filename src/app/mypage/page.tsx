@@ -1,10 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
-import { unauthorized } from "next/navigation";
 import { Footer } from "@/components/home";
 import { MenuList } from "@/components/mypage";
 import { MyPageContent } from "@/components/mypage/mypage-content";
 import { FixedPageHeader } from "@/components/ui";
-import { getSession } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
 import { colors } from "../global-tokens.stylex";
 
@@ -24,13 +22,7 @@ const styles = stylex.create({
 	},
 });
 
-export default async function MyPage() {
-	const session = await getSession();
-
-	if (!session) {
-		unauthorized();
-	}
-
+export default function MyPage() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<FixedPageHeader title="마이페이지" />
