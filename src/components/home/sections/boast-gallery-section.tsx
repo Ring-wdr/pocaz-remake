@@ -88,7 +88,7 @@ interface BoastPost {
 
 async function getBoastPosts(): Promise<BoastPost[]> {
 	const { data, error } = await api.posts.get({
-		query: { limit: "9", category: "boast" },
+		query: { limit: 9, category: "boast" },
 	});
 
 	if (error || !data) {

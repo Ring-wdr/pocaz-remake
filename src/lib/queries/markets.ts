@@ -56,7 +56,7 @@ export const chatListAllInfiniteQueryOptions = (
 		queryFn: async ({ pageParam }): Promise<ChatRoomPage> => {
 			const { data, error } = await api.chat.rooms.get({
 				query: {
-					limit: "20",
+					limit: 20,
 					...(pageParam ? { cursor: pageParam } : null),
 					...(search ? { search } : null),
 					...(filter ? { filter } : null),

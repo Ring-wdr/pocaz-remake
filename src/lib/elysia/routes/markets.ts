@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import { marketImageService, marketService } from "@/lib/services/market";
 import { userService } from "@/lib/services/user";
 
@@ -56,7 +57,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 		async ({ query }) => {
 			const result = await marketService.findAll({
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit) : 20,
+				limit: query.limit ?? 20,
 				sort:
 					(query.sort as "latest" | "priceAsc" | "priceDesc" | undefined) ??
 					"latest",
@@ -80,7 +81,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 		{
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 				sort: t.Optional(SortEnum),
 			}),
 			response: PaginatedMarketsSchema,
@@ -101,7 +102,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 
 			const result = await marketService.search(query.keyword, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
 				sort:
 					(query.sort as "latest" | "priceAsc" | "priceDesc" | undefined) ??
 					"latest",
@@ -126,7 +127,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 			query: t.Object({
 				keyword: t.Optional(t.String()),
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 				sort: t.Optional(SortEnum),
 			}),
 			response: PaginatedMarketsSchema,
@@ -150,7 +151,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				params.status as "available" | "sold" | "reserved",
 				{
 					cursor: query.cursor,
-					limit: query.limit ? Number.parseInt(query.limit) : 20,
+					limit: query.limit ?? 20,
 					sort:
 						(query.sort as "latest" | "priceAsc" | "priceDesc" | undefined) ??
 						"latest",
@@ -178,7 +179,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 			}),
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 				sort: t.Optional(SortEnum),
 			}),
 			response: PaginatedMarketsSchema,
@@ -244,7 +245,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 		async ({ params, query }) => {
 			const result = await marketService.findByUserId(params.userId, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit) : 20,
+				limit: query.limit ?? 20,
 				sort:
 					(query.sort as "latest" | "priceAsc" | "priceDesc" | undefined) ??
 					"latest",
@@ -271,7 +272,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 			}),
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 				sort: t.Optional(SortEnum),
 			}),
 			response: PaginatedMarketsSchema,

@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import {
 	chatMessageService,
 	chatRoomMemberService,
@@ -105,7 +106,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				search: query.search,
 				filter: query.filter as "all" | "trading" | "general" | undefined,
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
 			});
 
 			return {
@@ -145,7 +146,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				search: t.Optional(t.String()),
 				filter: t.Optional(t.String()),
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: t.Object({
 				rooms: t.Array(RoomItemSchema),
@@ -564,7 +565,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 
 			const result = await chatMessageService.findByRoomId(params.id, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit) : 50,
+				limit: query.limit ?? 50,
 			});
 
 			return {
@@ -584,7 +585,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			}),
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: {
 				200: PaginatedMessagesSchema,

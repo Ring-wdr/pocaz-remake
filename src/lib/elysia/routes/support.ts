@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 
 import { authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import { supportService } from "@/lib/services/support";
 import { userService } from "@/lib/services/user";
 
@@ -74,7 +75,7 @@ export const supportRoutes = new Elysia({ prefix: "/support" })
 				auth.user.user_metadata?.avatar_url,
 			);
 
-			const limit = query.limit ? Number.parseInt(query.limit, 10) : 20;
+			const limit = query.limit ?? 20;
 			const inquiries = await supportService.listByUser(user.id, limit);
 
 			return {
@@ -89,7 +90,7 @@ export const supportRoutes = new Elysia({ prefix: "/support" })
 		},
 		{
 			query: t.Object({
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: {
 				200: t.Object({

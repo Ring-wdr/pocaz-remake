@@ -54,7 +54,7 @@ export const userActivityQueryOptions = () =>
 		queryKey: ["users", "me", "activity"] as const,
 		queryFn: async () => {
 			const { data, error } = await api.users.me.activity.get({
-				query: { limit: "5" },
+				query: { limit: 5 },
 			});
 			if (error) {
 				throw new Error("Failed to fetch user activity");

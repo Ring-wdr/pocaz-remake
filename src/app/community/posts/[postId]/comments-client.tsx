@@ -360,7 +360,7 @@ export function CommentsClient({
 
 	const fetchComments = async (cursor?: string) => {
 		const { data, error } = await api.posts({ id: postId }).comments.get({
-			query: { cursor, limit: "20" },
+			query: { cursor, limit: 20 },
 		});
 
 		if (error || !data) {

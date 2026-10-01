@@ -28,7 +28,6 @@ export async function getPostList({
 	error: string | null;
 }> {
 	const safeLimit = parseLimit(limit);
-	const limitString = safeLimit.toString();
 
 	try {
 		let response: Awaited<ReturnType<typeof api.posts.get>>;
@@ -38,14 +37,14 @@ export async function getPostList({
 				query: {
 					keyword,
 					cursor: cursor ?? undefined,
-					limit: limitString,
+					limit: safeLimit,
 				},
 				fetch: { cache: "no-store" },
 			});
 		} else {
 			response = await api.posts.get({
 				query: {
-					limit: limitString,
+					limit: safeLimit,
 					category,
 					cursor: cursor ?? undefined,
 				},

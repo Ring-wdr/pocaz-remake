@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import {
 	commentService,
 	postImageService,
@@ -77,7 +78,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			const category = query.category as "free" | "boast" | "info" | undefined;
 			const result = await postService.findAll({
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
 				category,
 			});
 
@@ -98,7 +99,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 		{
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 				category: t.Optional(
 					t.Union([t.Literal("free"), t.Literal("boast"), t.Literal("info")]),
 				),
@@ -122,7 +123,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 
 			const result = await postService.search(query.keyword, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
 			});
 
 			return {
@@ -143,7 +144,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			query: t.Object({
 				keyword: t.Optional(t.String()),
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: PaginatedPostsSchema,
 			detail: {
@@ -213,7 +214,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			const [result, totalCount] = await Promise.all([
 				commentService.findByPostId(params.id, {
 					cursor: query.cursor,
-					limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+					limit: query.limit ?? 20,
 				}),
 				commentService.countByPostId(params.id),
 			]);
@@ -245,7 +246,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			}),
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: {
 				200: PaginatedCommentsSchema,
@@ -265,7 +266,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 		async ({ params, query }) => {
 			const result = await postService.findByUserId(params.userId, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
 			});
 
 			return {
@@ -288,7 +289,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			}),
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: PaginatedPostsSchema,
 			detail: {

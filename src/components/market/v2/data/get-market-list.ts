@@ -23,8 +23,6 @@ export async function getMarketList({
 	data: MarketListResult | null;
 	error: string | null;
 }> {
-	const limitString = limit.toString();
-
 	try {
 		let response: Awaited<ReturnType<typeof api.markets.get>>;
 
@@ -33,17 +31,17 @@ export async function getMarketList({
 				query: {
 					keyword,
 					cursor: cursor ?? undefined,
-					limit: limitString,
+					limit,
 					sort,
 				},
 			});
 		} else if (status && status !== "all") {
 			response = await api.markets.status({ status }).get({
-				query: { cursor: cursor ?? undefined, limit: limitString, sort },
+				query: { cursor: cursor ?? undefined, limit, sort },
 			});
 		} else {
 			response = await api.markets.get({
-				query: { cursor: cursor ?? undefined, limit: limitString, sort },
+				query: { cursor: cursor ?? undefined, limit, sort },
 			});
 		}
 

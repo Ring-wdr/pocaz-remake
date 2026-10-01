@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import { prisma } from "@/lib/prisma";
 import { activityService } from "@/lib/services/activity";
 import { marketLikeService } from "@/lib/services/market";
@@ -256,7 +257,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 
 			const result = await postService.findByUserId(user.id, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
 			});
 
 			return {
@@ -283,7 +284,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 		{
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: t.Object({
 				items: t.Array(
@@ -531,9 +532,8 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			if (!user) {
 				return { items: [], nextCursor: null, hasMore: false };
 			}
-			const parsedLimit = query.limit ? Number.parseInt(query.limit, 10) : 50;
 			const activities = await activityService.getByUserId(user.id, {
-				limit: Number.isFinite(parsedLimit) ? parsedLimit : 50,
+				limit: query.limit ?? 50,
 				cursor: query.cursor,
 				type: query.type,
 			});
@@ -552,7 +552,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 		},
 		{
 			query: t.Object({
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 				cursor: t.Optional(t.String()),
 				type: t.Optional(ActivityTypeEnum),
 			}),

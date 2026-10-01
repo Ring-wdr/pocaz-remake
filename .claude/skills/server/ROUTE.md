@@ -9,6 +9,7 @@
 ```typescript
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import { {domain}Service } from "@/lib/services/{domain}";
 import { userService } from "@/lib/services/user";
 
@@ -58,7 +59,7 @@ export const public{Domain}Routes = new Elysia({ prefix: "/{domains}" })
 		{
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50 })),
+				limit: LimitQuery, // 1~50, 범위 밖이면 422
 			}),
 			response: Paginated{Domain}Schema,
 			detail: {
