@@ -28,6 +28,7 @@ import {
 import { confirmAction } from "@/components/ui";
 import { formatRelativeTime } from "@/utils/date";
 import { api } from "@/utils/eden";
+import { isSubmitEnter } from "@/utils/keyboard";
 
 const styles = stylex.create({
 	section: {
@@ -499,8 +500,9 @@ export function CommentsClient({
 
 	const handleLoadMore = () => {
 		if (nextCursor) {
-			startTransition(() => {
-				fetchComments(nextCursor);
+			// 응답이 올 때까지 isPending으로 버튼을 막아서 같은 페이지를 두 번 붙이지 않는다
+			startTransition(async () => {
+				await fetchComments(nextCursor);
 			});
 		}
 	};
@@ -673,7 +675,7 @@ export function CommentsClient({
 						value={commentText}
 						onChange={(e) => setCommentText(e.target.value)}
 						onKeyDown={(e) => {
-							if (e.key === "Enter" && !e.shiftKey) {
+							if (isSubmitEnter(e)) {
 								e.preventDefault();
 								handleSubmitComment();
 							}
@@ -735,7 +737,7 @@ export function CommentsClient({
 										value={editContent}
 										onChange={(e) => setEditContent(e.target.value)}
 										onKeyDown={(e) => {
-											if (e.key === "Enter" && !e.shiftKey) {
+											if (isSubmitEnter(e)) {
 												e.preventDefault();
 												handleSaveEdit(comment.id);
 											}
@@ -861,7 +863,7 @@ export function CommentsClient({
 															value={editContent}
 															onChange={(e) => setEditContent(e.target.value)}
 															onKeyDown={(e) => {
-																if (e.key === "Enter" && !e.shiftKey) {
+																if (isSubmitEnter(e)) {
 																	e.preventDefault();
 																	handleSaveEdit(reply.id);
 																}
@@ -950,7 +952,7 @@ export function CommentsClient({
 										value={replyText}
 										onChange={(e) => setReplyText(e.target.value)}
 										onKeyDown={(e) => {
-											if (e.key === "Enter" && !e.shiftKey) {
+											if (isSubmitEnter(e)) {
 												e.preventDefault();
 												handleSubmitReply(comment.id);
 											}

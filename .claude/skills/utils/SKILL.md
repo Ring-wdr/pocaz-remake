@@ -56,6 +56,12 @@ const formattedDate = formatKoreanDate(date);
 | `getBaseUrl` | 앱 기본 URL |
 | `getApiBaseUrl` | API 기본 URL |
 
+### Keyboard (`@/utils/keyboard`)
+
+| 함수 | 용도 |
+|------|------|
+| `isSubmitEnter` | 입력창 keydown이 "Enter로 보내기"인지 (Shift+Enter·한글 조합 중 Enter 제외). Enter로 전송하는 입력창은 모두 이걸 쓴다 |
+
 ### Eden (`@/utils/eden`)
 
 | 함수 | 용도 |

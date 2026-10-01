@@ -31,6 +31,7 @@ import type {
 } from "@/types/entities";
 import { formatTime } from "@/utils/date";
 import { api } from "@/utils/eden";
+import { isSubmitEnter } from "@/utils/keyboard";
 import { ChatImageUploadButton } from "./chat-image-upload-button";
 import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
@@ -555,8 +556,8 @@ export default function ChatRoom({
 		[removePending],
 	);
 
-	const handleKeyPress = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" && !e.shiftKey) {
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (isSubmitEnter(e)) {
 			e.preventDefault();
 			handleSend();
 		}
@@ -805,7 +806,7 @@ export default function ChatRoom({
 						placeholder="메시지를 입력하세요"
 						value={inputValue}
 						onChange={(e) => setInputValue(e.target.value)}
-						onKeyPress={handleKeyPress}
+						onKeyDown={handleKeyDown}
 						{...stylex.props(styles.input)}
 					/>
 				</div>
