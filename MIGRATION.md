@@ -325,13 +325,11 @@ bun run build
 #### Storage API
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `/api/storage/upload` | POST | Required | Base64 이미지 업로드 |
-| `/api/storage/upload/multiple` | POST | Required | 여러 파일 업로드 |
-| `/api/storage/delete` | DELETE | Required | 파일 삭제 |
-| `/api/storage/url` | POST | Required | Public URL 조회 |
-| `/api/storage/signed-url` | POST | Required | Signed URL 생성 |
-| `/api/storage/list/:bucket` | GET | Required | 파일 목록 조회 |
+| `/api/storage/upload/file` | POST | Required | FormData 단일 이미지 업로드 |
+| `/api/storage/upload/files` | POST | Required | FormData 이미지 여러 개 업로드 (최대 10개) |
 | `/api/storage/buckets` | GET | Required | 사용 가능한 버킷 목록 |
+
+업로드 파일은 업로더의 Supabase ID 폴더(`{id}/{시각}-{UUID}.{확장자}`)에 저장되고, 형식은 파일 내용으로 판별한다(JPEG, PNG, GIF, WebP). Base64 업로드·삭제·URL·서명 URL·목록 API는 소유권 확인 없이 열려 있어 제거했다.
 
 ### Supabase 설정
 
@@ -343,6 +341,9 @@ Realtime을 사용하려면 Supabase Dashboard에서 활성화가 필요합니�
    ```sql
    ALTER PUBLICATION supabase_realtime ADD TABLE "ChatMessage";
    ```
+
+#### RLS 설정
+public 스키마는 PostgREST로도 노출되므로, RLS가 꺼져 있으면 공개된 anon 키만으로 테이블을 읽을 수 있습니다. `supabase/enable-rls.sql`을 SQL Editor에서 실행해 모든 테이블에 RLS를 켜고, Realtime 구독용으로 `ChatMessage`에 "채팅방 멤버만 읽기" 정책을 둡니다. Prisma는 테이블 소유자로 접속하므로 영향이 없습니다. 새 테이블을 추가한 마이그레이션 뒤에는 다시 실행합니다.
 
 #### Storage Bucket 설정
 Supabase Dashboard에서 Storage Bucket 생성 필요:
