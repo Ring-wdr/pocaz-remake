@@ -127,6 +127,27 @@ export const authGuard = new Elysia({ name: "auth-guard" })
 	});
 
 /**
+ * 관리자 여부. app_metadata는 service role로만 바꿀 수 있으므로(user_metadata와 달리)
+ * 사용자가 스스로 관리자가 될 수 없다. Supabase에서 `app_metadata.role = "admin"`을 지정한다.
+ */
+export function isAdmin(user: AuthUser | null | undefined): boolean {
+	return user?.app_metadata?.role === "admin";
+}
+
+/**
+ * Admin Guard - 관리자만 허용 (403)
+ * authGuard 다음에 use한다: `.use(authGuard).use(adminGuard)`.
+ * 단독으로 쓰면 auth가 주입되지 않으므로 모든 요청을 거부한다.
+ */
+export const adminGuard = new Elysia({ name: "admin-guard" })
+	.use(authGuard)
+	.onBeforeHandle({ as: "scoped" }, ({ auth, status }) => {
+		if (!isAdmin(auth?.user)) {
+			return status(403, { error: "Forbidden" });
+		}
+	});
+
+/**
  * Optional Auth - 인증 정보가 있으면 주입, 없으면 null
  * Public routes에서 선택적으로 인증 정보를 사용할 때
  */

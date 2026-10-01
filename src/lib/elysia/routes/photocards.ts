@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { authGuard } from "@/lib/elysia/auth";
+import { adminGuard, authGuard } from "@/lib/elysia/auth";
 import { galmangPocaService, photocardService } from "@/lib/services/photocard";
 
 // 공통 스키마
@@ -282,10 +282,11 @@ export const publicPhotocardRoutes = new Elysia({ prefix: "/photocards" })
 	);
 
 /**
- * Protected Photocard Routes (인증 필수 - 생성/수정/삭제)
+ * Protected Photocard Routes (관리자 전용 - 생성/수정/삭제)
  */
 export const photocardRoutes = new Elysia({ prefix: "/photocards" })
 	.use(authGuard)
+	.use(adminGuard)
 	// POST /api/photocards - 포토카드 생성
 	.post(
 		"/",
@@ -503,10 +504,12 @@ export const publicGalmangPocaRoutes = new Elysia({ prefix: "/galmang-poca" })
 	);
 
 /**
- * Protected GalmangPoca Routes
+ * Protected GalmangPoca Routes (관리자 전용)
+ * GalmangPoca에는 소유자 컬럼이 없어 소유권을 확인할 수 없으므로 관리자만 쓴다.
  */
 export const galmangPocaRoutes = new Elysia({ prefix: "/galmang-poca" })
 	.use(authGuard)
+	.use(adminGuard)
 	// POST /api/galmang-poca - 갈망포카 추가
 	.post(
 		"/",

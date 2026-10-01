@@ -81,6 +81,19 @@ export const protectedRoutes = new Elysia({ prefix: "/protected" })
   });
 ```
 
+### adminGuard (관리자 전용)
+
+카탈로그(소속사·그룹·아티스트·포토카드·갈망포카) 쓰기처럼 운영자만 하는 작업에 쓴다. 관리자는 Supabase `app_metadata.role = "admin"`으로 지정한다. `app_metadata`는 service role로만 바꿀 수 있어 사용자가 스스로 관리자가 될 수 없다(`user_metadata`는 사용자가 바꿀 수 있으므로 권한 판단에 쓰지 않는다).
+
+```typescript
+import { adminGuard, authGuard } from "@/lib/elysia/auth";
+
+export const agencyAdminRoutes = new Elysia()
+  .use(authGuard) // 401: 비로그인
+  .use(adminGuard) // 403: 관리자 아님. authGuard 없이 단독으로 쓰면 모든 요청을 거부한다
+  .post("/agencies", ({ body }) => agencyService.create(body));
+```
+
 ### optionalAuth (선택적)
 
 ```typescript
