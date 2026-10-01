@@ -1,5 +1,10 @@
 import * as stylex from "@stylexjs/stylex";
-import { AlertTriangle, CheckCircle2, HelpCircle, RefreshCw } from "lucide-react";
+import {
+	AlertTriangle,
+	CheckCircle2,
+	HelpCircle,
+	RefreshCw,
+} from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/home";
 import { createMetadata } from "@/lib/metadata";
@@ -135,15 +140,22 @@ export default function AuthErrorPage() {
 				<ul {...stylex.props(styles.guideList)}>
 					<li {...stylex.props(styles.guideItem)}>
 						<CheckCircle2 size={18} {...stylex.props(styles.guideIcon)} />
-						<span>브라우저 팝업 차단을 해제한 뒤 창이 열리는지 확인해주세요.</span>
+						<span>
+							브라우저 팝업 차단을 해제한 뒤 창이 열리는지 확인해주세요.
+						</span>
 					</li>
 					<li {...stylex.props(styles.guideItem)}>
 						<CheckCircle2 size={18} {...stylex.props(styles.guideIcon)} />
-						<span>회사/학교 계정이면 관리자 정책으로 차단될 수 있어요. 개인 계정이나 다른 브라우저/시크릿 모드에서 다시 시도해보세요.</span>
+						<span>
+							회사/학교 계정이면 관리자 정책으로 차단될 수 있어요. 개인 계정이나
+							다른 브라우저/시크릿 모드에서 다시 시도해보세요.
+						</span>
 					</li>
 					<li {...stylex.props(styles.guideItem)}>
 						<CheckCircle2 size={18} {...stylex.props(styles.guideIcon)} />
-						<span>VPN·광고차단 확장을 끄거나 네트워크를 변경한 후 다시 시도해주세요.</span>
+						<span>
+							VPN·광고차단 확장을 끄거나 네트워크를 변경한 후 다시 시도해주세요.
+						</span>
 					</li>
 				</ul>
 				<Link href="/login" {...stylex.props(styles.retryButton)}>

@@ -409,7 +409,10 @@ export default function EditPostClient({
 							/>
 						</label>
 						{existingImages.map((image) => (
-							<div key={image.id} {...stylex.props(styles.imagePreviewContainer)}>
+							<div
+								key={image.id}
+								{...stylex.props(styles.imagePreviewContainer)}
+							>
 								<img
 									src={image.imageUrl}
 									alt="첨부 이미지"

@@ -1,6 +1,6 @@
-import type { MarketSearchFilters, MarketListState } from "../types";
-import { getMarketList } from "../data/get-market-list";
 import MarketListClient from "../client/market-list-client";
+import { getMarketList } from "../data/get-market-list";
+import type { MarketListState, MarketSearchFilters } from "../types";
 
 type MarketListSectionProps = MarketSearchFilters & {
 	limit?: number;

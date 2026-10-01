@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { ChevronLeft, ChevronRight, Store } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { colors, radius, spacing } from "@/app/global-tokens.stylex";
 
@@ -77,10 +77,6 @@ export default function MarketImageCarousel({
 	title,
 }: MarketImageCarouselProps) {
 	const [currentIndex, setCurrentIndex] = useState(0);
-
-	useEffect(() => {
-		setCurrentIndex(0);
-	}, [images]);
 
 	if (!images || images.length === 0) {
 		return (

@@ -457,10 +457,7 @@ export default function SecurityPageClient({
 								)}
 							>
 								{isLoggingOut && (
-									<Loader2
-										size={16}
-										{...stylex.props(styles.spinner)}
-									/>
+									<Loader2 size={16} {...stylex.props(styles.spinner)} />
 								)}
 								{isLoggingOut ? "로그아웃 중..." : "로그아웃"}
 							</button>
@@ -510,10 +507,7 @@ export default function SecurityPageClient({
 								)}
 							>
 								{isDeleting && (
-									<Loader2
-										size={16}
-										{...stylex.props(styles.spinner)}
-									/>
+									<Loader2 size={16} {...stylex.props(styles.spinner)} />
 								)}
 								{isDeleting ? "처리 중..." : "탈퇴하기"}
 							</button>

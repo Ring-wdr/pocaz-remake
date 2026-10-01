@@ -688,7 +688,11 @@ export default function InquiryPageClient({
 						}
 						placeholder="답변을 받을 이메일을 입력해 주세요"
 						disabled={isSubmitting}
-						error={!!contactEmail && !isEmailValid ? "유효한 이메일을 입력해 주세요" : undefined}
+						error={
+							!!contactEmail && !isEmailValid
+								? "유효한 이메일을 입력해 주세요"
+								: undefined
+						}
 						helperText="로그인 계정과 다른 주소도 사용 가능합니다."
 					/>
 
@@ -774,11 +778,7 @@ export default function InquiryPageClient({
 						)}
 					</div>
 
-					<Button
-						type="submit"
-						disabled={!isValid || isSubmitting}
-						fullWidth
-					>
+					<Button type="submit" disabled={!isValid || isSubmitting} fullWidth>
 						<Send size={18} />
 						{isSubmitting ? "문의 접수 중..." : "문의하기"}
 					</Button>

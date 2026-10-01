@@ -627,10 +627,9 @@ export function CommentsClient({
 			return prev.map((comment) => ({
 				...comment,
 				replies: comment.replies.filter((r) => r.id !== commentId),
-				replyCount:
-					comment.replies.some((r) => r.id === commentId)
-						? comment.replyCount - 1
-						: comment.replyCount,
+				replyCount: comment.replies.some((r) => r.id === commentId)
+					? comment.replyCount - 1
+					: comment.replyCount,
 			}));
 		});
 
@@ -764,7 +763,10 @@ export function CommentsClient({
 										type="button"
 										onClick={handleCancelEdit}
 										disabled={isPending}
-										{...stylex.props(styles.editButton, styles.editCancelButton)}
+										{...stylex.props(
+											styles.editButton,
+											styles.editCancelButton,
+										)}
 									>
 										<X size={14} />
 									</button>
@@ -813,7 +815,10 @@ export function CommentsClient({
 											<button
 												type="button"
 												onClick={() => handleDelete(comment.id)}
-												{...stylex.props(styles.actionButton, styles.dangerButton)}
+												{...stylex.props(
+													styles.actionButton,
+													styles.dangerButton,
+												)}
 											>
 												<Trash2 size={14} />
 												<span>삭제</span>

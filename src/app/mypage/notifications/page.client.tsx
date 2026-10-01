@@ -5,7 +5,13 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
 
 const styles = stylex.create({
@@ -149,50 +155,50 @@ export default function NotificationsPage() {
 			saved
 				? (JSON.parse(saved) as NotificationSetting[])
 				: [
-					{
-						id: "chat",
-						label: "채팅 알림",
-						description: "새 메시지가 도착하면 알림을 받습니다",
-						enabled: true,
-					},
-					{
-						id: "like",
-						label: "좋아요 알림",
-						description: "내 게시글에 좋아요가 달리면 알림을 받습니다",
-						enabled: true,
-					},
-					{
-						id: "comment",
-						label: "댓글 알림",
-						description: "내 게시글에 댓글이 달리면 알림을 받습니다",
-						enabled: true,
-					},
-					{
-						id: "market",
-						label: "장터 알림",
-						description: "관심 상품의 상태가 변경되면 알림을 받습니다",
-						enabled: false,
-					},
-				],
+						{
+							id: "chat",
+							label: "채팅 알림",
+							description: "새 메시지가 도착하면 알림을 받습니다",
+							enabled: true,
+						},
+						{
+							id: "like",
+							label: "좋아요 알림",
+							description: "내 게시글에 좋아요가 달리면 알림을 받습니다",
+							enabled: true,
+						},
+						{
+							id: "comment",
+							label: "댓글 알림",
+							description: "내 게시글에 댓글이 달리면 알림을 받습니다",
+							enabled: true,
+						},
+						{
+							id: "market",
+							label: "장터 알림",
+							description: "관심 상품의 상태가 변경되면 알림을 받습니다",
+							enabled: false,
+						},
+					],
 		);
 
 		setMarketingSettings(
 			savedMarketing
 				? (JSON.parse(savedMarketing) as NotificationSetting[])
 				: [
-					{
-						id: "event",
-						label: "이벤트 알림",
-						description: "새로운 이벤트와 프로모션 정보를 받습니다",
-						enabled: false,
-					},
-					{
-						id: "news",
-						label: "소식 알림",
-						description: "포카즈의 새로운 기능과 업데이트 소식을 받습니다",
-						enabled: true,
-					},
-				],
+						{
+							id: "event",
+							label: "이벤트 알림",
+							description: "새로운 이벤트와 프로모션 정보를 받습니다",
+							enabled: false,
+						},
+						{
+							id: "news",
+							label: "소식 알림",
+							description: "포카즈의 새로운 기능과 업데이트 소식을 받습니다",
+							enabled: true,
+						},
+					],
 		);
 	}, []);
 

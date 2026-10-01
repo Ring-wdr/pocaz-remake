@@ -5,7 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { colors, fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const fixHeader = stylex.keyframes({
 	"0%": { top: "-5rem" },

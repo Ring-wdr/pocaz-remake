@@ -2,8 +2,8 @@ import { Elysia, t } from "elysia";
 
 import { authGuard } from "@/lib/elysia/auth";
 import {
-	type StorageBucket,
 	STORAGE_BUCKETS,
+	type StorageBucket,
 	storageService,
 } from "@/lib/services/storage";
 

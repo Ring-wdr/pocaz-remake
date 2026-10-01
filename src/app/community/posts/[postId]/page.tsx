@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import * as stylex from "@stylexjs/stylex";
 import dayjs from "dayjs";
 import { ArrowLeft, MessageCircle } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 

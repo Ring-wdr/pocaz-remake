@@ -9,9 +9,9 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
 import { formatRelativeTime } from "@/utils/date";
 import { api } from "@/utils/eden";
-import { createMetadata } from "@/lib/metadata";
 
 export const metadata = createMetadata({
 	title: "좋아요한 글 | POCAZ",
@@ -268,9 +268,11 @@ export default async function LikesPage({
 	const { cursor, limit, sort } = await searchParams;
 	const cursorParam = typeof cursor === "string" ? cursor : undefined;
 	const limitParam = typeof limit === "string" ? limit : `${PAGE_SIZE}`;
-	const sortParam = (typeof sort === "string" && ["likedAt", "popular", "recent"].includes(sort)
-		? sort
-		: "likedAt") as SortOption;
+	const sortParam = (
+		typeof sort === "string" && ["likedAt", "popular", "recent"].includes(sort)
+			? sort
+			: "likedAt"
+	) as SortOption;
 
 	const query: Record<string, string> = { limit: limitParam, sort: sortParam };
 	if (cursorParam) {
@@ -283,7 +285,9 @@ export default async function LikesPage({
 	const nextCursor = data?.nextCursor ?? null;
 
 	const nextHref =
-		hasMore && nextCursor ? buildHref({ cursor: nextCursor, sort: sortParam }) : null;
+		hasMore && nextCursor
+			? buildHref({ cursor: nextCursor, sort: sortParam })
+			: null;
 	const resetHref = buildHref({ sort: sortParam });
 
 	return (
@@ -334,13 +338,13 @@ export default async function LikesPage({
 								href={`/community/posts/${post.id}`}
 								{...stylex.props(styles.postItem)}
 							>
-								<p {...stylex.props(styles.postAuthor)}>
-									{post.user.nickname}
-								</p>
+								<p {...stylex.props(styles.postAuthor)}>{post.user.nickname}</p>
 								<h3 {...stylex.props(styles.postTitle)}>{post.content}</h3>
 								<div {...stylex.props(styles.postMeta)}>
 									<span {...stylex.props(styles.postTime)}>
-										{formatRelativeTime(sortParam === "likedAt" ? post.likedAt : post.createdAt)}
+										{formatRelativeTime(
+											sortParam === "likedAt" ? post.likedAt : post.createdAt,
+										)}
 									</span>
 									<div {...stylex.props(styles.postStats)}>
 										<span {...stylex.props(styles.stat, styles.statLiked)}>

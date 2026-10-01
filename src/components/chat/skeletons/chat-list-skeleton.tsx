@@ -140,9 +140,7 @@ export default function ChatListSkeleton({
 				<>
 					<div {...stylex.props(styles.headerRow)} />
 					<div {...stylex.props(styles.filterRow)}>
-						<div
-							{...stylex.props(styles.filterPill, styles.filterPillWide)}
-						/>
+						<div {...stylex.props(styles.filterPill, styles.filterPillWide)} />
 						<div
 							{...stylex.props(styles.filterPill, styles.filterPillMedium)}
 						/>

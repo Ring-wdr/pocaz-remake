@@ -15,7 +15,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ComponentType } from "react";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { signOut } from "@/lib/auth/actions";
 
 interface MenuItem {
@@ -189,14 +195,11 @@ export default function MenuList() {
 				</div>
 			))}
 
-		<form action={signOut}>
-			<button
-				type="submit"
-				{...stylex.props(styles.logoutButton)}
-			>
-				로그아웃
-			</button>
-		</form>
+			<form action={signOut}>
+				<button type="submit" {...stylex.props(styles.logoutButton)}>
+					로그아웃
+				</button>
+			</form>
 		</div>
 	);
 }

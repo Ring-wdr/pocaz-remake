@@ -8,7 +8,13 @@ import {
 	ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
 import { createMetadata } from "@/lib/metadata";
 
@@ -138,10 +144,7 @@ export default function SettingsPage() {
 				<div {...stylex.props(styles.section)}>
 					<h2 {...stylex.props(styles.sectionTitle)}>앱 설정</h2>
 					<div {...stylex.props(styles.list)}>
-						<Link
-							href="/mypage/notifications"
-							{...stylex.props(styles.item)}
-						>
+						<Link href="/mypage/notifications" {...stylex.props(styles.item)}>
 							<Bell size={20} {...stylex.props(styles.icon)} />
 							<span {...stylex.props(styles.label)}>알림 설정</span>
 							<ChevronRight size={18} {...stylex.props(styles.arrow)} />

@@ -176,7 +176,13 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			query: t.Object({
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
-				sort: t.Optional(t.Union([t.Literal("likedAt"), t.Literal("popular"), t.Literal("recent")])),
+				sort: t.Optional(
+					t.Union([
+						t.Literal("likedAt"),
+						t.Literal("popular"),
+						t.Literal("recent"),
+					]),
+				),
 			}),
 			response: t.Object({
 				items: t.Array(
@@ -197,7 +203,8 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			detail: {
 				tags: ["Likes"],
 				summary: "내가 좋아요한 게시글 목록",
-				description: "현재 사용자가 좋아요한 게시글 목록을 조회합니다 (페이지네이션 및 정렬 지원). sort: likedAt(좋아요한 순), popular(인기순), recent(최신순)",
+				description:
+					"현재 사용자가 좋아요한 게시글 목록을 조회합니다 (페이지네이션 및 정렬 지원). sort: likedAt(좋아요한 순), popular(인기순), recent(최신순)",
 			},
 		},
 	)

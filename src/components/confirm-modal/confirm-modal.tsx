@@ -378,11 +378,7 @@ export function ConfirmModal({
 					</button>
 				</div>
 
-				<form
-					{...stylex.props(styles.form)}
-					onSubmit={handleSubmit}
-					noValidate
-				>
+				<form {...stylex.props(styles.form)} onSubmit={handleSubmit} noValidate>
 					<div {...stylex.props(styles.content)}>
 						{description && (
 							<p id={descriptionId} {...stylex.props(styles.description)}>

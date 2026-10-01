@@ -7,7 +7,11 @@ type MarketQuery = {
 const DEFAULT_STATUS = "all";
 const DEFAULT_SORT = "latest";
 
-export function updateMarketQueryString({ keyword, status, sort }: MarketQuery) {
+export function updateMarketQueryString({
+	keyword,
+	status,
+	sort,
+}: MarketQuery) {
 	if (typeof window === "undefined") return;
 
 	const url = new URL(window.location.href);

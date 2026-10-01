@@ -2,7 +2,13 @@ import * as stylex from "@stylexjs/stylex";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { FixedPageHeader } from "@/components/ui";
 
 const styles = stylex.create({

@@ -43,7 +43,9 @@ export interface UseDisclosureOptions {
  *   onClose: () => console.log("Closed"),
  * });
  */
-export function useDisclosure(options: UseDisclosureOptions = {}): UseDisclosureReturn {
+export function useDisclosure(
+	options: UseDisclosureOptions = {},
+): UseDisclosureReturn {
 	const { defaultIsOpen = false, onOpen, onClose } = options;
 	const [isOpen, setIsOpenState] = useState(defaultIsOpen);
 

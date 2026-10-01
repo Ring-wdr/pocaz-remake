@@ -1,9 +1,9 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
 import {
-	postService,
 	commentService,
 	postImageService,
+	postService,
 } from "@/lib/services/post";
 import { userService } from "@/lib/services/user";
 
@@ -74,11 +74,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 	.get(
 		"/",
 		async ({ query }) => {
-			const category = query.category as
-				| "free"
-				| "boast"
-				| "info"
-				| undefined;
+			const category = query.category as "free" | "boast" | "info" | undefined;
 			const result = await postService.findAll({
 				cursor: query.cursor,
 				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
@@ -103,13 +99,16 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			query: t.Object({
 				cursor: t.Optional(t.String()),
 				limit: t.Optional(t.String()),
-				category: t.Optional(t.Union([t.Literal("free"), t.Literal("boast"), t.Literal("info")])),
+				category: t.Optional(
+					t.Union([t.Literal("free"), t.Literal("boast"), t.Literal("info")]),
+				),
 			}),
 			response: PaginatedPostsSchema,
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 목록 조회",
-				description: "게시글 목록을 페이지네이션하여 조회합니다. category로 필터링 가능합니다.",
+				description:
+					"게시글 목록을 페이지네이션하여 조회합니다. category로 필터링 가능합니다.",
 			},
 		},
 	)
@@ -196,7 +195,8 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 상세 조회",
-				description: "게시글의 상세 정보를 조회합니다. 댓글은 별도 API로 조회합니다.",
+				description:
+					"게시글의 상세 정보를 조회합니다. 댓글은 별도 API로 조회합니다.",
 			},
 		},
 	)
@@ -254,7 +254,8 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			detail: {
 				tags: ["Comments"],
 				summary: "댓글 목록 조회",
-				description: "게시글의 댓글을 페이지네이션하여 조회합니다. 대댓글도 포함됩니다.",
+				description:
+					"게시글의 댓글을 페이지네이션하여 조회합니다. 대댓글도 포함됩니다.",
 			},
 		},
 	)
@@ -334,7 +335,9 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 		{
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
-				category: t.Optional(t.Union([t.Literal("free"), t.Literal("boast"), t.Literal("info")])),
+				category: t.Optional(
+					t.Union([t.Literal("free"), t.Literal("boast"), t.Literal("info")]),
+				),
 				imageUrls: t.Optional(t.Array(t.String())),
 			}),
 			response: t.Object({

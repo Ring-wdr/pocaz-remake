@@ -60,10 +60,7 @@ export default function CategoryTabsSkeleton() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			{Array.from({ length: 4 }).map((_, index) => (
-				<div
-					key={index}
-					{...stylex.props(styles.tab, tabWidthStyles[index])}
-				/>
+				<div key={index} {...stylex.props(styles.tab, tabWidthStyles[index])} />
 			))}
 		</div>
 	);

@@ -11,8 +11,8 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
-import { useBodyScrollLock, useFocusManagement } from "@/hooks";
 import { Button, Input } from "@/components/ui";
+import { useBodyScrollLock, useFocusManagement } from "@/hooks";
 
 const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)" as const;
 
@@ -299,11 +299,7 @@ export function ConfirmModal({
 					</button>
 				</div>
 
-				<form
-					{...stylex.props(styles.form)}
-					onSubmit={handleSubmit}
-					noValidate
-				>
+				<form {...stylex.props(styles.form)} onSubmit={handleSubmit} noValidate>
 					<div {...stylex.props(styles.content)}>
 						{description && (
 							<p id={descriptionId} {...stylex.props(styles.description)}>
@@ -327,11 +323,7 @@ export function ConfirmModal({
 					</div>
 
 					<div {...stylex.props(styles.footer)}>
-						<Button
-							type="button"
-							variant="secondary"
-							onClick={handleCancel}
-						>
+						<Button type="button" variant="secondary" onClick={handleCancel}>
 							{cancelText}
 						</Button>
 						<Button type="submit" variant="primary">

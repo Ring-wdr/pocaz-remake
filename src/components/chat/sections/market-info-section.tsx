@@ -1,6 +1,4 @@
 import * as stylex from "@stylexjs/stylex";
-import type { MarketSummary } from "@/types/entities";
-
 import {
 	colors,
 	fontSize,
@@ -8,6 +6,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import type { MarketSummary } from "@/types/entities";
 
 const styles = stylex.create({
 	marketInfo: {

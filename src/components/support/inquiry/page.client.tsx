@@ -5,7 +5,13 @@ import { ArrowLeft, Send } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
 import { api } from "@/utils/eden";
 
@@ -227,9 +233,9 @@ export default function InquiryPage() {
 							id="category"
 							value={category}
 							onChange={(e) => setCategory(e.target.value)}
-						disabled={isSubmitting}
-						{...stylex.props(styles.select)}
-					>
+							disabled={isSubmitting}
+							{...stylex.props(styles.select)}
+						>
 							{categories.map((cat) => (
 								<option key={cat.value} value={cat.value}>
 									{cat.label}
@@ -249,9 +255,9 @@ export default function InquiryPage() {
 							onChange={(e) => setTitle(e.target.value)}
 							placeholder="제목을 입력해 주세요"
 							maxLength={100}
-						disabled={isSubmitting}
-						{...stylex.props(styles.input)}
-					/>
+							disabled={isSubmitting}
+							{...stylex.props(styles.input)}
+						/>
 					</div>
 
 					<div {...stylex.props(styles.formGroup)}>
@@ -264,9 +270,9 @@ export default function InquiryPage() {
 							onChange={(e) => setContent(e.target.value)}
 							placeholder="문의 내용을 상세히 작성해 주세요 (최소 10자)"
 							maxLength={2000}
-						disabled={isSubmitting}
-						{...stylex.props(styles.textarea)}
-					/>
+							disabled={isSubmitting}
+							{...stylex.props(styles.textarea)}
+						/>
 						<span {...stylex.props(styles.charCount)}>
 							{content.length}/2000
 						</span>

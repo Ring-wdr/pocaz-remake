@@ -1,4 +1,8 @@
-import type { MarketFilterValue, MarketSearchFilters, MarketSortValue } from "../types";
+import type {
+	MarketFilterValue,
+	MarketSearchFilters,
+	MarketSortValue,
+} from "../types";
 
 type MarketSearchParams = Awaited<PageProps<"/market">["searchParams"]>;
 
@@ -20,19 +24,23 @@ function pickFirst(value?: string | string[]) {
 	return Array.isArray(value) ? value[0] : value;
 }
 
-export function normalizeMarketSearchParams(params: MarketSearchParams): MarketSearchFilters {
+export function normalizeMarketSearchParams(
+	params: MarketSearchParams,
+): MarketSearchFilters {
 	const keyword = pickFirst(params?.keyword) ?? "";
 	const statusParam = pickFirst(params?.status);
 	const sortParam = pickFirst(params?.sort);
 	const cursor = pickFirst(params?.cursor) ?? null;
 
-	const status = statusParam && statusValues.has(statusParam as MarketFilterValue)
-		? (statusParam as MarketFilterValue)
-		: "all";
+	const status =
+		statusParam && statusValues.has(statusParam as MarketFilterValue)
+			? (statusParam as MarketFilterValue)
+			: "all";
 
-	const sort = sortParam && sortValues.has(sortParam as MarketSortValue)
-		? (sortParam as MarketSortValue)
-		: "latest";
+	const sort =
+		sortParam && sortValues.has(sortParam as MarketSortValue)
+			? (sortParam as MarketSortValue)
+			: "latest";
 
 	return {
 		keyword,

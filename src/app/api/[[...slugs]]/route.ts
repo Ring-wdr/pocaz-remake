@@ -11,8 +11,8 @@ import {
 	publicPhotocardRoutes,
 } from "@/lib/elysia/routes/photocards";
 import { postRoutes, publicPostRoutes } from "@/lib/elysia/routes/posts";
-import { supportRoutes } from "@/lib/elysia/routes/support";
 import { storageRoutes } from "@/lib/elysia/routes/storage";
+import { supportRoutes } from "@/lib/elysia/routes/support";
 import { publicUserRoutes, userRoutes } from "@/lib/elysia/routes/users";
 
 // ==============================================
@@ -149,8 +149,8 @@ if (process.env.NODE_ENV === "development") {
 						{ name: "GalmangPoca", description: "갈망포카 관련 API" },
 						{ name: "Likes", description: "좋아요 관련 API" },
 						{ name: "Chat", description: "채팅 관련 API" },
-					{ name: "Storage", description: "파일 저장소 관련 API" },
-					{ name: "Support", description: "고객지원/문의 API" },
+						{ name: "Storage", description: "파일 저장소 관련 API" },
+						{ name: "Support", description: "고객지원/문의 API" },
 					],
 				},
 			}),

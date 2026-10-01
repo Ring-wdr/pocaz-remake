@@ -5,7 +5,13 @@ import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import type { MarketItem } from "@/types/entities";
 
 const MOBILE = "@media (max-width: 767px)" as const;
@@ -103,7 +109,9 @@ export default function MainPocaItem({ items }: MainPocaItemProps) {
 								)}
 							</div>
 							<div {...stylex.props(styles.pocaListWrap)}>
-								<p {...stylex.props(styles.sellerName)}>{market.user.nickname}</p>
+								<p {...stylex.props(styles.sellerName)}>
+									{market.user.nickname}
+								</p>
 								<p {...stylex.props(styles.pocaTitle)}>{market.title}</p>
 								{market.description && (
 									<p {...stylex.props(styles.pocaDesc)}>

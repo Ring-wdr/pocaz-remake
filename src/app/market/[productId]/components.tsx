@@ -1,7 +1,13 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArrowLeft, Heart, MessageCircle, Share2 } from "lucide-react";
 import Link from "next/link";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const skeletonPulse = stylex.keyframes({
 	"0%": { opacity: 0.6 },

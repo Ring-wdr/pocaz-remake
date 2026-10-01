@@ -153,7 +153,10 @@ export const chatRoomService = {
 							members: {
 								some: {
 									user: {
-										nickname: { contains: search, mode: "insensitive" as const },
+										nickname: {
+											contains: search,
+											mode: "insensitive" as const,
+										},
 									},
 								},
 							},

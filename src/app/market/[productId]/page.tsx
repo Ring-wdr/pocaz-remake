@@ -108,7 +108,11 @@ export default async function MarketDetailPage({
 
 			<div {...stylex.props(styles.content)}>
 				<div {...stylex.props(styles.imageSection)}>
-					<MarketImageCarousel images={data.images} title={data.title} />
+					<MarketImageCarousel
+						key={productId}
+						images={data.images}
+						title={data.title}
+					/>
 					<StatusBadge marketId={productId} status={status} isOwner={isOwner} />
 				</div>
 

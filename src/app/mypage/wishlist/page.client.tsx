@@ -249,8 +249,12 @@ export default function WishlistClient({ products }: WishlistClientProps) {
 									</button>
 								</div>
 								<div {...stylex.props(styles.productInfo)}>
-									<p {...stylex.props(styles.productSeller)}>{product.seller}</p>
-									<h3 {...stylex.props(styles.productTitle)}>{product.title}</h3>
+									<p {...stylex.props(styles.productSeller)}>
+										{product.seller}
+									</p>
+									<h3 {...stylex.props(styles.productTitle)}>
+										{product.title}
+									</h3>
 									<p {...stylex.props(styles.productPrice)}>
 										{product.price
 											? `${product.price.toLocaleString()}원`

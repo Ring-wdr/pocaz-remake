@@ -171,7 +171,10 @@ export default function StatusChanger({
 				aria-label="판매 상태 변경"
 			>
 				<Button
-					{...stylex.props(styles.trigger, styles[statusStyles[selectedStatus]])}
+					{...stylex.props(
+						styles.trigger,
+						styles[statusStyles[selectedStatus]],
+					)}
 					data-focus-visible-added=""
 					style={{
 						outlineWidth: undefined,
@@ -184,9 +187,7 @@ export default function StatusChanger({
 								isFocusVisible && styles.triggerFocusVisible,
 							)}
 						>
-							<SelectValue>
-								{statusLabels.get(selectedStatus)}
-							</SelectValue>
+							<SelectValue>{statusLabels.get(selectedStatus)}</SelectValue>
 							<ChevronDown size={14} />
 						</span>
 					)}
@@ -194,11 +195,7 @@ export default function StatusChanger({
 				<Popover {...stylex.props(styles.popover)}>
 					<ListBox {...stylex.props(styles.listBox)}>
 						{statusOptions.map(([status, label]) => (
-							<ListBoxItem
-								key={status}
-								id={status}
-								textValue={label}
-							>
+							<ListBoxItem key={status} id={status} textValue={label}>
 								{({ isSelected, isFocused, isHovered, isDisabled }) => (
 									<div
 										{...stylex.props(

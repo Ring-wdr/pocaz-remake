@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useActionState } from "react";
-import { type SignInState, signInWithGoogle } from "@/lib/auth/actions";
 import { Button } from "@/components/ui";
+import { type SignInState, signInWithGoogle } from "@/lib/auth/actions";
 import {
 	colors,
 	fontSize,

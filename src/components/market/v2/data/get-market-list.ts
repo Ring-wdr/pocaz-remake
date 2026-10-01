@@ -38,11 +38,9 @@ export async function getMarketList({
 				},
 			});
 		} else if (status && status !== "all") {
-			response = await api.markets
-				.status({ status })
-				.get({
-					query: { cursor: cursor ?? undefined, limit: limitString, sort },
-				});
+			response = await api.markets.status({ status }).get({
+				query: { cursor: cursor ?? undefined, limit: limitString, sort },
+			});
 		} else {
 			response = await api.markets.get({
 				query: { cursor: cursor ?? undefined, limit: limitString, sort },

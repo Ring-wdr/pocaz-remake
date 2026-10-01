@@ -1,11 +1,11 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
+import { prisma } from "@/lib/prisma";
 import { activityService } from "@/lib/services/activity";
 import { marketLikeService } from "@/lib/services/market";
 import { postService } from "@/lib/services/post";
 import { transactionService } from "@/lib/services/transaction";
 import { userService } from "@/lib/services/user";
-import { prisma } from "@/lib/prisma";
 
 // 공통 응답 스키마
 const UserResponseSchema = t.Object({

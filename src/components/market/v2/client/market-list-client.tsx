@@ -1,7 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { colors, fontSize, spacing } from "@/app/global-tokens.stylex";
 import { getMarketList } from "../data/get-market-list";

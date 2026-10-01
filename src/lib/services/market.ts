@@ -10,15 +10,9 @@ export type MarketSort = "latest" | "priceAsc" | "priceDesc";
 function buildOrderBy(sort: MarketSort | undefined) {
 	switch (sort) {
 		case "priceAsc":
-			return [
-				{ price: "asc" as const },
-				{ createdAt: "desc" as const },
-			];
+			return [{ price: "asc" as const }, { createdAt: "desc" as const }];
 		case "priceDesc":
-			return [
-				{ price: "desc" as const },
-				{ createdAt: "desc" as const },
-			];
+			return [{ price: "desc" as const }, { createdAt: "desc" as const }];
 		default:
 			return [{ createdAt: "desc" as const }];
 	}
@@ -423,7 +417,10 @@ export const marketLikeService = {
 	/**
 	 * 여러 Market의 찜 여부 확인 (batch)
 	 */
-	async checkLikedMarkets(userId: string, marketIds: string[]): Promise<Record<string, boolean>> {
+	async checkLikedMarkets(
+		userId: string,
+		marketIds: string[],
+	): Promise<Record<string, boolean>> {
 		const likes = await prisma.marketLike.findMany({
 			where: {
 				userId,

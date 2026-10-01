@@ -13,16 +13,17 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-import {
-	colors,
-	fontSize,
-	spacing,
-} from "@/app/global-tokens.stylex";
+import { colors, fontSize, spacing } from "@/app/global-tokens.stylex";
 import { Button, Input } from "@/components/ui";
 import { api } from "@/utils/eden";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const ALLOWED_FILE_TYPES = [
+	"image/jpeg",
+	"image/png",
+	"image/gif",
+	"image/webp",
+];
 
 const spin = stylex.keyframes({
 	"0%": { transform: "rotate(0deg)" },
@@ -314,9 +315,7 @@ export default function EditProfileForm({
 					disabled={!canSave}
 					size="sm"
 				>
-					{isSaving && (
-						<Loader2 size={16} {...stylex.props(styles.spinner)} />
-					)}
+					{isSaving && <Loader2 size={16} {...stylex.props(styles.spinner)} />}
 					{isSaving ? "저장 중..." : "저장"}
 				</Button>
 			</div>

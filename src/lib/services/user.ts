@@ -134,7 +134,12 @@ export const userService = {
 	/**
 	 * Supabase Auth로 User 조회 또는 생성 (자동 연동)
 	 */
-	async findOrCreate(supabaseId: string, email?: string | null, name?: string | null, avatarUrl?: string | null) {
+	async findOrCreate(
+		supabaseId: string,
+		email?: string | null,
+		name?: string | null,
+		avatarUrl?: string | null,
+	) {
 		const existingUser = await this.findBySupabaseId(supabaseId);
 
 		if (existingUser) {

@@ -1,10 +1,16 @@
+import * as stylex from "@stylexjs/stylex";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import * as stylex from "@stylexjs/stylex";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
-import { api } from "@/utils/eden";
 import { createMetadata } from "@/lib/metadata";
+import { api } from "@/utils/eden";
 import SalesListClient from "./page.client";
 
 export const metadata = createMetadata({
