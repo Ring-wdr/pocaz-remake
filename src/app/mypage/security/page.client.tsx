@@ -19,7 +19,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
-import { signOut } from "@/lib/auth/actions";
+import { useSignOut } from "@/lib/hooks/use-sign-out";
 import { api } from "@/utils/eden";
 
 interface SecurityPageClientProps {
@@ -279,6 +279,7 @@ export default function SecurityPageClient({
 	loginEmail,
 }: SecurityPageClientProps) {
 	const [activeModal, setActiveModal] = useState<ModalType>(null);
+	const signOut = useSignOut();
 	const [isLoggingOut, startLogout] = useTransition();
 	const [isDeleting, startDelete] = useTransition();
 

@@ -2,6 +2,11 @@ import { queryOptions } from "@tanstack/react-query";
 import { api } from "@/utils/eden";
 
 /**
+ * 내 정보 쿼리들의 공통 키. 프로필 수정처럼 내 정보가 바뀌면 이 키로 무효화한다.
+ */
+export const myUserQueryKey = ["users", "me"] as const;
+
+/**
  * 프로필 정보 쿼리 옵션
  * - staleTime: 5분 (프로필은 자주 변경되지 않음)
  * - gcTime: 15분 (메모리에 캐시 유지)
@@ -9,7 +14,7 @@ import { api } from "@/utils/eden";
  */
 export const userProfileQueryOptions = () =>
 	queryOptions({
-		queryKey: ["users", "me", "profile"] as const,
+		queryKey: [...myUserQueryKey, "profile"] as const,
 		queryFn: async () => {
 			const { data, error } = await api.users.me.get();
 			if (error || !data) {
@@ -30,7 +35,7 @@ export const userProfileQueryOptions = () =>
  */
 export const userStatsQueryOptions = () =>
 	queryOptions({
-		queryKey: ["users", "me", "stats"] as const,
+		queryKey: [...myUserQueryKey, "stats"] as const,
 		queryFn: async () => {
 			const { data, error } = await api.users.me.summary.get();
 			if (error || !data) {
@@ -51,7 +56,7 @@ export const userStatsQueryOptions = () =>
  */
 export const userActivityQueryOptions = () =>
 	queryOptions({
-		queryKey: ["users", "me", "activity"] as const,
+		queryKey: [...myUserQueryKey, "activity"] as const,
 		queryFn: async () => {
 			const { data, error } = await api.users.me.activity.get({
 				query: { limit: 5 },

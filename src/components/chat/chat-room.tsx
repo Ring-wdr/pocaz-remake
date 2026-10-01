@@ -1,6 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, MoreVertical, Send, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +23,7 @@ import { useCallbackRef } from "@/hooks/use-callback-ref";
 import { useEventListener } from "@/hooks/use-event-listener";
 import { useChatMessages } from "@/lib/hooks/use-chat-messages";
 import { preCacheUsers, useChatPresence } from "@/lib/hooks/use-chat-realtime";
+import { chatRoomsQueryKey } from "@/lib/queries/markets";
 import type {
 	ChatMarketInfo,
 	ChatMember,
@@ -400,6 +402,7 @@ export default function ChatRoom({
 	currentUserId,
 }: ChatRoomProps) {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [inputValue, setInputValue] = useState("");
 	const [isSending, setIsSending] = useState(false);
 	const [isLeaving, setIsLeaving] = useState(false);
@@ -590,6 +593,7 @@ export default function ChatRoom({
 			}
 
 			toast.success("채팅방을 나갔습니다.");
+			void queryClient.invalidateQueries({ queryKey: chatRoomsQueryKey });
 			router.push("/chat/list");
 		} catch (err) {
 			console.error("Leave room error:", err);

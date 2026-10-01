@@ -1,6 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { useQueryClient } from "@tanstack/react-query";
 import { Camera, Check, Loader2, User, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 
 import { colors, fontSize, spacing } from "@/app/global-tokens.stylex";
 import { Button, Input } from "@/components/ui";
+import { myUserQueryKey } from "@/lib/queries/users";
 import { api } from "@/utils/eden";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -114,6 +116,7 @@ export default function EditProfileForm({
 	initialAvatar,
 }: EditProfileFormProps) {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [nickname, setNickname] = useState(initialNickname);
 	const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatar);
 	const [isSaving, startSaving] = useTransition();
@@ -263,6 +266,8 @@ export default function EditProfileForm({
 			}
 
 			toast.success("프로필이 수정되었습니다.");
+			// 마이페이지 요약은 React Query 캐시(5분)로 그려지므로 함께 갱신한다
+			await queryClient.invalidateQueries({ queryKey: myUserQueryKey });
 			router.refresh();
 		});
 	};

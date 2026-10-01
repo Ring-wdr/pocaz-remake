@@ -22,7 +22,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
-import { signOut } from "@/lib/auth/actions";
+import { useSignOut } from "@/lib/hooks/use-sign-out";
 
 interface MenuItem {
 	id: number;
@@ -168,6 +168,7 @@ const styles = stylex.create({
 });
 
 export default function MenuList() {
+	const signOut = useSignOut();
 	return (
 		<div {...stylex.props(styles.container)}>
 			{menuItems.map((section) => (

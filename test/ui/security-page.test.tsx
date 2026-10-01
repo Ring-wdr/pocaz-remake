@@ -27,13 +27,20 @@ registerDom();
 const { cleanup, fireEvent, render, waitFor } = await import(
 	"@testing-library/react"
 );
+const { QueryClient, QueryClientProvider } = await import(
+	"@tanstack/react-query"
+);
 const { default: SecurityPageClient } = await import(
 	"@/app/mypage/security/page.client"
 );
 
+let queryClient = new QueryClient();
+
 async function deleteAccount() {
 	const view = render(
-		<SecurityPageClient loginProvider="소셜" loginEmail="a@example.com" />,
+		<QueryClientProvider client={queryClient}>
+			<SecurityPageClient loginProvider="소셜" loginEmail="a@example.com" />
+		</QueryClientProvider>,
 	);
 	fireEvent.click(view.getByRole("button", { name: /회원 탈퇴/ }));
 	fireEvent.click(await view.findByRole("button", { name: "탈퇴하기" }));
@@ -42,6 +49,7 @@ async function deleteAccount() {
 describe("회원 탈퇴", () => {
 	beforeEach(() => {
 		cleanup();
+		queryClient = new QueryClient();
 		for (const fn of [signOut, deleteMe, toast.success, toast.error]) {
 			fn.mockClear();
 		}
@@ -71,12 +79,16 @@ describe("회원 탈퇴", () => {
 		expect(signOut).not.toHaveBeenCalled();
 	});
 
-	test("성공하면 완료를 알리고 로그아웃한다", async () => {
+	test("성공하면 완료를 알리고, 이전 사용자의 쿼리 캐시를 비운 뒤 로그아웃한다", async () => {
 		deleteMe.mockResolvedValueOnce(edenResult(200, { message: "deleted" }));
+		queryClient.setQueryData(["chat", "rooms", "all", "", "all"], {
+			pages: [{ rooms: [{ id: "room-of-previous-user" }] }],
+		});
 
 		await deleteAccount();
 
 		await waitFor(() => expect(signOut).toHaveBeenCalled());
 		expect(toast.success).toHaveBeenCalled();
+		expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
 	});
 });
