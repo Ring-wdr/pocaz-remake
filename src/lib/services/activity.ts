@@ -86,7 +86,11 @@ export const activityService = {
 		});
 
 		const itemsForPage = activities.slice(0, limit);
-		const nextCursor = activities.length > limit ? activities[limit].id : null;
+		// 다음 요청은 커서 항목을 건너뛰므로(skip: 1) 이 페이지의 마지막 항목을 커서로 준다
+		const nextCursor =
+			activities.length > limit
+				? itemsForPage[itemsForPage.length - 1].id
+				: null;
 
 		const postIds = itemsForPage
 			.filter((activity) => activity.targetType === "post")
