@@ -61,6 +61,11 @@ const styles = stylex.create({
 });
 
 /**
+ * Virtuoso의 firstItemIndex 시작값. 과거 메시지를 앞에 붙일 때마다 붙인 개수만큼 줄이므로 충분히 크게 잡는다.
+ */
+const START_INDEX = 1_000_000;
+
+/**
  * 가변 높이 메시지 리스트 (react-virtuoso)
  * - startReached: 위로 스크롤 시 과거 메시지 로드
  * - followOutput: 맨 아래일 때만 새 메시지를 따라감
@@ -81,29 +86,27 @@ export function ChatMessageList({
 }: ChatMessageListProps) {
 	const internalRef = useRef<VirtuosoHandle | null>(null);
 	const [mounted, setMounted] = useState(false);
-	const [firstItemIndex, setFirstItemIndex] = useState(0);
-	const prevFirstIdRef = useRef<string | null>(messages[0]?.id ?? null);
-	const prevLengthRef = useRef(messages.length);
+
+	// 과거 메시지를 앞에 붙이면 Virtuoso는 "같은 렌더에서" firstItemIndex가 붙인 개수만큼 줄어야 스크롤 위치를 지킨다.
+	// 기준 메시지(처음 맨 위에 있던 메시지)를 잡아 두고, 그 앞에 붙은 메시지 수로 firstItemIndex를 계산한다.
+	const [anchor, setAnchor] = useState({
+		id: messages[0]?.id ?? null,
+		index: START_INDEX,
+	});
+	const anchorPosition =
+		anchor.id === null
+			? -1
+			: messages.findIndex((message) => message.id === anchor.id);
+	const firstItemIndex =
+		anchorPosition === -1 ? anchor.index : anchor.index - anchorPosition;
+	if (anchorPosition === -1 && messages.length > 0) {
+		// 빈 방에서 시작했거나 기준이던 전송 중 메시지가 서버 메시지로 바뀌면 지금 맨 위 메시지로 기준을 옮긴다
+		setAnchor({ id: messages[0].id, index: firstItemIndex });
+	}
 
 	useEffect(() => {
 		setMounted(true);
 	}, []);
-
-	useEffect(() => {
-		const prevLength = prevLengthRef.current;
-		const currentLength = messages.length;
-		const delta = currentLength - prevLength;
-		const firstId = messages[0]?.id ?? null;
-		const isPrepended =
-			firstId !== prevFirstIdRef.current && delta > 0 && isFetchingPrev;
-
-		if (isPrepended) {
-			setFirstItemIndex((idx) => idx + delta);
-		}
-
-		prevFirstIdRef.current = firstId;
-		prevLengthRef.current = currentLength;
-	}, [isFetchingPrev, messages]);
 
 	if (!mounted) {
 		return null;
@@ -157,14 +160,14 @@ export function ChatMessageList({
 			atBottomStateChange={onAtBottomChange}
 			itemContent={(index, item) => (
 				<div>
-					{shouldRenderDateLabel(index) && (
+					{shouldRenderDateLabel(index - firstItemIndex) && (
 						<div {...stylex.props(styles.dateGroup)}>
 							<span {...stylex.props(styles.dateBadge)}>
 								{formatDayLabel(item.createdAt)}
 							</span>
 						</div>
 					)}
-					{shouldRenderUnreadDivider(index) && (
+					{shouldRenderUnreadDivider(index - firstItemIndex) && (
 						<div {...stylex.props(styles.unreadDivider)}>
 							<span {...stylex.props(styles.unreadDividerLine)} aria-hidden />
 							<span {...stylex.props(styles.unreadDividerLabel)}>
