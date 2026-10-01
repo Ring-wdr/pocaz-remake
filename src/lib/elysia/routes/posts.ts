@@ -63,6 +63,12 @@ const PaginatedCommentsSchema = t.Object({
 	totalCount: t.Number(),
 });
 
+const CategoryEnum = t.Union([
+	t.Literal("free"),
+	t.Literal("boast"),
+	t.Literal("info"),
+]);
+
 const ErrorSchema = t.Object({
 	error: t.String(),
 });
@@ -100,9 +106,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			query: t.Object({
 				cursor: t.Optional(t.String()),
 				limit: LimitQuery,
-				category: t.Optional(
-					t.Union([t.Literal("free"), t.Literal("boast"), t.Literal("info")]),
-				),
+				category: t.Optional(CategoryEnum),
 			}),
 			response: PaginatedPostsSchema,
 			detail: {
@@ -124,6 +128,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			const result = await postService.search(query.keyword, {
 				cursor: query.cursor,
 				limit: query.limit ?? 20,
+				category: query.category,
 			});
 
 			return {
@@ -145,6 +150,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 				keyword: t.Optional(t.String()),
 				cursor: t.Optional(t.String()),
 				limit: LimitQuery,
+				category: t.Optional(CategoryEnum),
 			}),
 			response: PaginatedPostsSchema,
 			detail: {
@@ -336,9 +342,7 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 		{
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
-				category: t.Optional(
-					t.Union([t.Literal("free"), t.Literal("boast"), t.Literal("info")]),
-				),
+				category: t.Optional(CategoryEnum),
 				imageUrls: t.Optional(t.Array(t.String())),
 			}),
 			response: t.Object({

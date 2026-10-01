@@ -222,8 +222,11 @@ export const marketService = {
 	/**
 	 * 검색
 	 */
-	async search(keyword: string, options: PaginationOptions = {}) {
-		const { cursor, limit = 20, sort } = options;
+	async search(
+		keyword: string,
+		options: PaginationOptions & { status?: MarketStatus } = {},
+	) {
+		const { cursor, limit = 20, sort, status } = options;
 
 		const markets = await prisma.market.findMany({
 			where: {
@@ -231,6 +234,7 @@ export const marketService = {
 					{ title: { contains: keyword, mode: "insensitive" } },
 					{ description: { contains: keyword, mode: "insensitive" } },
 				],
+				...(status && { status }),
 			},
 			take: limit + 1,
 			...(cursor && {

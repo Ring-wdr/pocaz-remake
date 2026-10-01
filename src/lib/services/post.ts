@@ -243,7 +243,7 @@ export const postService = {
 	 * 검색
 	 */
 	async search(keyword: string, options: PaginationOptions = {}) {
-		const { cursor, limit = 20 } = options;
+		const { cursor, limit = 20, category } = options;
 
 		const posts = await prisma.post.findMany({
 			where: {
@@ -251,6 +251,7 @@ export const postService = {
 					contains: keyword,
 					mode: "insensitive",
 				},
+				...(category && { category }),
 			},
 			take: limit + 1,
 			...(cursor && {

@@ -33,6 +33,7 @@ export async function getMarketList({
 					cursor: cursor ?? undefined,
 					limit,
 					sort,
+					status: status !== "all" ? status : undefined,
 				},
 			});
 		} else if (status && status !== "all") {

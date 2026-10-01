@@ -38,6 +38,7 @@ export async function getPostList({
 					keyword,
 					cursor: cursor ?? undefined,
 					limit: safeLimit,
+					category,
 				},
 				fetch: { cache: "no-store" },
 			});

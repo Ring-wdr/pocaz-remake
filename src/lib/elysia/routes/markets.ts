@@ -39,6 +39,12 @@ const SortEnum = t.Union([
 	t.Literal("priceDesc"),
 ]);
 
+const StatusEnum = t.Union([
+	t.Literal("available"),
+	t.Literal("reserved"),
+	t.Literal("sold"),
+]);
+
 const ErrorSchema = t.Object({
 	error: t.String(),
 });
@@ -103,6 +109,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 			const result = await marketService.search(query.keyword, {
 				cursor: query.cursor,
 				limit: query.limit ?? 20,
+				status: query.status,
 				sort:
 					(query.sort as "latest" | "priceAsc" | "priceDesc" | undefined) ??
 					"latest",
@@ -129,6 +136,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				cursor: t.Optional(t.String()),
 				limit: LimitQuery,
 				sort: t.Optional(SortEnum),
+				status: t.Optional(StatusEnum),
 			}),
 			response: PaginatedMarketsSchema,
 			detail: {
