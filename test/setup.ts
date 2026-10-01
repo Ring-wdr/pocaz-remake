@@ -50,3 +50,16 @@ mock.module("@/lib/supabase/elysia", () => ({
 mock.module("@supabase/supabase-js", () => ({
 	createClient: () => createFakeSupabaseAdmin(),
 }));
+
+// StyleX는 컴파일러가 없으면 create()가 예외를 던진다. 컴포넌트 테스트에서는 스타일을 검사하지 않으므로 대체한다.
+mock.module("@stylexjs/stylex", () => {
+	const vars = () =>
+		new Proxy({}, { get: (_, key) => `var(--${String(key)})` });
+	return {
+		create: <T>(styles: T) => styles,
+		props: () => ({}),
+		keyframes: () => "keyframes",
+		defineVars: vars,
+		firstThatWorks: (...values: unknown[]) => values[0],
+	};
+});
