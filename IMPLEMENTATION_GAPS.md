@@ -43,3 +43,11 @@
 - [v] 문의: 첨부/연락처 필드, 접수 번호·상태 표시, 로그인 가드 (`support/inquiry/page.client.tsx`)
 - [v] FAQ/약관/오류 페이지에 지원 채널·재시도 링크 강화 (`support/*`, `error.tsx` 등)
 - [v] 전역 에러/권한 페이지에 재시도·피드백/로그 수집 연결
+
+## 운영 반영·결정 필요 (2026-10-01 감사 후속, 자세한 내용은 `docs/opus-5.5-improvements.md`)
+- [ ] RLS: Supabase 대시보드에서 확인한 뒤 `supabase/enable-rls.sql` 실행
+- [ ] 인덱스 마이그레이션(`prisma/migrations/20261001124058_add_query_indexes`)을 운영 DB에 적용 (`bun run db:migrate:prod`)
+- [ ] BEST 포카 기준 정하기: 지금은 최근 포카와 같은 쿼리 (`components/home/sections/best-poca-section.tsx`)
+- [ ] rate limit을 공유 저장소로 옮기고 쓰기 라우트 전반으로 넓히기 (`lib/elysia/routes/likes.ts`)
+- [ ] 이미지 URL 검증: 프로필 사진·게시글/상품 이미지·채팅 `image:` 메시지가 임의 URL을 받아 `<img>`로 그린다 (`lib/elysia/routes/users.ts`, `posts.ts`, `markets.ts`, `components/chat/chat-room.tsx`)
+- [ ] 활동 내역·거래 내역을 만드는 코드가 없어 해당 화면이 항상 비어 있다 (`lib/services/activity.ts`, `lib/services/transaction.ts`)
