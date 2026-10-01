@@ -56,7 +56,7 @@ ChatRoom, ChatRoomMember, ChatMessage
   - `getSession()`
 - [x] 로그인 페이지 (`src/app/login/page.tsx`)
 - [x] Auth 에러 페이지 (`src/app/auth/auth-error/page.tsx`)
-- [x] AuthStatus 컴포넌트 (`src/components/auth-status.tsx`)
+- [x] AuthStatus 컴포넌트 (`src/components/auth-status.tsx`, 이후 쓰이지 않아 삭제)
 
 ### ✅ Phase 4: Elysia Auth Guard (완료)
 
@@ -131,8 +131,7 @@ src/
 │   │   └── auth-error/page.tsx      # 인증 에러 페이지
 │   ├── login/page.tsx               # 로그인 페이지
 │   └── page.tsx                     # 홈페이지
-├── components/
-│   └── auth-status.tsx              # 인증 상태 컴포넌트
+├── components/                      # UI·도메인 컴포넌트
 ├── generated/
 │   └── prisma/                      # Prisma Client (generated)
 ├── lib/

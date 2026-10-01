@@ -141,7 +141,7 @@ globalTokens.fontSans
 
 | Type | Location | Example |
 |------|----------|---------|
-| Components | `src/components/` | `auth-status.tsx` |
+| Components | `src/components/` | `chat/chat-list-item.tsx` |
 | Pages | `src/app/` | `page.tsx` |
 | Tokens | `src/app/` | `global-tokens.stylex.ts` |
 
