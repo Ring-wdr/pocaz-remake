@@ -26,7 +26,9 @@ export async function callApi(
 		headers.set("x-test-user", JSON.stringify(user));
 	}
 	let requestBody: BodyInit | undefined;
-	if (body !== undefined) {
+	if (body instanceof FormData) {
+		requestBody = body;
+	} else if (body !== undefined) {
 		headers.set("content-type", "application/json");
 		requestBody = JSON.stringify(body);
 	}

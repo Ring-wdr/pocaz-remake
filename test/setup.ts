@@ -1,4 +1,5 @@
 import { mock } from "bun:test";
+import { createFakeSupabaseAdmin } from "./helpers/storage";
 
 // 테스트는 실제 Supabase에 접속하지 않는다. 모듈을 불러올 때 클라이언트를 만드는 코드가 있어서 자리표시 값만 채운다.
 process.env.NEXT_PUBLIC_SUPABASE_URL ??= "http://127.0.0.1:54321";
@@ -43,4 +44,9 @@ mock.module("@/lib/supabase/elysia", () => ({
 			},
 		};
 	},
+}));
+
+// services/storage.ts의 service-role 클라이언트 대체. 업로드는 test/helpers/storage.ts에 기록된다.
+mock.module("@supabase/supabase-js", () => ({
+	createClient: () => createFakeSupabaseAdmin(),
 }));
