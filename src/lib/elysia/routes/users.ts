@@ -200,6 +200,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 		{
 			response: {
 				200: t.Object({ message: t.String() }),
+				401: t.Object({ error: t.String() }),
 				404: t.Object({ error: t.String() }),
 			},
 			detail: {

@@ -303,21 +303,15 @@ export default function SecurityPageClient({
 		startDelete(async () => {
 			try {
 				toast.loading("회원 탈퇴 처리 중...", { id: "delete" });
-				const result = await api.users.me.delete();
-				let errorMessage = "";
-				if (result.response.status === 404) {
-					const { value } = result.error || {};
-					if (value) {
-						if (value && "error" in value) {
-							errorMessage = value.error;
-						} else if (value.message) {
-							errorMessage = value.message;
-						}
-					}
-				}
-
-				if (errorMessage) {
-					throw new Error(errorMessage);
+				const { error } = await api.users.me.delete();
+				if (error) {
+					toast.error(
+						error.status === 401
+							? "로그인이 만료되었습니다. 다시 로그인한 뒤 시도해 주세요."
+							: "회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+						{ id: "delete" },
+					);
+					return;
 				}
 
 				toast.success("회원 탈퇴가 완료되었습니다.", { id: "delete" });
