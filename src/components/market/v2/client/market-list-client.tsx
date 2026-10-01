@@ -1,7 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import { colors, fontSize, spacing } from "@/app/global-tokens.stylex";
 import { getMarketList } from "../data/get-market-list";
@@ -60,6 +60,8 @@ export default function MarketListClient({
 	const [keywordInput, setKeywordInput] = useState(initialFilters.keyword);
 	const [appliedFilters, setAppliedFilters] = useState(initialFilters);
 	const [isPending, startTransition] = useTransition();
+	// 필터를 빠르게 바꾸면 요청이 겹친다. 마지막에 보낸 요청의 응답만 반영한다.
+	const latestRequestRef = useRef(0);
 
 	const replaceList = (nextFilters: {
 		keyword: string;
@@ -68,12 +70,14 @@ export default function MarketListClient({
 	}) => {
 		setAppliedFilters(nextFilters);
 		updateMarketQueryString(nextFilters);
+		const requestId = ++latestRequestRef.current;
 		startTransition(async () => {
 			const { data, error } = await getMarketList({
 				...nextFilters,
 				cursor: null,
 				limit,
 			});
+			if (requestId !== latestRequestRef.current) return;
 
 			if (error || !data) {
 				setState((prev) => ({ ...prev, error: "상품을 불러올 수 없습니다" }));
@@ -92,12 +96,15 @@ export default function MarketListClient({
 	const appendList = () => {
 		if (!state.nextCursor || isPending) return;
 
+		const requestId = ++latestRequestRef.current;
 		startTransition(async () => {
 			const { data, error } = await getMarketList({
 				...appliedFilters,
 				cursor: state.nextCursor,
 				limit,
 			});
+			// 그사이 필터가 바뀌었으면 이전 조건의 다음 페이지를 붙이지 않는다
+			if (requestId !== latestRequestRef.current) return;
 
 			if (error || !data) {
 				setState((prev) => ({
