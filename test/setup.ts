@@ -1,4 +1,5 @@
 import { mock } from "bun:test";
+import { authCalls } from "./helpers/auth";
 import { createFakeSupabaseAdmin } from "./helpers/storage";
 
 // 테스트는 실제 Supabase에 접속하지 않는다. 모듈을 불러올 때 클라이언트를 만드는 코드가 있어서 자리표시 값만 채운다.
@@ -21,6 +22,7 @@ mock.module("@/lib/supabase/elysia", () => ({
 		return {
 			auth: {
 				async getClaims() {
+					authCalls.count++;
 					return {
 						data: user
 							? {

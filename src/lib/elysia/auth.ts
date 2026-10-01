@@ -58,11 +58,13 @@ function claimsToAuthUser(claims: Record<string, unknown>): AuthUser {
 
 /**
  * Elysia Auth Plugin
- * 모든 요청에 Supabase Auth 정보를 Context에 주입
+ * 이 플러그인을 use한 라우트 그룹에만 Supabase Auth 정보를 Context에 주입한다(scoped).
  * getClaims()를 사용하여 JWT claims 기반으로 인증 처리
+ * global로 두면 뒤에 등록된 모든 라우트(공개 API 포함)가 요청마다 인증을 확인하고,
+ * authGuard를 쓰는 라우트는 두 번 확인한다.
  */
 export const authPlugin = new Elysia({ name: "auth" }).derive(
-	{ as: "global" },
+	{ as: "scoped" },
 	async ({ request }): Promise<{ auth: AuthContext }> => {
 		const supabase = createSupabaseElysiaClient(request);
 

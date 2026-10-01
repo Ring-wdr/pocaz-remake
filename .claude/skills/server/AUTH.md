@@ -96,6 +96,8 @@ export const agencyAdminRoutes = new Elysia()
 
 ### optionalAuth (선택적)
 
+`optionalAuth`도 scoped라서 use한 라우트 그룹에만 `auth`가 주입된다. 로그인 여부가 필요한 공개 라우트 그룹에서 직접 use한다.
+
 ```typescript
 import { optionalAuth } from "@/lib/elysia/auth";
 
