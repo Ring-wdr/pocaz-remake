@@ -252,7 +252,8 @@ export function ConfirmModal({
 		}
 
 		setErrors({});
-		onConfirm(fields.length > 0 ? formData : null);
+		// null은 취소를 뜻하므로, 입력 필드가 없는 확인은 빈 객체로 넘긴다
+		onConfirm(fields.length > 0 ? formData : {});
 	};
 
 	const handleInputChange = (name: string, value: string) => {
