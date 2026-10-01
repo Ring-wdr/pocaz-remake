@@ -373,6 +373,8 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 
 			const post = await postService.update(params.id, {
 				content: body.content,
+				addImageUrls: body.addImageUrls,
+				removeImageIds: body.removeImageIds,
 			});
 
 			return {
@@ -387,6 +389,8 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			}),
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
+				addImageUrls: t.Optional(t.Array(t.String(), { maxItems: 10 })),
+				removeImageIds: t.Optional(t.Array(t.String())),
 			}),
 			response: {
 				200: t.Object({
@@ -400,7 +404,8 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 수정",
-				description: "게시글 내용을 수정합니다.",
+				description:
+					"게시글 본문과 이미지(추가·삭제)를 한 번에 수정합니다. 하나라도 실패하면 아무것도 바뀌지 않습니다.",
 			},
 		},
 	)

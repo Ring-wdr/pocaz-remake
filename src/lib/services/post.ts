@@ -20,6 +20,10 @@ export interface CreatePostDto {
  */
 export interface UpdatePostDto {
 	content?: string;
+	/** 새로 붙일 이미지 URL */
+	addImageUrls?: string[];
+	/** 뗄 이미지 ID. 이 게시글의 이미지가 아니면 무시한다 */
+	removeImageIds?: string[];
 }
 
 /**
@@ -186,13 +190,21 @@ export const postService = {
 	},
 
 	/**
-	 * Post 수정
+	 * Post 수정. 본문과 이미지 변경을 한 트랜잭션으로 반영해서 중간에 실패해도 반쯤 바뀐 게시글이 남지 않는다.
 	 */
 	async update(id: string, dto: UpdatePostDto) {
+		const removeImageIds = dto.removeImageIds ?? [];
+		const addImageUrls = dto.addImageUrls ?? [];
 		return prisma.post.update({
 			where: { id },
 			data: {
 				content: dto.content,
+				images: {
+					deleteMany: removeImageIds.length
+						? { id: { in: removeImageIds } }
+						: undefined,
+					create: addImageUrls.map((imageUrl) => ({ imageUrl })),
+				},
 			},
 			include: {
 				user: {

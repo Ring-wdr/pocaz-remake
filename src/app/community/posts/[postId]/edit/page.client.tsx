@@ -325,38 +325,18 @@ export default function EditPostClient({
 		if (isDisabled) return;
 
 		startTransition(async () => {
-			// 1. 삭제할 이미지 처리
-			for (const imageId of deletedImageIds) {
-				const { error } = await api
-					.posts({ id: postId })
-					.images({ imageId })
-					.delete();
-				if (error) {
-					console.error("Failed to delete image:", error);
-				}
-			}
-
-			// 2. 새 이미지 업로드
+			// 1. 새 이미지를 먼저 올린다. 실패하면 게시글은 그대로다.
 			const uploadedUrls = await uploadNewImages(newImages);
 			if (uploadedUrls === null) {
 				toast.error("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
 				return;
 			}
 
-			// 3. 새 이미지 연결
-			if (uploadedUrls.length > 0) {
-				const { error } = await api.posts({ id: postId }).images.post({
-					imageUrls: uploadedUrls,
-				});
-				if (error) {
-					toast.error("이미지 추가에 실패했습니다.");
-					return;
-				}
-			}
-
-			// 4. 게시글 내용 수정
+			// 2. 본문·이미지 추가·삭제를 한 요청으로 저장한다(서버가 한 트랜잭션으로 반영)
 			const { error } = await api.posts({ id: postId }).put({
 				content: content.trim(),
+				addImageUrls: uploadedUrls,
+				removeImageIds: deletedImageIds,
 			});
 
 			if (error) {
