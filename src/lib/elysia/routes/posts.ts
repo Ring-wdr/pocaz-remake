@@ -668,7 +668,14 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				return { error: "Forbidden" };
 			}
 
-			await postImageService.deleteImage(params.imageId);
+			const deleted = await postImageService.deleteImage(
+				params.id,
+				params.imageId,
+			);
+			if (!deleted) {
+				set.status = 404;
+				return { error: "Image not found" };
+			}
 
 			return { message: "Image deleted successfully" };
 		},
@@ -681,6 +688,7 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				200: t.Object({ message: t.String() }),
 				401: ErrorSchema,
 				403: ErrorSchema,
+				404: ErrorSchema,
 			},
 			detail: {
 				tags: ["Posts"],

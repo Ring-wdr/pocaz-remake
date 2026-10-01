@@ -463,12 +463,13 @@ export const marketImageService = {
 	},
 
 	/**
-	 * 이미지 삭제
+	 * 이미지 삭제. 해당 상품의 이미지일 때만 지우고, 지웠는지 돌려준다.
 	 */
-	async deleteImage(id: string) {
-		await prisma.marketImage.delete({
-			where: { id },
+	async deleteImage(marketId: string, imageId: string) {
+		const { count } = await prisma.marketImage.deleteMany({
+			where: { id: imageId, marketId },
 		});
+		return count > 0;
 	},
 
 	/**

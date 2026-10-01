@@ -500,7 +500,14 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				return { error: "Forbidden" };
 			}
 
-			await marketImageService.deleteImage(params.imageId);
+			const deleted = await marketImageService.deleteImage(
+				params.id,
+				params.imageId,
+			);
+			if (!deleted) {
+				set.status = 404;
+				return { error: "Image not found" };
+			}
 
 			return { message: "Image deleted successfully" };
 		},
@@ -513,6 +520,7 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				200: MessageSchema,
 				401: ErrorSchema,
 				403: ErrorSchema,
+				404: ErrorSchema,
 			},
 			detail: {
 				tags: ["Markets"],

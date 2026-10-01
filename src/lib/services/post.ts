@@ -488,12 +488,13 @@ export const postImageService = {
 	},
 
 	/**
-	 * 이미지 삭제
+	 * 이미지 삭제. 해당 게시글의 이미지일 때만 지우고, 지웠는지 돌려준다.
 	 */
-	async deleteImage(id: string) {
-		await prisma.postImage.delete({
-			where: { id },
+	async deleteImage(postId: string, imageId: string) {
+		const { count } = await prisma.postImage.deleteMany({
+			where: { id: imageId, postId },
 		});
+		return count > 0;
 	},
 
 	/**
