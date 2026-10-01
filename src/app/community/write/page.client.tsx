@@ -31,7 +31,18 @@ interface ImageFile {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+const spin = stylex.keyframes({
+	"0%": { transform: "rotate(0deg)" },
+	"100%": { transform: "rotate(360deg)" },
+});
+
 const styles = stylex.create({
+	spinner: {
+		animationName: spin,
+		animationDuration: "1s",
+		animationTimingFunction: "linear",
+		animationIterationCount: "infinite",
+	},
 	container: {
 		flex: 1,
 		display: "flex",
@@ -530,7 +541,11 @@ export default function CommunityWritePage() {
 								/>
 								{image.status === "uploading" && (
 									<div {...stylex.props(styles.imageOverlay)}>
-										<Loader2 size={24} color="white" className="animate-spin" />
+										<Loader2
+											size={24}
+											color="white"
+											{...stylex.props(styles.spinner)}
+										/>
 									</div>
 								)}
 								{image.status === "failed" && (
@@ -567,7 +582,7 @@ export default function CommunityWritePage() {
 					fullWidth
 				>
 					{isPending ? (
-						<Loader2 size={20} className="animate-spin" />
+						<Loader2 size={20} {...stylex.props(styles.spinner)} />
 					) : (
 						"등록하기"
 					)}
