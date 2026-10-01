@@ -23,7 +23,8 @@ export async function callApi(
 ) {
 	const headers = new Headers();
 	if (user) {
-		headers.set("x-test-user", JSON.stringify(user));
+		// 헤더 값에는 ASCII만 들어가므로 한글 이름(user_metadata) 등을 위해 인코딩한다
+		headers.set("x-test-user", encodeURIComponent(JSON.stringify(user)));
 	}
 	let requestBody: BodyInit | undefined;
 	if (body instanceof FormData) {

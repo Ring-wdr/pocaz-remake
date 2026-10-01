@@ -261,6 +261,12 @@ export default function EditProfileForm({
 			});
 
 			if (error) {
+				if (error.status === 409) {
+					// 확인한 뒤 다른 사람이 먼저 가져간 경우
+					setNicknameStatus("taken");
+					toast.error("이미 사용 중인 닉네임입니다.");
+					return;
+				}
 				toast.error("프로필 업데이트에 실패했습니다.");
 				return;
 			}

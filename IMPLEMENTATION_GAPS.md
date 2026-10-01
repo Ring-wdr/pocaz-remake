@@ -34,6 +34,7 @@
 - [ ] 설정: 다크모드/테마 토글 실제 동작 및 영속화 (`mypage/settings/page.tsx`)
 - [ ] 알림 설정: 서버/푸시 권한 연동, 토글 영속화 (`mypage/notifications/page.client.tsx`) - 현재 localStorage만 지원
 - [v] 보안: 로그아웃/탈퇴 2차 확인 모달, 로딩 표시 강화 (`mypage/security/page.client.tsx`)
+- [ ] 탈퇴 범위: 계정은 익명화되고(이메일·닉네임·프로필 사진 삭제) 다시 로그인해도 복구되지 않는다. 하지만 작성한 글·댓글·판매글·채팅 메시지와 Supabase Auth 계정(이메일·이름)은 남는다. 탈퇴 화면은 "모든 데이터가 영구적으로 삭제"된다고 안내하므로, 삭제 범위(법정 보존 기간이 있는 거래 기록 포함)를 정해 구현하거나 안내 문구를 고친다 (`mypage/security/page.client.tsx`, `lib/services/user.ts`)
 - [v] 판매/구매/거래: 탭 필터링 동작 추가 (`mypage/sales/page.client.tsx`)
 - [v] 찜: 위시 해제 액션 추가 (`mypage/wishlist/page.client.tsx`)
 - [v] 좋아요한 글: 정렬 옵션(좋아요한 순/인기순/최신순) 추가, 페이지네이션 유지 (`mypage/likes/page.tsx`, `lib/services/like.ts`)

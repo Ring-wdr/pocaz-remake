@@ -6,7 +6,7 @@ import { activityService } from "@/lib/services/activity";
 import { marketLikeService } from "@/lib/services/market";
 import { postService } from "@/lib/services/post";
 import { transactionService } from "@/lib/services/transaction";
-import { userService } from "@/lib/services/user";
+import { normalizeNickname, userService } from "@/lib/services/user";
 
 // 공통 응답 스키마
 const UserResponseSchema = t.Object({
@@ -39,6 +39,8 @@ const ActivityTypeEnum = t.Union([
 	t.Literal("trade"),
 	t.Literal("market"),
 ]);
+
+const NICKNAME_RULE_MESSAGE = "닉네임은 2-20자 이내로 입력해주세요";
 
 const ErrorSchema = t.Object({
 	error: t.String(),
@@ -142,10 +144,24 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				};
 			}
 
+			let nickname: string | undefined;
+			if (body.nickname !== undefined) {
+				const normalized = normalizeNickname(body.nickname);
+				if (!normalized) {
+					set.status = 400;
+					return { error: NICKNAME_RULE_MESSAGE };
+				}
+				nickname = normalized;
+			}
+
 			const user = await userService.update(existingUser.id, {
-				nickname: body.nickname,
+				nickname,
 				profileImage: body.profileImage,
 			});
+			if (!user) {
+				set.status = 409;
+				return { error: "이미 사용 중인 닉네임입니다" };
+			}
 
 			return {
 				id: user.id,
@@ -170,7 +186,9 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 					score: t.Number(),
 					updatedAt: t.String(),
 				}),
+				400: ErrorSchema,
 				404: ErrorSchema,
+				409: ErrorSchema,
 			},
 			detail: {
 				tags: ["Users"],
@@ -217,7 +235,7 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 		async ({ params, set }) => {
 			const user = await userService.findById(params.id);
 
-			if (!user || user.deletedAt) {
+			if (!user) {
 				set.status = 404;
 				return {
 					error: "User not found",
@@ -495,10 +513,10 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 	.get(
 		"/me/check-nickname",
 		async ({ auth, query, set }) => {
-			const { nickname } = query;
-			if (!nickname || nickname.length < 2 || nickname.length > 20) {
+			const nickname = normalizeNickname(query.nickname);
+			if (!nickname) {
 				set.status = 400;
-				return { error: "닉네임은 2-20자 이내로 입력해주세요" };
+				return { error: NICKNAME_RULE_MESSAGE };
 			}
 
 			const user = await userService.findBySupabaseId(auth.user.id);

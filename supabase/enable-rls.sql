@@ -48,6 +48,7 @@ as $$
 		join public."User" u on u.id = m."userId"
 		where m."roomId" = room_id
 			and u."supabaseId" = (select auth.uid())::text
+			and u."deletedAt" is null
 	);
 $$;
 

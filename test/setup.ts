@@ -13,11 +13,11 @@ if (process.env.TEST_DATABASE_URL) {
 process.env.DATABASE_URL ??=
 	"postgresql://placeholder:placeholder@localhost:5432/placeholder";
 
-// authGuard/optionalAuth가 쓰는 Supabase 클라이언트 대체. 요청의 x-test-user 헤더(JSON)가 로그인한 사용자다.
+// authGuard/optionalAuth가 쓰는 Supabase 클라이언트 대체. 요청의 x-test-user 헤더(URI 인코딩한 JSON)가 로그인한 사용자다.
 mock.module("@/lib/supabase/elysia", () => ({
 	createSupabaseElysiaClient(request: Request) {
 		const raw = request.headers.get("x-test-user");
-		const user = raw ? JSON.parse(raw) : null;
+		const user = raw ? JSON.parse(decodeURIComponent(raw)) : null;
 		return {
 			auth: {
 				async getClaims() {
