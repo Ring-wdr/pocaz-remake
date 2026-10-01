@@ -729,7 +729,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 		},
 	)
 
-	// GET /api/chat/rooms/market/:marketId - 특정 마켓의 채팅방 목록 (판매자용)
+	// GET /api/chat/rooms/market/:marketId - 특정 마켓에서 내가 참여한 채팅방 목록
 	.get(
 		"/rooms/market/:marketId",
 		async ({ auth, params, set }) => {
@@ -739,7 +739,10 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				return { error: "User not found" };
 			}
 
-			const rooms = await chatRoomService.findByMarketId(params.marketId);
+			const rooms = await chatRoomService.findByMarketId(
+				params.marketId,
+				user.id,
+			);
 
 			return {
 				rooms: rooms.map((room) => ({
@@ -784,7 +787,8 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			detail: {
 				tags: ["Chat"],
 				summary: "마켓 채팅방 목록 조회",
-				description: "특정 마켓에 대한 채팅방 목록을 조회합니다.",
+				description:
+					"특정 마켓의 채팅방 중 내가 참여한 방 목록을 조회합니다. 판매자는 모든 거래 채팅방을 봅니다.",
 			},
 		},
 	);

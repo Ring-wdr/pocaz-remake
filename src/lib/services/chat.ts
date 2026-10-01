@@ -340,11 +340,12 @@ export const chatRoomService = {
 	},
 
 	/**
-	 * 특정 마켓의 채팅방 목록 조회 (판매자용)
+	 * 특정 마켓의 채팅방 중 사용자가 참여한 방 목록
+	 * 판매자는 자기 상품의 거래 채팅방마다 멤버이므로 전부 보게 된다.
 	 */
-	async findByMarketId(marketId: string) {
+	async findByMarketId(marketId: string, userId: string) {
 		return prisma.chatRoom.findMany({
-			where: { marketId },
+			where: { marketId, members: { some: { userId } } },
 			include: {
 				members: {
 					include: {
