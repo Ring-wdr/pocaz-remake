@@ -34,6 +34,8 @@ const formattedDate = formatKoreanDate(date);
 
 ### Date (`@/utils/date`)
 
+모두 한국 시간(`Asia/Seoul`)으로 표시한다. 서버 시간대와 관계없다.
+
 | 함수 | 출력 형식 | 용도 |
 |------|----------|------|
 | `formatRelativeTime` | "10분 전", "3일 전" | 상대 시간 |

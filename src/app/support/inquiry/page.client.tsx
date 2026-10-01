@@ -22,6 +22,7 @@ import {
 import { Footer } from "@/components/home";
 import { Button, Input } from "@/components/ui";
 import { normalizeEdenError } from "@/lib/elysia/client/error";
+import { formatFullDateTime } from "@/utils/date";
 import { api } from "@/utils/eden";
 
 interface InquiryPageClientProps {
@@ -818,7 +819,7 @@ export default function InquiryPageClient({
 								<div {...stylex.props(styles.resultItem)}>
 									<p {...stylex.props(styles.resultLabel)}>접수 시각</p>
 									<p {...stylex.props(styles.resultValue)}>
-										{new Date(lastSubmission.createdAt).toLocaleString("ko-KR")}
+										{formatFullDateTime(lastSubmission.createdAt)}
 									</p>
 								</div>
 							)}

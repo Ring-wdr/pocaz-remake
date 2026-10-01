@@ -11,6 +11,7 @@ src/utils/date.ts
 ## Dependencies
 
 - `dayjs` (한국어 로케일 적용됨)
+- `dayjs/plugin/utc`, `dayjs/plugin/timezone`: 모든 함수는 실행 환경의 시간대가 아니라 한국 시간(`Asia/Seoul`)으로 표시한다. 서버(Vercel은 UTC)와 브라우저가 같은 문자열을 그려야 hydration 불일치가 없고, 해외에서 접속해도 거래 시각이 한국 시간으로 보인다. "오늘/어제"와 `isSameDay`도 한국 날짜 기준이다.
 
 ## Functions
 
