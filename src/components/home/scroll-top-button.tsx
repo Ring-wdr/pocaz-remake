@@ -78,6 +78,7 @@ export default function ScrollTopButton() {
 		<div {...stylex.props(styles.wrapper)}>
 			<h3 {...stylex.props(styles.topBtn, btnStatus && styles.topBtnActive)}>
 				<button
+					aria-label="맨 위로"
 					type="button"
 					{...stylex.props(styles.button)}
 					onClick={handleTop}

@@ -624,7 +624,11 @@ export default function ChatRoom({
 		<div data-chat-container {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.topSection)}>
 				<div {...stylex.props(styles.header)}>
-					<Link href="/chat/list" {...stylex.props(styles.backButton)}>
+					<Link
+						aria-label="채팅 목록으로 돌아가기"
+						href="/chat/list"
+						{...stylex.props(styles.backButton)}
+					>
 						<ArrowLeft size={24} />
 					</Link>
 					<div {...stylex.props(styles.partnerInfo)}>
@@ -646,6 +650,7 @@ export default function ChatRoom({
 						</div>
 					</div>
 					<button
+						aria-label="채팅방 메뉴"
 						type="button"
 						onClick={handleOpenMenu}
 						{...stylex.props(styles.menuButton)}
@@ -811,6 +816,7 @@ export default function ChatRoom({
 					/>
 				</div>
 				<button
+					aria-label="메시지 보내기"
 					type="button"
 					onClick={handleSend}
 					disabled={!inputValue.trim() || isSending}

@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { ArrowLeft, Heart, MessageCircle, Share2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import {
 	colors,
@@ -322,51 +322,14 @@ export const statusStyles: Record<MarketStatus, keyof typeof styles> = {
 export function Header() {
 	return (
 		<header {...stylex.props(styles.header)}>
-			<Link href="/market" {...stylex.props(styles.backButton)}>
+			<Link
+				aria-label="마켓으로 돌아가기"
+				href="/market"
+				{...stylex.props(styles.backButton)}
+			>
 				<ArrowLeft size={20} />
 			</Link>
 			<h1 {...stylex.props(styles.headerTitle)}>상품 상세</h1>
 		</header>
-	);
-}
-
-export function ActionBar() {
-	return (
-		<div {...stylex.props(styles.actionBar)}>
-			<button type="button" {...stylex.props(styles.actionButton)}>
-				<Heart size={20} />
-			</button>
-			<button type="button" {...stylex.props(styles.actionButton)}>
-				<Share2 size={20} />
-			</button>
-			<Link href="/chat/list" {...stylex.props(styles.chatButton)}>
-				<MessageCircle size={18} />
-				채팅하기
-			</Link>
-		</div>
-	);
-}
-
-export function ActionBarSkeleton() {
-	return (
-		<div {...stylex.props(styles.actionBar)}>
-			<div {...stylex.props(styles.skeletonAction, styles.skeleton)} />
-			<div {...stylex.props(styles.skeletonAction, styles.skeleton)} />
-			<div {...stylex.props(styles.skeletonChat, styles.skeleton)} />
-		</div>
-	);
-}
-
-export function StatusBadgeSkeleton() {
-	return (
-		<span
-			{...stylex.props(
-				styles.statusBadge,
-				styles.skeleton,
-				styles.statusAvailable,
-			)}
-		>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-		</span>
 	);
 }

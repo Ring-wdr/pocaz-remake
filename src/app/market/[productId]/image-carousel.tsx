@@ -105,6 +105,7 @@ export default function MarketImageCarousel({
 			{hasMultipleImages && (
 				<>
 					<button
+						aria-label="이전 이미지"
 						type="button"
 						onClick={handlePrev}
 						{...stylex.props(styles.imageNav, styles.imageNavLeft)}
@@ -112,6 +113,7 @@ export default function MarketImageCarousel({
 						<ChevronLeft size={20} />
 					</button>
 					<button
+						aria-label="다음 이미지"
 						type="button"
 						onClick={handleNext}
 						{...stylex.props(styles.imageNav, styles.imageNavRight)}

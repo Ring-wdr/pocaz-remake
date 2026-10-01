@@ -172,7 +172,11 @@ export default function FAQPage() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
-				<Link href="/mypage" {...stylex.props(styles.backButton)}>
+				<Link
+					aria-label="마이페이지로 돌아가기"
+					href="/mypage"
+					{...stylex.props(styles.backButton)}
+				>
 					<ArrowLeft size={20} />
 				</Link>
 				<h1 {...stylex.props(styles.headerTitle)}>자주 묻는 질문</h1>

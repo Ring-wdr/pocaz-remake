@@ -684,6 +684,7 @@ export function CommentsClient({
 						{...stylex.props(styles.commentInput)}
 					/>
 					<button
+						aria-label="댓글 등록"
 						type="button"
 						onClick={handleSubmitComment}
 						disabled={isPending || !commentText.trim()}
@@ -749,6 +750,7 @@ export function CommentsClient({
 										{...stylex.props(styles.editInput)}
 									/>
 									<button
+										aria-label="수정 저장"
 										type="button"
 										onClick={() => handleSaveEdit(comment.id)}
 										disabled={isPending || !editContent.trim()}
@@ -762,6 +764,7 @@ export function CommentsClient({
 										<Check size={14} />
 									</button>
 									<button
+										aria-label="수정 취소"
 										type="button"
 										onClick={handleCancelEdit}
 										disabled={isPending}
@@ -875,6 +878,7 @@ export function CommentsClient({
 															{...stylex.props(styles.editInput)}
 														/>
 														<button
+															aria-label="수정 저장"
 															type="button"
 															onClick={() => handleSaveEdit(reply.id)}
 															disabled={isPending || !editContent.trim()}
@@ -888,6 +892,7 @@ export function CommentsClient({
 															<Check size={14} />
 														</button>
 														<button
+															aria-label="수정 취소"
 															type="button"
 															onClick={handleCancelEdit}
 															disabled={isPending}
@@ -961,6 +966,7 @@ export function CommentsClient({
 										{...stylex.props(styles.replyInput)}
 									/>
 									<button
+										aria-label="답글 등록"
 										type="button"
 										onClick={() => handleSubmitReply(comment.id)}
 										disabled={isPending || !replyText.trim()}

@@ -354,6 +354,7 @@ export default function EditPostClient({
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
 				<button
+					aria-label="뒤로 가기"
 					type="button"
 					onClick={() => router.back()}
 					{...stylex.props(styles.backButton)}
@@ -410,6 +411,7 @@ export default function EditPostClient({
 									{...stylex.props(styles.imagePreview)}
 								/>
 								<button
+									aria-label="이미지 삭제"
 									type="button"
 									onClick={() => handleRemoveExistingImage(image.id)}
 									{...stylex.props(styles.removeImageButton)}
@@ -429,6 +431,7 @@ export default function EditPostClient({
 									{...stylex.props(styles.imagePreview)}
 								/>
 								<button
+									aria-label="이미지 삭제"
 									type="button"
 									onClick={() => handleRemoveNewImage(index)}
 									{...stylex.props(styles.removeImageButton)}

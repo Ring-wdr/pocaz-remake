@@ -344,6 +344,7 @@ export default function EditProfileForm({
 						</div>
 					)}
 					<button
+						aria-label="프로필 사진 변경"
 						type="button"
 						onClick={() => fileInputRef.current?.click()}
 						disabled={isUploading}

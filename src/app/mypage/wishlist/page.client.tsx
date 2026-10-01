@@ -236,6 +236,7 @@ export default function WishlistClient({ products }: WishlistClientProps) {
 										{statusLabels[status]}
 									</span>
 									<button
+										aria-label="찜 해제"
 										type="button"
 										onClick={(e) => handleRemoveWishlist(e, product.id)}
 										disabled={isRemoving || isPending}

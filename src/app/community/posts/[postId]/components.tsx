@@ -189,6 +189,8 @@ export function LikeButton({
 			type="button"
 			onClick={handleLike}
 			disabled={isPending}
+			aria-label={`좋아요 ${likeCount}개`}
+			aria-pressed={isLiked}
 			{...stylex.props(
 				styles.statItem,
 				isLiked && styles.statItemActive,

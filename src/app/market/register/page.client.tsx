@@ -449,6 +449,7 @@ export default function MarketRegisterPage() {
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
 				<button
+					aria-label="뒤로 가기"
 					type="button"
 					onClick={() => router.back()}
 					{...stylex.props(styles.backButton)}
@@ -494,6 +495,7 @@ export default function MarketRegisterPage() {
 									<span {...stylex.props(styles.mainImageBadge)}>대표</span>
 								)}
 								<button
+									aria-label="이미지 삭제"
 									type="button"
 									onClick={() => handleRemoveImage(index)}
 									{...stylex.props(styles.removeImageButton)}

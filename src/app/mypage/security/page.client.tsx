@@ -337,7 +337,11 @@ export default function SecurityPageClient({
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
-				<Link href="/mypage/settings" {...stylex.props(styles.backButton)}>
+				<Link
+					aria-label="설정으로 돌아가기"
+					href="/mypage/settings"
+					{...stylex.props(styles.backButton)}
+				>
 					<ArrowLeft size={20} />
 				</Link>
 				<h1 {...stylex.props(styles.headerTitle)}>보안</h1>

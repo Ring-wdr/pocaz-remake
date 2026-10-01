@@ -96,7 +96,11 @@ export default function PrivacyPage() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
-				<Link href="/login" {...stylex.props(styles.backButton)}>
+				<Link
+					aria-label="로그인 화면으로 돌아가기"
+					href="/login"
+					{...stylex.props(styles.backButton)}
+				>
 					<ArrowLeft size={20} />
 				</Link>
 				<h1 {...stylex.props(styles.headerTitle)}>개인정보처리방침</h1>

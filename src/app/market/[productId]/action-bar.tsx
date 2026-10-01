@@ -242,6 +242,7 @@ export function ActionBar({
 				</button>
 			</form>
 			<button
+				aria-label="공유하기"
 				type="button"
 				onClick={handleShare}
 				{...stylex.props(styles.actionButton)}

@@ -208,7 +208,11 @@ export default async function PostDetailPage({
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
-				<Link href="/community" {...stylex.props(styles.backButton)}>
+				<Link
+					aria-label="커뮤니티로 돌아가기"
+					href="/community"
+					{...stylex.props(styles.backButton)}
+				>
 					<ArrowLeft size={24} />
 				</Link>
 				<h1 {...stylex.props(styles.headerTitle)}>게시글</h1>
