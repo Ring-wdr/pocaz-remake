@@ -6,12 +6,25 @@
 
 이 저장소는 LLM API를 호출하지 않는다(Anthropic·OpenAI 등 SDK 사용 없음). 그래서 "Opus 5.5에 맞춘다"는 말은 두 가지 일이다.
 
-1. **에이전트가 읽는 지시 파일을 Opus 5.5에 맞게 고친다.** 대상은 `AGENTS.md`, `.claude/skills/**`, `.claude/commands/**`다. Opus 5.5는 이전 모델보다 지시를 문자 그대로 따르고 예시 코드를 가장 강한 신호로 삼는다. 그래서 없는 경로, 서로 모순되는 규칙, 결함이 섞인 템플릿이 예전보다 더 직접 결과물에 옮겨진다. 감사 결과 저장소가 직접 반박하는 사실 오류·모순 10건(High)과 개선 항목 14건(Medium)을 찾았다. 고친 내용은 [`opus-5.5-agent-config.patch`](./opus-5.5-agent-config.patch)에 있다(20개 파일, +142/−178, `git apply --check` 통과, **아직 적용하지 않음**).
+1. **에이전트가 읽는 지시 파일을 Opus 5.5에 맞게 고친다.** 대상은 `AGENTS.md`, `.claude/skills/**`, `.claude/commands/**`다. Opus 5.5는 이전 모델보다 지시를 문자 그대로 따르고 예시 코드를 가장 강한 신호로 삼는다. 그래서 없는 경로, 서로 모순되는 규칙, 결함이 섞인 템플릿이 예전보다 더 직접 결과물에 옮겨진다. 감사 결과 저장소가 직접 반박하는 사실 오류·모순 10건(High)과 개선 항목 14건(Medium)을 찾았다. 제안한 수정은 적용했다. 인증 실패 계약(H4) 부분만 P0-5 코드 수정과 함께 들어간다.
 2. **에이전트가 스스로 검증할 수 있게 만든다.** Opus 5.5가 가장 크게 좋아진 영역은 실제 저장소에서 테스트가 통과할 때까지 변경을 끝까지 밀고 가는 작업이다. 그런데 지금 이 저장소에는 테스트와 CI가 없고, `tsc`는 단독으로 실행하면 실패하며, Biome 검사는 기존 오류 88개 때문에 새 오류를 구분할 수 없고, 웹(원격) 세션에서는 `bun install`부터 실패한다.
 
 분석하면서 코드 결함도 다수 찾았다. 가장 급한 것은 보안이다. 로그인한 사용자라면 누구나 스토리지의 아무 파일이나 지울 수 있고, 남의 게시글·상품 이미지를 지울 수 있으며, 아무 상품의 채팅방 목록과 마지막 메시지를 볼 수 있다. 또 인증 실패 시 API가 401이 아니라 500을 반환하고, 삭제 확인 모달이 항상 "취소"로 처리돼 게시글 삭제·댓글 삭제·채팅방 나가기가 동작하지 않는다. 전체 목록은 [4장](#4-코드베이스-개선-백로그)에 있다.
 
 권장 순서는 검증 루프 구축, 지시 파일 patch 적용, P0 보안 수정(회귀 테스트 포함), P1 기능 버그, CI, P2 순이다([5장](#5-권장-진행-순서)).
+
+## 진행 상황
+
+2026-10-01 기준. 5장의 권장 순서대로 진행한다.
+
+| 단계 | 상태 |
+|---|---|
+| 검증 루프: typecheck(A1), Biome 기준선(A2), `bun test` 기반과 로컬 Postgres(A3), 웹 세션 훅(A4), 권한 설정(A6) | 완료 |
+| 지시 파일 수정(2장), 날짜 포맷 일원화(M13) | 완료. H4는 P0-5와 함께 |
+| P0 보안 | 진행 중 |
+| P1 기능 버그 | 대기 |
+| CI(A5) | 대기 |
+| P2 | 대기 |
 
 ## 1. 분석 전제
 
@@ -114,22 +127,22 @@ Prisma 7.0.1로 적혀 있지만 실제는 7.2.0. 조치: 버전 열을 지우�
 - **L4.** Claude Code는 커스텀 명령을 스킬로 통합하는 방향이다. `server-*` 명령 5개는 server 스킬과 내용이 겹치므로, 새로 만들 때는 `.claude/skills/<name>/SKILL.md`를 쓰고 기존 것은 점진적으로 합치는 것을 검토.
 - **L5.** 루트 `MIGRATION.md`(레거시 Express → Next 이전 계획)에는 완료된 이력이 섞여 있어 에이전트가 현재 사실로 읽을 수 있다. `docs/archive/` 같은 곳으로 옮기는 것을 검토.
 
-### 제안 diff
+### 적용 내역
 
-[`docs/opus-5.5-agent-config.patch`](./opus-5.5-agent-config.patch)에 High·Medium 항목을 모두 담았다(L 항목 제외). 저장소 루트에서 `git apply docs/opus-5.5-agent-config.patch`로 적용하고, 원치 않는 부분은 적용 후 `git checkout -p <파일>`로 되돌리면 된다.
+High·Medium 항목을 적용했다(L 항목 제외). M1은 현재 구조를 유지하기로 결정했다. 클라이언트 전용 화면(채팅 목록, 마이페이지 요약)은 서버 렌더링이 더 느려서 React Query + Suspensive로 옮긴 것이고, 그 이유를 `AGENTS.md`에 함께 적었다.
 
-| 파일 | 담긴 항목 |
+| 파일 | 반영 항목 |
 |---|---|
-| `AGENTS.md` | Project·Commands 섹션(A7), M3, M4, M1, H2+H6, Prisma 명령 구분(H10), M2 |
+| `AGENTS.md` | Project·Commands 섹션(A7, `bun test` 포함), M3, M4, M1, H2+H6, Prisma 명령 구분(H10), M2 |
 | `README.md` | M4 — 요청 가이드 이동 |
-| `package.json` | `typecheck` 스크립트(A1) |
-| `biome.json` | M13 — `dayjs` 직접 import 금지 |
+| `package.json` | `typecheck`·`test` 스크립트(A1, A3) |
+| `biome.json` | M13 — `src/utils/date.ts`와 테스트 밖의 `dayjs` 직접 import 금지 |
 | `.claude/commands/*` | H1, H3, M9 |
-| `.claude/skills/server/*` | H4, H5, H10, M5, M8, M10, M11, M14 |
+| `.claude/skills/server/*` | H5, H10, M5, M8, M10, M11, M14 (H4는 P0-5와 함께) |
 | `.claude/skills/stylex/*` | H6, H7, H8, M5, M6, M7, M12, M14 |
-| `.claude/skills/utils/SKILL.md` | H9, M5, M13, M14 |
+| `.claude/skills/utils/*` | H9, M5, M13, M14, 새 날짜 함수 |
 
-서로 묶여 있는 부분: `AGENTS.md`의 `bun run typecheck`는 `package.json` 변경이, `utils/SKILL.md`의 `noRestrictedImports` 언급은 `biome.json` 변경이 있어야 맞다. `AUTH.md`·`EDEN.md`의 인증 실패 부분(H4)은 P0-5 코드 수정과 같은 커밋으로 넣는다.
+M13을 켜면서 `dayjs`를 직접 쓰던 6개 파일을 `@/utils/date`로 옮겼다. 새 함수는 `formatFullDateTime`, `formatTime`, `formatDayLabel`, `isSameDay`이고, 채팅 목록의 자체 `formatTime`은 같은 구현인 `formatChatTime`으로 대체했다. 홈의 최근 게시글 날짜는 `YYYY-MM-DD`에서 다른 화면과 같은 `YYYY.MM.DD`로 바뀐다.
 
 ## 3. 검증 루프와 하네스
 
@@ -143,45 +156,17 @@ Prisma 7.0.1로 적혀 있지만 실제는 7.2.0. 조치: 버전 열을 지우�
 | Biome | `biome check` 88 errors, 15 warnings, 37 infos. 대부분 포맷(55개 파일)과 import 정렬(41건)이고, 실제 lint 오류는 3개(`useExhaustiveDependencies` 1, `noShadowRestrictedNames` 2) |
 | 웹 세션 설치 | `bun install --frozen-lockfile`이 `postinstall`의 `prisma generate`에서 실패. `prisma.config.ts`의 `env("DIRECT_URL")`이 `.env` 없는 환경에서 예외를 던진다. 자리표시 값을 주면 성공 |
 
-**A1. 타입체크 스크립트.** `"typecheck": "next typegen && tsc --noEmit"`(patch에 포함). 이 명령으로 오류 0을 확인했다.
+**A1. 타입체크 스크립트.** 적용함: `bun run typecheck`(`next typegen && tsc --noEmit`). 오류 0.
 
-**A2. Biome 기준선 정리.** 기존 오류가 88개면 에이전트가 자기 변경으로 생긴 오류를 구분할 수 없다. `bunx biome check --write`로 포맷과 import 정렬만 정리하는 커밋(동작 변화 없음)을 따로 만들고 남은 lint 오류 3개를 고치면, `bun run check`가 통과/실패 기준으로 쓸 수 있게 된다.
+**A2. Biome 기준선 정리.** 적용함: `bun run check` 오류 0(경고 11·정보 25는 남겨 둠). 기존 오류가 88개면 에이전트가 자기 변경으로 생긴 오류를 구분할 수 없다. `bunx biome check --write`로 포맷과 import 정렬만 정리하는 커밋(동작 변화 없음)을 따로 만들고 남은 lint 오류 3개를 고치면, `bun run check`가 통과/실패 기준으로 쓸 수 있게 된다.
 
-**A3. 테스트 도입.** `bun test`는 설정 없이 바로 쓸 수 있고 tsconfig의 `@/*` 경로도 해석한다. 권장 순서:
+**A3. 테스트 도입.** 기반 적용함: `bunfig.toml`, `test/setup.ts`(Supabase 인증 대체), `test/helpers/*`. 아래 2번의 라우트 테스트는 P0 수정과 함께 추가한다. `bun test`는 설정 없이 바로 쓸 수 있고 tsconfig의 `@/*` 경로도 해석한다. 권장 순서:
 
 1. 순수 함수부터: `src/utils/date.ts`(시간대 포함), `src/lib/elysia/client/error.ts`의 `normalizeEdenError`.
 2. 라우트 테스트: Elysia 앱은 `app.handle(new Request("http://localhost/api/..."))`로 서버 없이 호출할 수 있다. P0 권한 버그(스토리지, 하위 이미지, 채팅방 조회)를 고칠 때마다 "남의 리소스에 접근하면 403/404"를 확인하는 테스트를 같이 넣는다. `authGuard`가 Supabase를 직접 부르므로, 테스트에서 사용자를 주입할 수 있게 인증 해석 부분을 분리해야 한다. DB가 필요한 테스트는 로컬 Postgres 같은 별도 테스트 DB로 돌린다.
 3. 주의할 점: `bun test`는 Bun 런타임에서 돈다. 이 앱은 Node에서 돌기 때문에 `Response.redirect`처럼 런타임마다 다른 동작은 `bun test`가 잡지 못한다(H4 버그는 Bun에서 재현되지 않는다). 런타임에 의존하지 않게 코드를 고치는 것이 먼저이고, 라우트 테스트를 Node에서 돌리고 싶다면 Vitest가 대안이다.
 
-**A4. 웹 세션용 SessionStart 훅.** Claude Code on the web 세션이 시작될 때 의존성 설치와 타입 생성을 자동으로 하게 한다. 원격 세션(`CLAUDE_CODE_REMOTE=true`)에서만 실행되게 한다.
-
-```bash
-#!/bin/bash
-# .claude/hooks/session-start.sh
-set -euo pipefail
-[ "${CLAUDE_CODE_REMOTE:-}" = "true" ] || exit 0
-cd "$CLAUDE_PROJECT_DIR"
-# postinstall의 prisma generate가 prisma.config.ts의 env("DIRECT_URL")을 요구한다. 코드 생성에는 DB 접속이 필요 없다.
-export DIRECT_URL="${DIRECT_URL:-postgresql://placeholder:placeholder@localhost:5432/placeholder}"
-export DATABASE_URL="${DATABASE_URL:-$DIRECT_URL}"
-bun install --frozen-lockfile
-bunx next typegen
-```
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup",
-        "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh" }]
-      }
-    ]
-  }
-}
-```
-
-함께 정리할 것: `prisma.config.ts:1`이 `dotenv/config`를 import하지만 `dotenv`가 `package.json`에 없다(c12를 통한 간접 의존에 기대고 있음). 직접 의존성으로 추가한다. `bun.lock`의 루트 패키지 이름이 템플릿 이름(`@stylexswc/next-turbopack-example`)으로 남아 있는데, 다음에 lockfile을 재생성할 때 정리된다.
+**A4. 웹 세션용 SessionStart 훅.** 적용함: `.claude/hooks/session-start.sh`가 원격 세션(`CLAUDE_CODE_REMOTE=true`)에서만 `DIRECT_URL`/`DATABASE_URL`이 없으면 자리표시 값을 넣고, `bun install`, `next typegen`, 통합 테스트용 로컬 Postgres 준비(마이그레이션 적용, `TEST_DATABASE_URL`을 세션 환경변수로 등록)를 한다. 등록은 `.claude/settings.json`. `prisma.config.ts`가 import하는 `dotenv`도 직접 의존성으로 선언했다. `bun.lock`의 루트 패키지 이름이 템플릿 이름(`@stylexswc/next-turbopack-example`)으로 남아 있는 것은 그대로다(다음에 lockfile을 재생성할 때 정리).
 
 **A5. CI.** 위 검사를 PR마다 돌린다.
 
@@ -207,17 +192,7 @@ jobs:
       # - run: bun test   # A3 이후
 ```
 
-**A6. 문장으로만 있는 규칙을 권한 설정으로.** "요청 없이 DB 명령을 실행하지 않는다"는 지금 `AGENTS.md`의 문장으로만 존재한다. 권한 설정으로 옮기면 모델과 무관하게 지켜지고, 안전한 검사 명령은 매번 승인받지 않아도 된다(`.claude/settings.json`, A4의 hooks와 같은 파일).
-
-```json
-{
-  "permissions": {
-    "allow": ["Bash(bun run typecheck)", "Bash(bun run check)", "Bash(bun run lint)", "Bash(bun run format)", "Bash(bun run db:generate)", "Bash(bun test)", "Bash(bun test *)"],
-    "ask": ["Bash(bun run db:migrate)", "Bash(bun run db:migrate *)", "Bash(bunx prisma migrate dev *)", "Bash(bun run db:push)", "Bash(bunx prisma db push *)"],
-    "deny": ["Bash(bun run db:reset)", "Bash(bunx prisma migrate reset *)"]
-  }
-}
-```
+**A6. 문장으로만 있는 규칙을 권한 설정으로.** 적용함: `.claude/settings.json`에서 검사·테스트 명령은 허용하고, `db:migrate`·`db:push`·`migrate deploy`는 실행 전에 묻고, `db:reset`·`migrate reset`은 막는다. 권한 설정은 모델과 무관하게 지켜진다.
 
 **A7. `AGENTS.md`는 에이전트가 스스로 알 수 없는 맥락 위주로.** patch에 Project·Commands 섹션을 넣었다. Opus 5.5에게 가장 값진 텍스트는 이 앱이 무엇인지, 코드가 어디 있는지, 무엇으로 검증하는지, 어떤 명령이 왜 위험한지다. 나중에 `CLAUDE.md`를 추가하면 기본 설정에서는 `AGENTS.md`를 더 이상 읽지 않는다. 그때는 `CLAUDE.md`에 `@AGENTS.md`를 넣어 한 곳을 기준으로 유지한다.
 

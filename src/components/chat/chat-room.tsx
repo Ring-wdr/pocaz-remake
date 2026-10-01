@@ -1,7 +1,6 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import dayjs from "dayjs";
 import { AlertCircle, ArrowLeft, MoreVertical, Send, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,6 +27,7 @@ import type {
 	ChatMember,
 	PaginatedMessages,
 } from "@/types/entities";
+import { formatTime } from "@/utils/date";
 import { api } from "@/utils/eden";
 import { ChatImageUploadButton } from "./chat-image-upload-button";
 import { ChatMessageList } from "./chat-message-list";
@@ -767,7 +767,7 @@ export default function ChatRoom({
 													: styles.messageTimeTheirs,
 											)}
 										>
-											{dayjs(message.createdAt).format("HH:mm")}
+											{formatTime(message.createdAt)}
 										</div>
 									)}
 								</div>

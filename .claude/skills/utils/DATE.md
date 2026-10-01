@@ -77,6 +77,40 @@ formatDateTime(message.createdAt)
 // "11.30 10:30"
 ```
 
+### formatFullDateTime
+
+연도까지 포함한 날짜+시간. 게시글 상세의 작성 시각에 사용.
+
+```typescript
+import { formatFullDateTime } from "@/utils/date";
+
+formatFullDateTime(post.createdAt)
+// "2024.11.30 10:30"
+```
+
+### formatTime
+
+시간만. 채팅 메시지 말풍선에 사용.
+
+```typescript
+import { formatTime } from "@/utils/date";
+
+formatTime(message.createdAt)
+// "10:30"
+```
+
+### formatDayLabel / isSameDay
+
+채팅 메시지 목록의 날짜 구분선. 앞 메시지와 다른 날이면 라벨을 넣는다.
+
+```typescript
+import { formatDayLabel, isSameDay } from "@/utils/date";
+
+if (!isSameDay(prev.createdAt, current.createdAt)) {
+  formatDayLabel(current.createdAt); // "오늘" | "어제" | "2024.11.30"
+}
+```
+
 ### formatChatTime
 
 채팅 목록용. 컨텍스트에 따라 다른 형식 반환.
@@ -96,7 +130,8 @@ formatChatTime(chat.lastMessageAt)
 | 컨텍스트 | 권장 함수 |
 |----------|----------|
 | 게시글 목록 | `formatRelativeTime` |
-| 상세 페이지 | `formatKoreanDate` |
+| 상세 페이지 | `formatKoreanDate` (게시글 작성 시각은 `formatFullDateTime`) |
 | 채팅 목록 | `formatChatTime` |
+| 채팅 메시지 | `formatTime`, 날짜 구분선은 `formatDayLabel` + `isSameDay` |
 | 알림 목록 | `formatShortDate` or `formatRelativeTime` |
 | 거래 내역 | `formatDate` or `formatDateTime` |

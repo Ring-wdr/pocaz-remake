@@ -1,5 +1,4 @@
 import * as stylex from "@stylexjs/stylex";
-import dayjs from "dayjs";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -16,6 +15,7 @@ import {
 } from "@/app/global-tokens.stylex";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
+import { formatFullDateTime } from "@/utils/date";
 import { api } from "@/utils/eden";
 
 import { CommentsSection } from "./comments-section";
@@ -229,7 +229,7 @@ export default async function PostDetailPage({
 					<div {...stylex.props(styles.authorInfo)}>
 						<p {...stylex.props(styles.authorName)}>{post.user.nickname}</p>
 						<p {...stylex.props(styles.postDate)}>
-							{dayjs(post.createdAt).format("YYYY.MM.DD HH:mm")}
+							{formatFullDateTime(post.createdAt)}
 						</p>
 					</div>
 				</div>

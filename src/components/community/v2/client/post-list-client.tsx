@@ -1,7 +1,6 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import dayjs from "dayjs";
 import {
 	AlertCircle,
 	ChevronDown,
@@ -12,7 +11,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
-
 import {
 	colors,
 	fontSize,
@@ -24,6 +22,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { SearchBar } from "@/components/ui";
+import { formatShortDate } from "@/utils/date";
 import { getPostList } from "../data/get-post-list";
 import type { PostCategory, PostListItem, PostListState } from "../types";
 import LoadMoreSpinner from "./load-more-spinner";
@@ -393,7 +392,7 @@ export default function PostListClient({
 								<div {...stylex.props(styles.meta)}>
 									<span>{post.user.nickname}</span>
 									<span>·</span>
-									<span>{dayjs(post.createdAt).format("MM.DD")}</span>
+									<span>{formatShortDate(post.createdAt)}</span>
 									<span {...stylex.props(styles.metaItem)}>
 										<MessageCircle size={12} />
 										{post.replyCount}

@@ -16,6 +16,16 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
+			"style": {
+				"noRestrictedImports": {
+					"level": "error",
+					"options": {
+						"paths": {
+							"dayjs": "날짜 포맷은 @/utils/date의 함수를 사용하세요. 필요한 형식이 없으면 src/utils/date.ts에 추가합니다."
+						}
+					}
+				}
+			},
 			"suspicious": {
 				"noArrayIndexKey": "info"
 			},
@@ -32,6 +42,18 @@
 			"quoteStyle": "double"
 		}
 	},
+	"overrides": [
+		{
+			"includes": ["src/utils/date.ts", "test/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": "off"
+					}
+				}
+			}
+		}
+	],
 	"assist": {
 		"enabled": true,
 		"actions": {

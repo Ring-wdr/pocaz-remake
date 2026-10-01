@@ -51,6 +51,41 @@ export function formatDateTime(dateString: string): string {
 }
 
 /**
+ * 연도까지 포함한 날짜+시간 포맷 (YYYY.MM.DD HH:mm)
+ */
+export function formatFullDateTime(dateString: string): string {
+	return dayjs(dateString).format("YYYY.MM.DD HH:mm");
+}
+
+/**
+ * 시간 포맷 (HH:mm)
+ */
+export function formatTime(dateString: string): string {
+	return dayjs(dateString).format("HH:mm");
+}
+
+/**
+ * 날짜 구분선 라벨
+ * - 오늘: "오늘"
+ * - 어제: "어제"
+ * - 그 외: YYYY.MM.DD
+ */
+export function formatDayLabel(dateString: string): string {
+	const date = dayjs(dateString);
+	const today = dayjs();
+	if (date.isSame(today, "day")) return "오늘";
+	if (date.isSame(today.subtract(1, "day"), "day")) return "어제";
+	return date.format("YYYY.MM.DD");
+}
+
+/**
+ * 두 시각이 같은 날인지
+ */
+export function isSameDay(a: string, b: string): boolean {
+	return dayjs(a).isSame(dayjs(b), "day");
+}
+
+/**
  * 채팅용 시간 포맷
  * - 오늘: HH:mm
  * - 어제: "어제"

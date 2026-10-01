@@ -1,13 +1,12 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import dayjs from "dayjs";
 import type { ComponentProps, ReactNode, Ref } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { colors, radius, spacing, text } from "@/app/global-tokens.stylex";
-
 import type { ChatMessageView } from "@/lib/hooks/use-chat-messages";
+import { formatDayLabel, isSameDay } from "@/utils/date";
 
 interface ChatMessageListProps extends ComponentProps<typeof Virtuoso> {
 	messages: ChatMessageView[];
@@ -60,14 +59,6 @@ const styles = stylex.create({
 		borderRadius: radius.md,
 	},
 });
-
-const formatDateLabel = (date: string) => {
-	const target = dayjs(date);
-	const today = dayjs();
-	if (target.isSame(today, "day")) return "오늘";
-	if (target.isSame(today.subtract(1, "day"), "day")) return "어제";
-	return target.format("YYYY.MM.DD");
-};
 
 /**
  * 가변 높이 메시지 리스트 (react-virtuoso)
@@ -143,9 +134,7 @@ export function ChatMessageList({
 		const current = messages[index];
 		if (!prev || !current) return false;
 
-		const prevDate = dayjs(prev.createdAt).format("YYYY-MM-DD");
-		const currDate = dayjs(current.createdAt).format("YYYY-MM-DD");
-		return prevDate !== currDate;
+		return !isSameDay(prev.createdAt, current.createdAt);
 	};
 
 	return (
@@ -171,7 +160,7 @@ export function ChatMessageList({
 					{shouldRenderDateLabel(index) && (
 						<div {...stylex.props(styles.dateGroup)}>
 							<span {...stylex.props(styles.dateBadge)}>
-								{formatDateLabel(item.createdAt)}
+								{formatDayLabel(item.createdAt)}
 							</span>
 						</div>
 					)}
