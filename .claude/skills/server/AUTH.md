@@ -22,12 +22,11 @@
 .derive({ as: "scoped" }, async ({ request }) => { ... })
 ```
 
-### 2. derive + onBeforeHandle 조합으로 리다이렉트
+### 2. derive는 주입만, 인증 실패는 onBeforeHandle에서 401로 응답
 
-인증 실패 시 로그인 페이지로 리다이렉트하려면 `derive`와 `onBeforeHandle`을 조합합니다:
+이 API는 브라우저와 서버 컴포넌트가 모두 fetch(Eden)로 호출하므로 리다이렉트로 응답하지 않는다. Node 런타임(Next 서버)에서는 `redirect("/login")`이 상대 URL을 파싱하지 못해 500이 되고, 리다이렉트가 동작하더라도 fetch가 로그인 페이지 HTML을 200으로 받아 `error`가 비게 된다.
 
 ```typescript
-// ✅ CORRECT - derive로 인증 정보 주입, onBeforeHandle에서 redirect
 export const authGuard = new Elysia({ name: "auth-guard" })
   .derive({ as: "scoped" }, async ({ request }) => {
     // ... 인증 로직 ...
@@ -35,14 +34,14 @@ export const authGuard = new Elysia({ name: "auth-guard" })
       auth: { user, session } as AuthenticatedContext,
     };
   })
-  .onBeforeHandle({ as: "scoped" }, ({ auth, redirect }) => {
+  .onBeforeHandle({ as: "scoped" }, ({ auth, status }) => {
     if (!auth.user || !auth.session) {
-      return redirect("/login");  // Elysia 내장 redirect (302)
+      return status(401, { error: "Unauthorized" });
     }
   });
 ```
 
-**주의**: `redirect()`는 `derive`에서 직접 반환 불가, 반드시 `onBeforeHandle`에서 사용
+로그인 화면으로 보내는 일은 호출하는 쪽이 한다. 서버 컴포넌트는 `error.status === 401`이면 `unauthorized()`(next.config의 `authInterrupts`)를 호출하고, 클라이언트는 로그인 유도 UI를 띄운다.
 
 ## Auth Types
 
@@ -146,8 +145,8 @@ if (count === 0) {
 ## 에러 응답
 
 ```typescript
-// 401 Unauthorized
-{ "error": "Unauthorized", "message": "Authentication required" }
+// 401 Unauthorized (authGuard)
+{ "error": "Unauthorized" }
 
 // 403 Forbidden
 { "error": "Forbidden" }

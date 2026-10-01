@@ -76,16 +76,15 @@ treaty<typeof AppType>(app, { ... }); // HTTP가 아닌 직접 호출
 
 `src/utils/url.ts`의 `getApiBaseUrl()`은 `getBaseUrl()`을 그대로 쓴다. 브라우저에서는 `window.location.origin`, 서버에서는 `NEXT_PUBLIC_SITE_URL` → `VERCEL_PROJECT_PRODUCTION_URL` → `VERCEL_URL` → `http://localhost:${PORT ?? 3000}` 순서다.
 
-## 인증 라우트와 리다이렉트
+## 인증 실패 처리
 
-`authGuard`가 적용된 라우트는 인증 실패 시 자동으로 `/login`으로 302 리다이렉트합니다.
-Eden Treaty 클라이언트에서는 별도 처리 없이 브라우저가 리다이렉트를 따라갑니다.
+`authGuard` 라우트는 인증 실패 시 `401 { error: "Unauthorized" }`를 반환한다(AUTH.md). 리다이렉트는 일어나지 않으므로 호출하는 쪽에서 처리한다.
 
 ```typescript
-// authGuard 라우트 호출 시
 const { data, error } = await api.users.me.get();
-// 인증 실패 → 자동으로 /login 리다이렉트 (Elysia 레벨에서 처리)
-// 인증 성공 → data에 프로필 정보
+if (error?.status === 401) {
+  unauthorized(); // 서버 컴포넌트 (next/navigation). 클라이언트에서는 로그인 유도 UI
+}
 ```
 
 ## 에러 핸들링

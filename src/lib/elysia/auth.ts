@@ -90,11 +90,11 @@ export const authPlugin = new Elysia({ name: "auth" }).derive(
 );
 
 /**
- * Auth Guard - 인증되지 않은 요청을 차단
+ * Auth Guard - 인증되지 않은 요청을 401로 차단
  * Protected routes에 적용
  *
- * 이 guard를 사용하는 모든 라우트는 자동으로 401 응답 스키마가 추가됩니다.
- * derive 내에서 직접 에러를 반환하여 실행 순서 문제를 방지합니다.
+ * API는 브라우저와 서버 컴포넌트가 fetch(Eden)로 호출하므로 리다이렉트하지 않는다.
+ * 로그인 화면으로 보내는 일은 호출하는 쪽이 401을 보고 처리한다.
  */
 export const authGuard = new Elysia({ name: "auth-guard" })
 	.derive({ as: "scoped" }, async ({ request }) => {
@@ -120,9 +120,9 @@ export const authGuard = new Elysia({ name: "auth-guard" })
 			} as AuthenticatedContext,
 		};
 	})
-	.onBeforeHandle({ as: "scoped" }, ({ auth, redirect }) => {
+	.onBeforeHandle({ as: "scoped" }, ({ auth, status }) => {
 		if (!auth.user || !auth.session) {
-			return redirect("/login");
+			return status(401, { error: "Unauthorized" });
 		}
 	});
 
