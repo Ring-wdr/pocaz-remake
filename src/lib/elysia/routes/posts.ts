@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
 import { LimitQuery } from "@/lib/elysia/schemas";
 import {
+	CommentError,
 	commentService,
 	postImageService,
 	postService,
@@ -484,11 +485,9 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 					parentId: body.parentId ?? null,
 				};
 			} catch (error) {
+				if (!(error instanceof CommentError)) throw error;
 				set.status = 400;
-				return {
-					error:
-						error instanceof Error ? error.message : "Failed to create comment",
-				};
+				return { error: error.message };
 			}
 		},
 		{
@@ -589,11 +588,9 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				await commentService.delete(params.commentId);
 				return { message: "Comment deleted successfully" };
 			} catch (error) {
+				if (!(error instanceof CommentError)) throw error;
 				set.status = 400;
-				return {
-					error:
-						error instanceof Error ? error.message : "Failed to delete comment",
-				};
+				return { error: error.message };
 			}
 		},
 		{

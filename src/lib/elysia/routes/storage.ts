@@ -70,6 +70,12 @@ const ErrorSchema = t.Object({
  * Storage Routes (모두 인증 필수)
  * 업로드한 파일은 업로더의 Supabase ID 폴더에 저장된다.
  */
+/**
+ * 저장소 오류 메시지는 내부 정보(버킷·정책 이름 등)를 담을 수 있어서 서버 로그에만 남기고 이 문구를 돌려준다.
+ */
+const UPLOAD_FAILED_MESSAGE =
+	"이미지를 업로드하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+
 export const storageRoutes = new Elysia({ prefix: "/storage" })
 	.use(authGuard)
 
@@ -115,10 +121,9 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 					],
 				};
 			} catch (error) {
+				console.error("[storage] upload failed", error);
 				set.status = 500;
-				return {
-					error: error instanceof Error ? error.message : "Upload failed",
-				};
+				return { error: UPLOAD_FAILED_MESSAGE };
 			}
 		},
 		{
@@ -182,10 +187,11 @@ export const storageRoutes = new Elysia({ prefix: "/storage" })
 						fileName: file.name,
 					});
 				} catch (error) {
+					console.error("[storage] upload failed", error);
 					errors.push({
 						index: i,
 						fileName: file.name,
-						error: error instanceof Error ? error.message : "Upload failed",
+						error: UPLOAD_FAILED_MESSAGE,
 					});
 				}
 			}

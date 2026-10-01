@@ -27,6 +27,11 @@ export interface UpdatePostDto {
 }
 
 /**
+ * 요청 내용 때문에 댓글을 만들거나 지울 수 없을 때(400). 이 오류의 메시지만 응답에 그대로 내보낸다.
+ */
+export class CommentError extends Error {}
+
+/**
  * Comment 생성 DTO
  */
 export interface CreateCommentDto {
@@ -375,11 +380,11 @@ export const commentService = {
 				select: { postId: true, parentId: true },
 			});
 			if (!parent || parent.postId !== dto.postId) {
-				throw new Error("Invalid parent comment");
+				throw new CommentError("Invalid parent comment");
 			}
 			// 대댓글에 또 대댓글을 달 수 없음 (1 depth 제한)
 			if (parent.parentId !== null) {
-				throw new Error("Cannot reply to a reply");
+				throw new CommentError("Cannot reply to a reply");
 			}
 		}
 
@@ -433,7 +438,7 @@ export const commentService = {
 		});
 
 		if (!comment) {
-			throw new Error("Comment not found");
+			throw new CommentError("Comment not found");
 		}
 
 		// 대댓글이 있으면 soft delete, 없으면 hard delete
