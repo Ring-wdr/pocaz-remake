@@ -42,7 +42,7 @@ export const public{Domain}Routes = new Elysia({ prefix: "/{domains}" })
 		async ({ query }) => {
 			const result = await {domain}Service.findAll({
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit) : 20,
+				limit: query.limit ?? 20,
 			});
 
 			return {
@@ -58,7 +58,7 @@ export const public{Domain}Routes = new Elysia({ prefix: "/{domains}" })
 		{
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50 })),
 			}),
 			response: Paginated{Domain}Schema,
 			detail: {

@@ -37,8 +37,8 @@ const styles = stylex.create({
 ```typescript
 const styles = stylex.create({
   base: { padding: 16 },
-  active: { backgroundColor: '#2a2a4e' },
-  primary: { color: '#6366f1' },
+  active: { backgroundColor: colors.bgTertiary },
+  primary: { color: colors.accentPrimary },
 });
 
 <div {...stylex.props(
@@ -53,16 +53,18 @@ const styles = stylex.create({
 ```typescript
 const styles = stylex.create({
   button: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: colors.bgSecondary,
     cursor: 'pointer',
     ':hover': {
-      backgroundColor: '#2a2a4e',
+      backgroundColor: colors.bgTertiary,
     },
     ':active': {
       transform: 'scale(0.98)',
     },
     ':focus': {
-      outline: '2px solid #6366f1',
+      outlineWidth: 2,
+      outlineStyle: 'solid',
+      outlineColor: colors.accentPrimary,
       outlineOffset: 2,
     },
   },
@@ -147,7 +149,7 @@ Only use inline styles for truly runtime-computed values:
 ```typescript
 const styles = stylex.create({
   box: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: colors.bgSecondary,
     transition: 'all 0.2s ease',
   },
 });
@@ -371,7 +373,7 @@ BottomMenu가 `position: sticky`, `bottom: 0`으로 항상 하단에 고정되�
 ### 구현
 
 ```typescript
-import { colors, size } from "@/app/global-tokens.stylex";
+import { colors, fontSize, fontWeight, radius, size } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
   // 페이지 컨테이너
@@ -410,12 +412,12 @@ const styles = stylex.create({
     width: "100%",
     paddingTop: "16px",
     paddingBottom: "16px",
-    fontSize: "16px",
-    fontWeight: 600,
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.semibold,
     color: colors.textInverse,
     backgroundColor: colors.bgInverse,
     borderWidth: 0,
-    borderRadius: "12px",
+    borderRadius: radius.md,
     cursor: "pointer",
     transition: "opacity 0.2s ease",
   },

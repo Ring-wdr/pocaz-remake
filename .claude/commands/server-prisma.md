@@ -3,10 +3,10 @@ Create a new Prisma model and related schema.
 ## Instructions
 
 1. Load these reference files:
-   - `.claude/skills/server/prisma.md` - Prisma patterns
+   - `.claude/skills/server/PRISMA.md` - Prisma patterns
    - `prisma/schema.prisma` - Current schema
 
-2. Ask the user for:
+2. Ask only for what the arguments leave out:
    - Model name (e.g., "Review", "Comment")
    - Fields and types
    - Relations (User, Images, etc.)

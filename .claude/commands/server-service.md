@@ -3,11 +3,11 @@ Create a new service layer for the specified domain.
 ## Instructions
 
 1. Load these reference files:
-   - `.claude/skills/server/service.md` - Service template
+   - `.claude/skills/server/SERVICE.md` - Service template
    - `src/lib/services/post.ts` - Reference implementation
    - `src/lib/services/user.ts` - Another reference
 
-2. Ask the user for:
+2. Ask only for what the arguments leave out:
    - Domain name (e.g., "review", "comment")
    - Required operations (CRUD, search, pagination)
    - Special features (soft delete, nested create, etc.)

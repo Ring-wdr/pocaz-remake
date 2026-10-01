@@ -10,9 +10,9 @@
 | `src/lib/supabase/client.ts` | 브라우저용 (싱글톤) |
 | `src/utils/eden.ts` | Eden Treaty 클라이언트 |
 
-## ⚠️ 중요: authGuard 구현 주의사항
+## authGuard 구현 규칙
 
-### 1. `as: "scoped"` 필수 사용
+### 1. `as: "scoped"`를 사용한다
 
 ```typescript
 // ❌ WRONG - 모든 라우트에 적용되어 public 라우트도 인증 필요
@@ -129,6 +129,18 @@ const user = await userService.findBySupabaseId(auth.user.id);
 
   // 수정 진행
 })
+```
+
+하위 리소스(`/:id/images/:imageId`, 댓글 등)는 부모 소유권을 확인한 뒤 삭제·수정 조건에 부모 ID도 넣는다. ID만으로 지우면 다른 사람 게시글의 이미지도 지울 수 있다.
+
+```typescript
+const { count } = await prisma.postImage.deleteMany({
+  where: { id: params.imageId, postId: params.id },
+});
+if (count === 0) {
+  set.status = 404;
+  return { error: "Image not found" };
+}
 ```
 
 ## 에러 응답

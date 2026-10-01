@@ -1,15 +1,11 @@
 ---
 name: stylex
-description: 컴포넌트 생성, 스타일 작성, tsx 파일 수정 시 반드시 사용. StyleX 규칙(shorthand 금지, keyframes 스코프) 준수 필수.
+description: 컴포넌트 생성, 스타일 작성, tsx 파일 수정 시 반드시 사용. StyleX 규칙(다중 값 shorthand 금지, keyframes 스코프) 준수 필수.
 ---
 
 # StyleX Development Skill
 
 Pocaz 프로젝트의 StyleX CSS-in-JS 스타일링 스킬입니다.
-
-## Triggers (reference)
-
-컴포넌트, component, 스타일, style, tsx, 버튼, button, 카드, card, 레이아웃, layout
 
 ## When to Use
 
@@ -21,27 +17,7 @@ Pocaz 프로젝트의 StyleX CSS-in-JS 스타일링 스킬입니다.
 
 ## Build Configuration
 
-Next.js 16 + Turbopack + `@stylexswc/nextjs-plugin`:
-
-```typescript
-// next.config.ts
-import path from "node:path";
-import stylexPlugin from "@stylexswc/nextjs-plugin/turbopack";
-
-export default stylexPlugin({
-  rsOptions: {
-    aliases: {
-      "@/*": [path.join(__dirname, "src", "*")],
-    },
-    runtimeInjection: false,
-    treeshakeCompensation: true,
-  },
-  stylexImports: ["stylex", "@stylexjs/stylex"],
-})({
-  reactCompiler: true,
-  transpilePackages: ["@stylexjs/open-props"],
-});
-```
+빌드 설정은 `next.config.ts`(Turbopack + `@stylexswc/nextjs-plugin`)와 `postcss.config.js`에 있다. 여기에 복사본을 두지 않는다.
 
 ## Quick Start
 
@@ -62,9 +38,9 @@ export function Component() {
 }
 ```
 
-## Critical Rules
+## Rules
 
-1. **No shorthand properties** - `border: '1px solid red'` 사용 불가
+1. **No multi-value shorthands** - `border: '1px solid red'`, `padding: '10px 20px'`, `margin: '0 auto'`, `outline: '2px solid …'`, `flex: '1 1 auto'`, `background: …`는 longhand로 나눈다. 단일 값 shorthand(`margin: 0`, `padding: spacing.md`, `flex: 1`, `borderRadius: 8`)와 `transition`은 코드베이스 전반에서 쓰는 허용 패턴이다. 같은 스타일 안에서 shorthand와 longhand를 섞지 않는다(예: `margin: "0 auto"` + `marginBottom`).
    ```typescript
    // WRONG
    border: '1px solid #ccc'
@@ -72,7 +48,7 @@ export function Component() {
    // CORRECT
    borderWidth: 1,
    borderStyle: 'solid',
-   borderColor: '#ccc',
+   borderColor: colors.borderPrimary,
    ```
 
 2. **Keyframes are local** - 파일 간 export 불가, 사용 파일에서 정의
@@ -106,6 +82,8 @@ export function Component() {
 ## Project Tokens
 
 토큰 파일: `src/app/global-tokens.stylex.ts`
+
+색과 글자 크기는 토큰으로 지정하고 hex·px 값을 새로 만들지 않는다(토큰에 라이트/다크 모드 값이 들어 있다). 새 화면은 `src/components/ui`의 컴포넌트와 비슷한 기존 페이지(예: `/market/register`, `/community/write`)의 구성을 따른다.
 
 ```typescript
 import {
