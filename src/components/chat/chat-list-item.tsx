@@ -1,7 +1,6 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import dayjs from "dayjs";
 import { Loader2, ShoppingBag, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -13,6 +12,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import type { ChatRoomListItem } from "@/types/entities";
+import { formatChatTime } from "@/utils/date";
 
 const spinKeyframes = stylex.keyframes({
 	"0%": { transform: "rotate(0deg)" },
@@ -139,22 +139,6 @@ const styles = stylex.create({
 	},
 });
 
-function formatTime(dateStr: string): string {
-	const date = dayjs(dateStr);
-	const now = dayjs();
-
-	if (date.isSame(now, "day")) {
-		return date.format("HH:mm");
-	}
-	if (date.isSame(now.subtract(1, "day"), "day")) {
-		return "어제";
-	}
-	if (date.isSame(now, "year")) {
-		return date.format("MM.DD");
-	}
-	return date.format("YY.MM.DD");
-}
-
 interface ChatListItemProps {
 	room: ChatRoomListItem;
 }
@@ -221,7 +205,7 @@ export function ChatListItem({ room }: ChatListItemProps) {
 					<div {...stylex.props(styles.rightInfo)}>
 						{room.lastMessage && (
 							<span {...stylex.props(styles.time)}>
-								{formatTime(room.lastMessage.createdAt)}
+								{formatChatTime(room.lastMessage.createdAt)}
 							</span>
 						)}
 						{isLoading && (

@@ -50,7 +50,14 @@ export const Controlled: Story = {
 		const [searchedValue, setSearchedValue] = useState("");
 
 		return (
-			<div style={{ display: "flex", flexDirection: "column", gap: 16, width: 300 }}>
+			<div
+				style={{
+					display: "flex",
+					flexDirection: "column",
+					gap: 16,
+					width: 300,
+				}}
+			>
 				<SearchBar
 					value={value}
 					onChange={setValue}
@@ -68,7 +75,9 @@ export const Controlled: Story = {
 
 export const AllSizes: Story = {
 	render: () => (
-		<div style={{ display: "flex", flexDirection: "column", gap: 16, width: 300 }}>
+		<div
+			style={{ display: "flex", flexDirection: "column", gap: 16, width: 300 }}
+		>
 			<SearchBar size="sm" placeholder="Small" />
 			<SearchBar size="md" placeholder="Medium" />
 			<SearchBar size="lg" placeholder="Large" />

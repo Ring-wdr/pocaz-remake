@@ -10,15 +10,9 @@ export type MarketSort = "latest" | "priceAsc" | "priceDesc";
 function buildOrderBy(sort: MarketSort | undefined) {
 	switch (sort) {
 		case "priceAsc":
-			return [
-				{ price: "asc" as const },
-				{ createdAt: "desc" as const },
-			];
+			return [{ price: "asc" as const }, { createdAt: "desc" as const }];
 		case "priceDesc":
-			return [
-				{ price: "desc" as const },
-				{ createdAt: "desc" as const },
-			];
+			return [{ price: "desc" as const }, { createdAt: "desc" as const }];
 		default:
 			return [{ createdAt: "desc" as const }];
 	}
@@ -228,8 +222,11 @@ export const marketService = {
 	/**
 	 * 검색
 	 */
-	async search(keyword: string, options: PaginationOptions = {}) {
-		const { cursor, limit = 20, sort } = options;
+	async search(
+		keyword: string,
+		options: PaginationOptions & { status?: MarketStatus } = {},
+	) {
+		const { cursor, limit = 20, sort, status } = options;
 
 		const markets = await prisma.market.findMany({
 			where: {
@@ -237,6 +234,7 @@ export const marketService = {
 					{ title: { contains: keyword, mode: "insensitive" } },
 					{ description: { contains: keyword, mode: "insensitive" } },
 				],
+				...(status && { status }),
 			},
 			take: limit + 1,
 			...(cursor && {
@@ -423,7 +421,10 @@ export const marketLikeService = {
 	/**
 	 * 여러 Market의 찜 여부 확인 (batch)
 	 */
-	async checkLikedMarkets(userId: string, marketIds: string[]): Promise<Record<string, boolean>> {
+	async checkLikedMarkets(
+		userId: string,
+		marketIds: string[],
+	): Promise<Record<string, boolean>> {
 		const likes = await prisma.marketLike.findMany({
 			where: {
 				userId,
@@ -466,12 +467,13 @@ export const marketImageService = {
 	},
 
 	/**
-	 * 이미지 삭제
+	 * 이미지 삭제. 해당 상품의 이미지일 때만 지우고, 지웠는지 돌려준다.
 	 */
-	async deleteImage(id: string) {
-		await prisma.marketImage.delete({
-			where: { id },
+	async deleteImage(marketId: string, imageId: string) {
+		const { count } = await prisma.marketImage.deleteMany({
+			where: { id: imageId, marketId },
 		});
+		return count > 0;
 	},
 
 	/**

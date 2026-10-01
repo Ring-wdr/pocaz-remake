@@ -4,16 +4,16 @@ Limitations and required workarounds for StyleX.
 
 ## Table of Contents
 
-- [No Shorthand Properties](#no-shorthand-properties)
+- [No Multi-value Shorthands](#no-multi-value-shorthands)
 - [Keyframes Scope](#keyframes-scope)
 - [String vs Number Values](#string-vs-number-values)
 - [Spread Syntax Required](#spread-syntax-required)
 - [No Static Inline Styles](#no-static-inline-styles)
 - [Flex Layout Constraints](#flex-layout-constraints)
 
-## No Shorthand Properties
+## No Multi-value Shorthands
 
-StyleX does not support CSS shorthand. Always use longhand properties.
+다중 값 shorthand는 longhand로 나눈다. 단일 값 shorthand(`margin: 16`, `padding: 16`, `flex: 1`, `borderRadius: 8`)와 `transition`은 허용한다.
 
 ### Border
 
@@ -24,7 +24,7 @@ border: '1px solid #2a2a4e'
 // CORRECT
 borderWidth: 1,
 borderStyle: 'solid',
-borderColor: '#2a2a4e',
+borderColor: colors.borderPrimary,
 
 // Border radius (single value OK)
 borderRadius: 8,
@@ -44,7 +44,7 @@ background: '#1a1a2e'
 background: 'linear-gradient(to right, #1a1a2e, #2a2a4e)'
 
 // CORRECT
-backgroundColor: '#1a1a2e',
+backgroundColor: colors.bgSecondary,
 
 // For gradients
 backgroundImage: 'linear-gradient(to right, #1a1a2e, #2a2a4e)',
@@ -81,7 +81,7 @@ outline: '2px solid #6366f1'
 // CORRECT
 outlineWidth: 2,
 outlineStyle: 'solid',
-outlineColor: '#6366f1',
+outlineColor: colors.accentPrimary,
 outlineOffset: 2,
 ```
 
@@ -185,18 +185,12 @@ const styles = stylex.create({
 ### What CAN Be Shared
 
 ```typescript
-// tokens.stylex.ts - defineVars works across files
-export const colors = stylex.defineVars({
-  primary: '#6366f1',
-  background: '#0a0a0a',
-});
-
-// component.tsx
-import { colors } from '@/styles/tokens.stylex';
+// defineVars로 만든 토큰은 파일 간 공유된다 (src/app/global-tokens.stylex.ts)
+import { colors } from '@/app/global-tokens.stylex';
 
 const styles = stylex.create({
   box: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.bgPrimary,
   },
 });
 ```

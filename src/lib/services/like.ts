@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import type { Like } from "@/generated/prisma/client";
 
 /**
  * Like Service
@@ -84,7 +83,11 @@ export const likeService = {
 	 */
 	async getLikedPosts(
 		userId: string,
-		options?: { cursor?: string; limit?: number; sort?: "likedAt" | "popular" | "recent" },
+		options?: {
+			cursor?: string;
+			limit?: number;
+			sort?: "likedAt" | "popular" | "recent";
+		},
 	) {
 		const limit = options?.limit ?? 20;
 		const cursor = options?.cursor;
@@ -252,7 +255,10 @@ export const likeService = {
 	/**
 	 * 여러 Post의 좋아요 여부 확인 (batch)
 	 */
-	async checkLikedPosts(userId: string, postIds: string[]): Promise<Record<string, boolean>> {
+	async checkLikedPosts(
+		userId: string,
+		postIds: string[],
+	): Promise<Record<string, boolean>> {
 		const likes = await prisma.like.findMany({
 			where: {
 				userId,

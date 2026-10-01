@@ -12,12 +12,13 @@ This command creates everything needed for a new domain:
 ## Instructions
 
 1. Load all server skills:
-   - `.claude/skills/server/index.md`
-   - `.claude/skills/server/prisma.md`
-   - `.claude/skills/server/service.md`
-   - `.claude/skills/server/route.md`
+   - `.claude/skills/server/SKILL.md`
+   - `.claude/skills/server/PRISMA.md`
+   - `.claude/skills/server/SERVICE.md`
+   - `.claude/skills/server/ROUTE.md`
+   - `.claude/skills/server/AUTH.md`
 
-2. Ask the user for domain specification:
+2. Take the domain specification from the arguments, and ask only for what they leave out:
    - Domain name (singular, PascalCase: e.g., "Review")
    - Fields and their types
    - Relations (always include User, optionally Images)

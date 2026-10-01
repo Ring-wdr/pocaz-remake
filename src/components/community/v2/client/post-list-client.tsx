@@ -1,7 +1,6 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import dayjs from "dayjs";
 import {
 	AlertCircle,
 	ChevronDown,
@@ -11,8 +10,7 @@ import {
 	RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
-import { useState, useTransition } from "react";
-
+import { useRef, useState, useTransition } from "react";
 import {
 	colors,
 	fontSize,
@@ -24,6 +22,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { SearchBar } from "@/components/ui";
+import { formatShortDate } from "@/utils/date";
 import { getPostList } from "../data/get-post-list";
 import type { PostCategory, PostListItem, PostListState } from "../types";
 import LoadMoreSpinner from "./load-more-spinner";
@@ -259,6 +258,8 @@ export default function PostListClient({
 	const [state, setState] = useState<PostListState>(initialState);
 	const [searchKeyword, setSearchKeyword] = useState(initialState.keyword);
 	const [isPending, startTransition] = useTransition();
+	// 검색을 빠르게 다시 하면 요청이 겹친다. 마지막에 보낸 요청의 응답만 반영한다.
+	const latestRequestRef = useRef(0);
 
 	const hasPosts = state.items.length > 0;
 	const hasKeyword = !!state.keyword;
@@ -267,6 +268,7 @@ export default function PostListClient({
 		isPending && state.items.length === 0 && !state.error;
 
 	const replaceList = (keyword: string) => {
+		const requestId = ++latestRequestRef.current;
 		startTransition(async () => {
 			const { data, error } = await getPostList({
 				category,
@@ -274,6 +276,7 @@ export default function PostListClient({
 				cursor: null,
 				limit,
 			});
+			if (requestId !== latestRequestRef.current) return;
 
 			if (error || !data) {
 				setState((prev) => ({
@@ -300,6 +303,7 @@ export default function PostListClient({
 	const appendList = () => {
 		if (!state.nextCursor || isPending) return;
 
+		const requestId = ++latestRequestRef.current;
 		startTransition(async () => {
 			const { data, error } = await getPostList({
 				category,
@@ -307,6 +311,8 @@ export default function PostListClient({
 				cursor: state.nextCursor,
 				limit,
 			});
+			// 그사이 검색어가 바뀌었으면 이전 검색의 다음 페이지를 붙이지 않는다
+			if (requestId !== latestRequestRef.current) return;
 
 			if (error || !data) {
 				setState((prev) => ({
@@ -393,7 +399,7 @@ export default function PostListClient({
 								<div {...stylex.props(styles.meta)}>
 									<span>{post.user.nickname}</span>
 									<span>·</span>
-									<span>{dayjs(post.createdAt).format("MM.DD")}</span>
+									<span>{formatShortDate(post.createdAt)}</span>
 									<span {...stylex.props(styles.metaItem)}>
 										<MessageCircle size={12} />
 										{post.replyCount}

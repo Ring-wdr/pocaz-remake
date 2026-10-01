@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { api } from "@/utils/eden";
 import type {
 	MarketFilterValue,
@@ -23,8 +24,6 @@ export async function getMarketList({
 	data: MarketListResult | null;
 	error: string | null;
 }> {
-	const limitString = limit.toString();
-
 	try {
 		let response: Awaited<ReturnType<typeof api.markets.get>>;
 
@@ -33,19 +32,18 @@ export async function getMarketList({
 				query: {
 					keyword,
 					cursor: cursor ?? undefined,
-					limit: limitString,
+					limit,
 					sort,
+					status: status !== "all" ? status : undefined,
 				},
 			});
 		} else if (status && status !== "all") {
-			response = await api.markets
-				.status({ status })
-				.get({
-					query: { cursor: cursor ?? undefined, limit: limitString, sort },
-				});
+			response = await api.markets.status({ status }).get({
+				query: { cursor: cursor ?? undefined, limit, sort },
+			});
 		} else {
 			response = await api.markets.get({
-				query: { cursor: cursor ?? undefined, limit: limitString, sort },
+				query: { cursor: cursor ?? undefined, limit, sort },
 			});
 		}
 
@@ -55,6 +53,8 @@ export async function getMarketList({
 
 		return { data: response.data, error: null };
 	} catch (error) {
+		// 서버 렌더링 중 cookies()가 던지는 동적 렌더링 신호 같은 Next 내부 오류는 삼키지 않는다
+		unstable_rethrow(error);
 		console.error("getMarketList failed", error);
 		return { data: null, error: "상품을 불러오는 중 오류가 발생했습니다" };
 	}

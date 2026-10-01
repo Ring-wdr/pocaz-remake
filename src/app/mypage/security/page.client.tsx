@@ -19,7 +19,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
-import { signOut } from "@/lib/auth/actions";
+import { useSignOut } from "@/lib/hooks/use-sign-out";
 import { api } from "@/utils/eden";
 
 interface SecurityPageClientProps {
@@ -279,6 +279,7 @@ export default function SecurityPageClient({
 	loginEmail,
 }: SecurityPageClientProps) {
 	const [activeModal, setActiveModal] = useState<ModalType>(null);
+	const signOut = useSignOut();
 	const [isLoggingOut, startLogout] = useTransition();
 	const [isDeleting, startDelete] = useTransition();
 
@@ -303,21 +304,15 @@ export default function SecurityPageClient({
 		startDelete(async () => {
 			try {
 				toast.loading("회원 탈퇴 처리 중...", { id: "delete" });
-				const result = await api.users.me.delete();
-				let errorMessage = "";
-				if (result.response.status === 404) {
-					const { value } = result.error || {};
-					if (value) {
-						if (value && "error" in value) {
-							errorMessage = value.error;
-						} else if (value.message) {
-							errorMessage = value.message;
-						}
-					}
-				}
-
-				if (errorMessage) {
-					throw new Error(errorMessage);
+				const { error } = await api.users.me.delete();
+				if (error) {
+					toast.error(
+						error.status === 401
+							? "로그인이 만료되었습니다. 다시 로그인한 뒤 시도해 주세요."
+							: "회원 탈퇴에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+						{ id: "delete" },
+					);
+					return;
 				}
 
 				toast.success("회원 탈퇴가 완료되었습니다.", { id: "delete" });
@@ -342,7 +337,11 @@ export default function SecurityPageClient({
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
-				<Link href="/mypage/settings" {...stylex.props(styles.backButton)}>
+				<Link
+					aria-label="설정으로 돌아가기"
+					href="/mypage/settings"
+					{...stylex.props(styles.backButton)}
+				>
 					<ArrowLeft size={20} />
 				</Link>
 				<h1 {...stylex.props(styles.headerTitle)}>보안</h1>
@@ -457,10 +456,7 @@ export default function SecurityPageClient({
 								)}
 							>
 								{isLoggingOut && (
-									<Loader2
-										size={16}
-										{...stylex.props(styles.spinner)}
-									/>
+									<Loader2 size={16} {...stylex.props(styles.spinner)} />
 								)}
 								{isLoggingOut ? "로그아웃 중..." : "로그아웃"}
 							</button>
@@ -510,10 +506,7 @@ export default function SecurityPageClient({
 								)}
 							>
 								{isDeleting && (
-									<Loader2
-										size={16}
-										{...stylex.props(styles.spinner)}
-									/>
+									<Loader2 size={16} {...stylex.props(styles.spinner)} />
 								)}
 								{isDeleting ? "처리 중..." : "탈퇴하기"}
 							</button>

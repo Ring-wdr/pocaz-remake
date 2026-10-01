@@ -3,6 +3,11 @@ import type { MarketSummary } from "@/types/entities";
 import { api } from "@/utils/eden";
 
 /**
+ * 채팅방 목록 쿼리들의 공통 키. 방을 나가거나 만들면 이 키로 무효화한다.
+ */
+export const chatRoomsQueryKey = ["chat", "rooms"] as const;
+
+/**
  * 마켓 정보 쿼리 옵션
  * - marketId가 필수 파라미터
  * - staleTime: 10분 (마켓 정보는 자주 변경되지 않음)
@@ -18,7 +23,7 @@ import { api } from "@/utils/eden";
  */
 export const chatListMarketQueryOptions = (marketId: string) =>
 	queryOptions({
-		queryKey: ["chat", "rooms", "market", marketId] as const,
+		queryKey: [...chatRoomsQueryKey, "market", marketId] as const,
 		queryFn: async () => {
 			const { data, error } = await api.chat.rooms.market({ marketId }).get();
 			if (error || !data) {
@@ -51,12 +56,12 @@ export const chatListAllInfiniteQueryOptions = (
 	filter = "all",
 ) => {
 	return infiniteQueryOptions({
-		queryKey: ["chat", "rooms", "all", search, filter] as const,
+		queryKey: [...chatRoomsQueryKey, "all", search, filter] as const,
 		initialPageParam: null,
 		queryFn: async ({ pageParam }): Promise<ChatRoomPage> => {
 			const { data, error } = await api.chat.rooms.get({
 				query: {
-					limit: "20",
+					limit: 20,
 					...(pageParam ? { cursor: pageParam } : null),
 					...(search ? { search } : null),
 					...(filter ? { filter } : null),

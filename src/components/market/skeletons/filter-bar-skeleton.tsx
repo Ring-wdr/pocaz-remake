@@ -1,10 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import {
-	colors,
-	fontSize,
-	radius,
-	spacing,
-} from "@/app/global-tokens.stylex";
+import { colors, fontSize, radius, spacing } from "@/app/global-tokens.stylex";
 import FilterTabsSkeleton from "./filter-tabs-skeleton";
 
 const shimmer = stylex.keyframes({

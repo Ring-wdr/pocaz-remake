@@ -3,11 +3,11 @@
 import * as stylex from "@stylexjs/stylex";
 
 import {
+	colors,
 	fontSize,
 	fontWeight,
 	radius,
 	spacing,
-	colors,
 } from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({

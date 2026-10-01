@@ -73,7 +73,7 @@ function useRoomMessagesInfiniteQuery({
 				.messages.get({
 					query: {
 						cursor: pageParam ?? undefined,
-						limit: String(pageSize),
+						limit: pageSize,
 					},
 				});
 

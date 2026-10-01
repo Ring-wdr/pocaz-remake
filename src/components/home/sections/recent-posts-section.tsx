@@ -1,5 +1,4 @@
 import * as stylex from "@stylexjs/stylex";
-import dayjs from "dayjs";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -9,6 +8,7 @@ import {
 	fontWeight,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { formatDate } from "@/utils/date";
 import { api } from "@/utils/eden";
 import { layoutStyles } from "../layout-constants.stylex";
 
@@ -84,7 +84,7 @@ interface Post {
 
 async function getRecentPosts(): Promise<Post[]> {
 	const { data, error } = await api.posts.get({
-		query: { limit: "5" },
+		query: { limit: 5 },
 		fetch: { next: { revalidate: 120 } },
 	});
 
@@ -110,7 +110,7 @@ export default async function RecentPostsSection() {
 				) : (
 					<ul {...stylex.props(styles.boardListUl)}>
 						{posts.map((post) => {
-							const days = dayjs(post.createdAt).format("YYYY-MM-DD");
+							const days = formatDate(post.createdAt);
 							const title =
 								post.content.length > 30
 									? `${post.content.slice(0, 30)}...`

@@ -131,10 +131,7 @@ export default function MarketGridItem({ item }: MarketGridItemProps) {
 					</div>
 				)}
 				<span
-					{...stylex.props(
-						styles.statusBadge,
-						styles[statusStyles[statusKey]],
-					)}
+					{...stylex.props(styles.statusBadge, styles[statusStyles[statusKey]])}
 				>
 					{statusLabels[statusKey]}
 				</span>

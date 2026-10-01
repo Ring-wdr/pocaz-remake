@@ -48,7 +48,7 @@ const styles = stylex.create({
 
 async function getBestPocaItems(): Promise<MarketItem[]> {
 	const { data, error } = await api.markets.get({
-		query: { limit: "5" },
+		query: { limit: 5 },
 	});
 
 	if (error || !data) {

@@ -153,7 +153,10 @@ export const chatRoomService = {
 							members: {
 								some: {
 									user: {
-										nickname: { contains: search, mode: "insensitive" as const },
+										nickname: {
+											contains: search,
+											mode: "insensitive" as const,
+										},
 									},
 								},
 							},
@@ -337,11 +340,12 @@ export const chatRoomService = {
 	},
 
 	/**
-	 * 특정 마켓의 채팅방 목록 조회 (판매자용)
+	 * 특정 마켓의 채팅방 중 사용자가 참여한 방 목록
+	 * 판매자는 자기 상품의 거래 채팅방마다 멤버이므로 전부 보게 된다.
 	 */
-	async findByMarketId(marketId: string) {
+	async findByMarketId(marketId: string, userId: string) {
 		return prisma.chatRoom.findMany({
-			where: { marketId },
+			where: { marketId, members: { some: { userId } } },
 			include: {
 				members: {
 					include: {
@@ -396,6 +400,18 @@ export const chatRoomService = {
 		await prisma.chatRoom.delete({
 			where: { id },
 		});
+	},
+
+	/**
+	 * 멤버를 초대할 수 있는 방인지. 거래 채팅방과 이름 없는 1:1 방은 대화 당사자끼리만 쓰므로
+	 * 초대할 수 없다(새 멤버가 이전 대화를 모두 보게 된다).
+	 */
+	async allowsInvites(roomId: string) {
+		const room = await prisma.chatRoom.findUnique({
+			where: { id: roomId },
+			select: { marketId: true, name: true },
+		});
+		return !!room && room.marketId === null && room.name !== null;
 	},
 
 	/**

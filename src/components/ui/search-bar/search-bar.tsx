@@ -2,12 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { Search, XCircle } from "lucide-react";
-import {
-	type ChangeEvent,
-	type KeyboardEvent,
-	useEffect,
-	useState,
-} from "react";
+import { type ChangeEvent, type KeyboardEvent, useState } from "react";
 import {
 	colors,
 	fontSize,
@@ -17,6 +12,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { useControlledState } from "@/hooks/use-controlled-state";
+import { isSubmitEnter } from "@/utils/keyboard";
 
 const styles = stylex.create({
 	container: {
@@ -131,7 +127,7 @@ export function SearchBar({
 	};
 
 	const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter") {
+		if (isSubmitEnter(e)) {
 			e.preventDefault();
 			onSearch?.(value);
 		}

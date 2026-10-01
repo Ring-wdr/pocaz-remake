@@ -22,8 +22,6 @@ export const metadata = createMetadata({
 	ogTitle: "POCAZ Home",
 });
 
-export const revalidate = 120;
-
 const styles = stylex.create({
 	container: {
 		flex: 1,

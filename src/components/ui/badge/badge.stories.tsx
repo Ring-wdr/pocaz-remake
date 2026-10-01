@@ -50,7 +50,8 @@ export const Warning: Story = {
 	},
 };
 
-export const Error: Story = {
+export const ErrorVariant: Story = {
+	name: "Error",
 	args: {
 		variant: "error",
 		children: "에러",
@@ -110,12 +111,24 @@ export const AllVariants: Story = {
 export const AllOutline: Story = {
 	render: () => (
 		<div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-			<Badge variant="default" outline>Default</Badge>
-			<Badge variant="primary" outline>Primary</Badge>
-			<Badge variant="success" outline>Success</Badge>
-			<Badge variant="warning" outline>Warning</Badge>
-			<Badge variant="error" outline>Error</Badge>
-			<Badge variant="info" outline>Info</Badge>
+			<Badge variant="default" outline>
+				Default
+			</Badge>
+			<Badge variant="primary" outline>
+				Primary
+			</Badge>
+			<Badge variant="success" outline>
+				Success
+			</Badge>
+			<Badge variant="warning" outline>
+				Warning
+			</Badge>
+			<Badge variant="error" outline>
+				Error
+			</Badge>
+			<Badge variant="info" outline>
+				Info
+			</Badge>
 		</div>
 	),
 };
@@ -123,9 +136,15 @@ export const AllOutline: Story = {
 export const WithDots: Story = {
 	render: () => (
 		<div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-			<Badge variant="success" dot>온라인</Badge>
-			<Badge variant="error" dot>오프라인</Badge>
-			<Badge variant="warning" dot>자리비움</Badge>
+			<Badge variant="success" dot>
+				온라인
+			</Badge>
+			<Badge variant="error" dot>
+				오프라인
+			</Badge>
+			<Badge variant="warning" dot>
+				자리비움
+			</Badge>
 		</div>
 	),
 };

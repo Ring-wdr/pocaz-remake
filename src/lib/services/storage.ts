@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 /**
  * Supabase Storage 클라이언트 (Service Role Key 사용)
+ * Storage RLS를 우회하므로 경로와 권한은 이 서비스와 라우트에서 정한다.
  */
 const supabaseAdmin = createClient(
 	process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,29 +33,63 @@ export type StorageBucket =
 	(typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS];
 
 /**
+ * 업로드를 허용하는 이미지 형식. SVG는 스크립트를 담을 수 있어 받지 않는다.
+ */
+export interface ImageType {
+	mime: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+	ext: "jpg" | "png" | "gif" | "webp";
+}
+
+/**
+ * 파일 앞부분의 시그니처로 이미지 형식을 판별한다. 클라이언트가 보낸 MIME 타입은 쓰지 않는다.
+ */
+export function detectImageType(bytes: Uint8Array): ImageType | null {
+	const startsWith = (signature: number[], offset = 0) =>
+		signature.every((byte, i) => bytes[offset + i] === byte);
+
+	if (startsWith([0xff, 0xd8, 0xff])) {
+		return { mime: "image/jpeg", ext: "jpg" };
+	}
+	if (startsWith([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
+		return { mime: "image/png", ext: "png" };
+	}
+	// GIF87a / GIF89a
+	if (
+		startsWith([0x47, 0x49, 0x46, 0x38]) &&
+		(bytes[4] === 0x37 || bytes[4] === 0x39) &&
+		bytes[5] === 0x61
+	) {
+		return { mime: "image/gif", ext: "gif" };
+	}
+	// RIFF....WEBP
+	if (
+		startsWith([0x52, 0x49, 0x46, 0x46]) &&
+		startsWith([0x57, 0x45, 0x42, 0x50], 8)
+	) {
+		return { mime: "image/webp", ext: "webp" };
+	}
+	return null;
+}
+
+/**
  * Storage Service
  */
 export const storageService = {
 	/**
-	 * 파일 업로드 (Base64)
+	 * 이미지 업로드. 경로는 `{업로더 Supabase ID}/{시각}-{UUID}.{확장자}`로 서버가 만든다.
 	 */
-	async uploadBase64(
+	async uploadImage(
 		bucket: StorageBucket,
-		base64Data: string,
-		fileName: string,
-		contentType: string,
+		ownerId: string,
+		bytes: Uint8Array,
+		type: ImageType,
 	): Promise<UploadResult> {
-		// Base64 데이터에서 prefix 제거 (data:image/png;base64, 등)
-		const base64Content = base64Data.replace(/^data:[^;]+;base64,/, "");
-		const buffer = Buffer.from(base64Content, "base64");
-
-		const uniqueFileName = `${Date.now()}-${crypto.randomUUID()}-${fileName}`;
-		const path = uniqueFileName;
+		const path = `${ownerId}/${Date.now()}-${crypto.randomUUID()}.${type.ext}`;
 
 		const { data, error } = await supabaseAdmin.storage
 			.from(bucket)
-			.upload(path, buffer, {
-				contentType,
+			.upload(path, bytes, {
+				contentType: type.mime,
 				upsert: false,
 			});
 
@@ -71,171 +106,5 @@ export const storageService = {
 			fullPath: data.fullPath,
 			publicUrl: urlData.publicUrl,
 		};
-	},
-
-	/**
-	 * 파일 업로드 (Buffer)
-	 */
-	async uploadBuffer(
-		bucket: StorageBucket,
-		buffer: Buffer | File,
-		fileName: string,
-		contentType: string,
-	): Promise<UploadResult> {
-		const uniqueFileName = `${Date.now()}-${crypto.randomUUID()}-${fileName}`;
-		const path = uniqueFileName;
-
-		const { data, error } = await supabaseAdmin.storage
-			.from(bucket)
-			.upload(path, buffer, {
-				contentType,
-				upsert: false,
-			});
-
-		if (error) {
-			throw new Error(`Upload failed: ${error.message}`);
-		}
-
-		const { data: urlData } = supabaseAdmin.storage
-			.from(bucket)
-			.getPublicUrl(data.path);
-
-		return {
-			path: data.path,
-			fullPath: data.fullPath,
-			publicUrl: urlData.publicUrl,
-		};
-	},
-
-	/**
-	 * 폴더 경로와 함께 업로드
-	 */
-	async uploadToFolder(
-		bucket: StorageBucket,
-		folder: string,
-		buffer: Buffer,
-		fileName: string,
-		contentType: string,
-	): Promise<UploadResult> {
-		const uniqueFileName = `${Date.now()}-${crypto.randomUUID()}-${fileName}`;
-		const path = `${folder}/${uniqueFileName}`;
-
-		const { data, error } = await supabaseAdmin.storage
-			.from(bucket)
-			.upload(path, buffer, {
-				contentType,
-				upsert: false,
-			});
-
-		if (error) {
-			throw new Error(`Upload failed: ${error.message}`);
-		}
-
-		const { data: urlData } = supabaseAdmin.storage
-			.from(bucket)
-			.getPublicUrl(data.path);
-
-		return {
-			path: data.path,
-			fullPath: data.fullPath,
-			publicUrl: urlData.publicUrl,
-		};
-	},
-
-	/**
-	 * 파일 삭제
-	 */
-	async delete(bucket: StorageBucket, paths: string[]): Promise<void> {
-		const { error } = await supabaseAdmin.storage.from(bucket).remove(paths);
-
-		if (error) {
-			throw new Error(`Delete failed: ${error.message}`);
-		}
-	},
-
-	/**
-	 * 단일 파일 삭제
-	 */
-	async deleteOne(bucket: StorageBucket, path: string): Promise<void> {
-		await this.delete(bucket, [path]);
-	},
-
-	/**
-	 * Public URL 조회
-	 */
-	getPublicUrl(bucket: StorageBucket, path: string): string {
-		const { data } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
-		return data.publicUrl;
-	},
-
-	/**
-	 * Signed URL 생성 (private bucket용)
-	 */
-	async createSignedUrl(
-		bucket: StorageBucket,
-		path: string,
-		expiresIn = 3600,
-	): Promise<string> {
-		const { data, error } = await supabaseAdmin.storage
-			.from(bucket)
-			.createSignedUrl(path, expiresIn);
-
-		if (error) {
-			throw new Error(`Signed URL creation failed: ${error.message}`);
-		}
-
-		return data.signedUrl;
-	},
-
-	/**
-	 * 파일 목록 조회
-	 */
-	async list(bucket: StorageBucket, folder?: string) {
-		const { data, error } = await supabaseAdmin.storage
-			.from(bucket)
-			.list(folder, {
-				limit: 100,
-				sortBy: { column: "created_at", order: "desc" },
-			});
-
-		if (error) {
-			throw new Error(`List failed: ${error.message}`);
-		}
-
-		return data;
-	},
-
-	/**
-	 * 파일 이동/이름 변경
-	 */
-	async move(
-		bucket: StorageBucket,
-		fromPath: string,
-		toPath: string,
-	): Promise<void> {
-		const { error } = await supabaseAdmin.storage
-			.from(bucket)
-			.move(fromPath, toPath);
-
-		if (error) {
-			throw new Error(`Move failed: ${error.message}`);
-		}
-	},
-
-	/**
-	 * 파일 복사
-	 */
-	async copy(
-		bucket: StorageBucket,
-		fromPath: string,
-		toPath: string,
-	): Promise<void> {
-		const { error } = await supabaseAdmin.storage
-			.from(bucket)
-			.copy(fromPath, toPath);
-
-		if (error) {
-			throw new Error(`Copy failed: ${error.message}`);
-		}
 	},
 };

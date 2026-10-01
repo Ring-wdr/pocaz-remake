@@ -44,6 +44,7 @@ export default async function ChatListPage({
 				leading={
 					firstMarketId ? (
 						<Link
+							aria-label="뒤로 가기"
 							href="/chat/list"
 							{...stylex.props(fixedHeaderStyles.roundButton)}
 						>

@@ -1,9 +1,11 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import {
-	postService,
+	CommentError,
 	commentService,
 	postImageService,
+	postService,
 } from "@/lib/services/post";
 import { userService } from "@/lib/services/user";
 
@@ -62,6 +64,12 @@ const PaginatedCommentsSchema = t.Object({
 	totalCount: t.Number(),
 });
 
+const CategoryEnum = t.Union([
+	t.Literal("free"),
+	t.Literal("boast"),
+	t.Literal("info"),
+]);
+
 const ErrorSchema = t.Object({
 	error: t.String(),
 });
@@ -74,14 +82,10 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 	.get(
 		"/",
 		async ({ query }) => {
-			const category = query.category as
-				| "free"
-				| "boast"
-				| "info"
-				| undefined;
+			const category = query.category as "free" | "boast" | "info" | undefined;
 			const result = await postService.findAll({
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
 				category,
 			});
 
@@ -102,14 +106,15 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 		{
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
-				category: t.Optional(t.Union([t.Literal("free"), t.Literal("boast"), t.Literal("info")])),
+				limit: LimitQuery,
+				category: t.Optional(CategoryEnum),
 			}),
 			response: PaginatedPostsSchema,
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 목록 조회",
-				description: "게시글 목록을 페이지네이션하여 조회합니다. category로 필터링 가능합니다.",
+				description:
+					"게시글 목록을 페이지네이션하여 조회합니다. category로 필터링 가능합니다.",
 			},
 		},
 	)
@@ -123,7 +128,8 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 
 			const result = await postService.search(query.keyword, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
+				category: query.category,
 			});
 
 			return {
@@ -144,7 +150,8 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			query: t.Object({
 				keyword: t.Optional(t.String()),
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
+				category: t.Optional(CategoryEnum),
 			}),
 			response: PaginatedPostsSchema,
 			detail: {
@@ -196,7 +203,8 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 상세 조회",
-				description: "게시글의 상세 정보를 조회합니다. 댓글은 별도 API로 조회합니다.",
+				description:
+					"게시글의 상세 정보를 조회합니다. 댓글은 별도 API로 조회합니다.",
 			},
 		},
 	)
@@ -213,7 +221,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			const [result, totalCount] = await Promise.all([
 				commentService.findByPostId(params.id, {
 					cursor: query.cursor,
-					limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+					limit: query.limit ?? 20,
 				}),
 				commentService.countByPostId(params.id),
 			]);
@@ -245,7 +253,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			}),
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: {
 				200: PaginatedCommentsSchema,
@@ -254,7 +262,8 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			detail: {
 				tags: ["Comments"],
 				summary: "댓글 목록 조회",
-				description: "게시글의 댓글을 페이지네이션하여 조회합니다. 대댓글도 포함됩니다.",
+				description:
+					"게시글의 댓글을 페이지네이션하여 조회합니다. 대댓글도 포함됩니다.",
 			},
 		},
 	)
@@ -264,7 +273,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 		async ({ params, query }) => {
 			const result = await postService.findByUserId(params.userId, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
 			});
 
 			return {
@@ -287,7 +296,7 @@ export const publicPostRoutes = new Elysia({ prefix: "/posts" })
 			}),
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: PaginatedPostsSchema,
 			detail: {
@@ -334,7 +343,7 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 		{
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
-				category: t.Optional(t.Union([t.Literal("free"), t.Literal("boast"), t.Literal("info")])),
+				category: t.Optional(CategoryEnum),
 				imageUrls: t.Optional(t.Array(t.String())),
 			}),
 			response: t.Object({
@@ -369,6 +378,8 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 
 			const post = await postService.update(params.id, {
 				content: body.content,
+				addImageUrls: body.addImageUrls,
+				removeImageIds: body.removeImageIds,
 			});
 
 			return {
@@ -383,6 +394,8 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			}),
 			body: t.Object({
 				content: t.String({ minLength: 1 }),
+				addImageUrls: t.Optional(t.Array(t.String(), { maxItems: 10 })),
+				removeImageIds: t.Optional(t.Array(t.String())),
 			}),
 			response: {
 				200: t.Object({
@@ -396,7 +409,8 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 			detail: {
 				tags: ["Posts"],
 				summary: "게시글 수정",
-				description: "게시글 내용을 수정합니다.",
+				description:
+					"게시글 본문과 이미지(추가·삭제)를 한 번에 수정합니다. 하나라도 실패하면 아무것도 바뀌지 않습니다.",
 			},
 		},
 	)
@@ -471,11 +485,9 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 					parentId: body.parentId ?? null,
 				};
 			} catch (error) {
+				if (!(error instanceof CommentError)) throw error;
 				set.status = 400;
-				return {
-					error:
-						error instanceof Error ? error.message : "Failed to create comment",
-				};
+				return { error: error.message };
 			}
 		},
 		{
@@ -576,11 +588,9 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				await commentService.delete(params.commentId);
 				return { message: "Comment deleted successfully" };
 			} catch (error) {
+				if (!(error instanceof CommentError)) throw error;
 				set.status = 400;
-				return {
-					error:
-						error instanceof Error ? error.message : "Failed to delete comment",
-				};
+				return { error: error.message };
 			}
 		},
 		{
@@ -665,7 +675,14 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				return { error: "Forbidden" };
 			}
 
-			await postImageService.deleteImage(params.imageId);
+			const deleted = await postImageService.deleteImage(
+				params.id,
+				params.imageId,
+			);
+			if (!deleted) {
+				set.status = 404;
+				return { error: "Image not found" };
+			}
 
 			return { message: "Image deleted successfully" };
 		},
@@ -678,6 +695,7 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 				200: t.Object({ message: t.String() }),
 				401: ErrorSchema,
 				403: ErrorSchema,
+				404: ErrorSchema,
 			},
 			detail: {
 				tags: ["Posts"],

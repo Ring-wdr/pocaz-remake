@@ -58,11 +58,13 @@ function claimsToAuthUser(claims: Record<string, unknown>): AuthUser {
 
 /**
  * Elysia Auth Plugin
- * 모든 요청에 Supabase Auth 정보를 Context에 주입
+ * 이 플러그인을 use한 라우트 그룹에만 Supabase Auth 정보를 Context에 주입한다(scoped).
  * getClaims()를 사용하여 JWT claims 기반으로 인증 처리
+ * global로 두면 뒤에 등록된 모든 라우트(공개 API 포함)가 요청마다 인증을 확인하고,
+ * authGuard를 쓰는 라우트는 두 번 확인한다.
  */
 export const authPlugin = new Elysia({ name: "auth" }).derive(
-	{ as: "global" },
+	{ as: "scoped" },
 	async ({ request }): Promise<{ auth: AuthContext }> => {
 		const supabase = createSupabaseElysiaClient(request);
 
@@ -90,11 +92,11 @@ export const authPlugin = new Elysia({ name: "auth" }).derive(
 );
 
 /**
- * Auth Guard - 인증되지 않은 요청을 차단
+ * Auth Guard - 인증되지 않은 요청을 401로 차단
  * Protected routes에 적용
  *
- * 이 guard를 사용하는 모든 라우트는 자동으로 401 응답 스키마가 추가됩니다.
- * derive 내에서 직접 에러를 반환하여 실행 순서 문제를 방지합니다.
+ * API는 브라우저와 서버 컴포넌트가 fetch(Eden)로 호출하므로 리다이렉트하지 않는다.
+ * 로그인 화면으로 보내는 일은 호출하는 쪽이 401을 보고 처리한다.
  */
 export const authGuard = new Elysia({ name: "auth-guard" })
 	.derive({ as: "scoped" }, async ({ request }) => {
@@ -120,9 +122,30 @@ export const authGuard = new Elysia({ name: "auth-guard" })
 			} as AuthenticatedContext,
 		};
 	})
-	.onBeforeHandle({ as: "scoped" }, ({ auth, redirect }) => {
+	.onBeforeHandle({ as: "scoped" }, ({ auth, status }) => {
 		if (!auth.user || !auth.session) {
-			return redirect("/login");
+			return status(401, { error: "Unauthorized" });
+		}
+	});
+
+/**
+ * 관리자 여부. app_metadata는 service role로만 바꿀 수 있으므로(user_metadata와 달리)
+ * 사용자가 스스로 관리자가 될 수 없다. Supabase에서 `app_metadata.role = "admin"`을 지정한다.
+ */
+export function isAdmin(user: AuthUser | null | undefined): boolean {
+	return user?.app_metadata?.role === "admin";
+}
+
+/**
+ * Admin Guard - 관리자만 허용 (403)
+ * authGuard 다음에 use한다: `.use(authGuard).use(adminGuard)`.
+ * 단독으로 쓰면 auth가 주입되지 않으므로 모든 요청을 거부한다.
+ */
+export const adminGuard = new Elysia({ name: "admin-guard" })
+	.use(authGuard)
+	.onBeforeHandle({ as: "scoped" }, ({ auth, status }) => {
+		if (!isAdmin(auth?.user)) {
+			return status(403, { error: "Forbidden" });
 		}
 	});
 

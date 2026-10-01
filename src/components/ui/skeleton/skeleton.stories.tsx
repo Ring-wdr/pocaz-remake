@@ -1,5 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
-import { Skeleton, SkeletonAvatar, SkeletonCard, SkeletonText } from "./skeleton";
+import {
+	Skeleton,
+	SkeletonAvatar,
+	SkeletonCard,
+	SkeletonText,
+} from "./skeleton";
 
 const meta: Meta<typeof Skeleton> = {
 	title: "UI/Skeleton",
@@ -76,10 +81,22 @@ export const Card: Story = {
 
 export const ListItem: Story = {
 	render: () => (
-		<div style={{ display: "flex", gap: "12px", alignItems: "center", width: "300px" }}>
+		<div
+			style={{
+				display: "flex",
+				gap: "12px",
+				alignItems: "center",
+				width: "300px",
+			}}
+		>
 			<SkeletonAvatar size="md" />
 			<div style={{ flex: 1 }}>
-				<Skeleton variant="text" width="60%" height={16} style={{ marginBottom: 8 }} />
+				<Skeleton
+					variant="text"
+					width="60%"
+					height={16}
+					style={{ marginBottom: 8 }}
+				/>
 				<Skeleton variant="text" width="80%" height={14} />
 			</div>
 		</div>
@@ -89,10 +106,30 @@ export const ListItem: Story = {
 export const ProductCard: Story = {
 	render: () => (
 		<div style={{ width: "200px" }}>
-			<Skeleton variant="rounded" width="100%" height={200} style={{ marginBottom: 12 }} />
-			<Skeleton variant="text" width="40%" height={12} style={{ marginBottom: 4 }} />
-			<Skeleton variant="text" width="70%" height={16} style={{ marginBottom: 4 }} />
-			<Skeleton variant="text" width="50%" height={14} style={{ marginBottom: 8 }} />
+			<Skeleton
+				variant="rounded"
+				width="100%"
+				height={200}
+				style={{ marginBottom: 12 }}
+			/>
+			<Skeleton
+				variant="text"
+				width="40%"
+				height={12}
+				style={{ marginBottom: 4 }}
+			/>
+			<Skeleton
+				variant="text"
+				width="70%"
+				height={16}
+				style={{ marginBottom: 4 }}
+			/>
+			<Skeleton
+				variant="text"
+				width="50%"
+				height={14}
+				style={{ marginBottom: 8 }}
+			/>
 			<Skeleton variant="text" width="60%" height={18} />
 		</div>
 	),
@@ -100,12 +137,28 @@ export const ProductCard: Story = {
 
 export const ChatList: Story = {
 	render: () => (
-		<div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "350px" }}>
+		<div
+			style={{
+				display: "flex",
+				flexDirection: "column",
+				gap: "16px",
+				width: "350px",
+			}}
+		>
 			{[1, 2, 3].map((i) => (
-				<div key={i} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+				<div
+					key={i}
+					style={{ display: "flex", gap: "12px", alignItems: "center" }}
+				>
 					<SkeletonAvatar size={52} />
 					<div style={{ flex: 1 }}>
-						<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+						<div
+							style={{
+								display: "flex",
+								justifyContent: "space-between",
+								marginBottom: 4,
+							}}
+						>
 							<Skeleton variant="text" width="40%" height={16} />
 							<Skeleton variant="text" width="15%" height={12} />
 						</div>

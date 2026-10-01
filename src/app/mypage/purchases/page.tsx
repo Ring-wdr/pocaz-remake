@@ -1,11 +1,17 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArrowLeft, ShoppingCart, Store } from "lucide-react";
 import Link from "next/link";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
 import { formatDate } from "@/utils/date";
 import { api } from "@/utils/eden";
-import { createMetadata } from "@/lib/metadata";
 
 export const metadata = createMetadata({
 	title: "구매 내역 | POCAZ",
@@ -151,7 +157,11 @@ export default async function PurchasesPage() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
-				<Link href="/mypage" {...stylex.props(styles.backButton)}>
+				<Link
+					aria-label="마이페이지로 돌아가기"
+					href="/mypage"
+					{...stylex.props(styles.backButton)}
+				>
 					<ArrowLeft size={20} />
 				</Link>
 				<h1 {...stylex.props(styles.headerTitle)}>구매 내역</h1>

@@ -28,6 +28,7 @@ import {
 import { confirmAction } from "@/components/ui";
 import { formatRelativeTime } from "@/utils/date";
 import { api } from "@/utils/eden";
+import { isSubmitEnter } from "@/utils/keyboard";
 
 const styles = stylex.create({
 	section: {
@@ -360,7 +361,7 @@ export function CommentsClient({
 
 	const fetchComments = async (cursor?: string) => {
 		const { data, error } = await api.posts({ id: postId }).comments.get({
-			query: { cursor, limit: "20" },
+			query: { cursor, limit: 20 },
 		});
 
 		if (error || !data) {
@@ -499,8 +500,9 @@ export function CommentsClient({
 
 	const handleLoadMore = () => {
 		if (nextCursor) {
-			startTransition(() => {
-				fetchComments(nextCursor);
+			// 응답이 올 때까지 isPending으로 버튼을 막아서 같은 페이지를 두 번 붙이지 않는다
+			startTransition(async () => {
+				await fetchComments(nextCursor);
 			});
 		}
 	};
@@ -627,10 +629,9 @@ export function CommentsClient({
 			return prev.map((comment) => ({
 				...comment,
 				replies: comment.replies.filter((r) => r.id !== commentId),
-				replyCount:
-					comment.replies.some((r) => r.id === commentId)
-						? comment.replyCount - 1
-						: comment.replyCount,
+				replyCount: comment.replies.some((r) => r.id === commentId)
+					? comment.replyCount - 1
+					: comment.replyCount,
 			}));
 		});
 
@@ -674,7 +675,7 @@ export function CommentsClient({
 						value={commentText}
 						onChange={(e) => setCommentText(e.target.value)}
 						onKeyDown={(e) => {
-							if (e.key === "Enter" && !e.shiftKey) {
+							if (isSubmitEnter(e)) {
 								e.preventDefault();
 								handleSubmitComment();
 							}
@@ -683,6 +684,7 @@ export function CommentsClient({
 						{...stylex.props(styles.commentInput)}
 					/>
 					<button
+						aria-label="댓글 등록"
 						type="button"
 						onClick={handleSubmitComment}
 						disabled={isPending || !commentText.trim()}
@@ -736,7 +738,7 @@ export function CommentsClient({
 										value={editContent}
 										onChange={(e) => setEditContent(e.target.value)}
 										onKeyDown={(e) => {
-											if (e.key === "Enter" && !e.shiftKey) {
+											if (isSubmitEnter(e)) {
 												e.preventDefault();
 												handleSaveEdit(comment.id);
 											}
@@ -748,6 +750,7 @@ export function CommentsClient({
 										{...stylex.props(styles.editInput)}
 									/>
 									<button
+										aria-label="수정 저장"
 										type="button"
 										onClick={() => handleSaveEdit(comment.id)}
 										disabled={isPending || !editContent.trim()}
@@ -761,10 +764,14 @@ export function CommentsClient({
 										<Check size={14} />
 									</button>
 									<button
+										aria-label="수정 취소"
 										type="button"
 										onClick={handleCancelEdit}
 										disabled={isPending}
-										{...stylex.props(styles.editButton, styles.editCancelButton)}
+										{...stylex.props(
+											styles.editButton,
+											styles.editCancelButton,
+										)}
 									>
 										<X size={14} />
 									</button>
@@ -813,7 +820,10 @@ export function CommentsClient({
 											<button
 												type="button"
 												onClick={() => handleDelete(comment.id)}
-												{...stylex.props(styles.actionButton, styles.dangerButton)}
+												{...stylex.props(
+													styles.actionButton,
+													styles.dangerButton,
+												)}
 											>
 												<Trash2 size={14} />
 												<span>삭제</span>
@@ -856,7 +866,7 @@ export function CommentsClient({
 															value={editContent}
 															onChange={(e) => setEditContent(e.target.value)}
 															onKeyDown={(e) => {
-																if (e.key === "Enter" && !e.shiftKey) {
+																if (isSubmitEnter(e)) {
 																	e.preventDefault();
 																	handleSaveEdit(reply.id);
 																}
@@ -868,6 +878,7 @@ export function CommentsClient({
 															{...stylex.props(styles.editInput)}
 														/>
 														<button
+															aria-label="수정 저장"
 															type="button"
 															onClick={() => handleSaveEdit(reply.id)}
 															disabled={isPending || !editContent.trim()}
@@ -881,6 +892,7 @@ export function CommentsClient({
 															<Check size={14} />
 														</button>
 														<button
+															aria-label="수정 취소"
 															type="button"
 															onClick={handleCancelEdit}
 															disabled={isPending}
@@ -945,7 +957,7 @@ export function CommentsClient({
 										value={replyText}
 										onChange={(e) => setReplyText(e.target.value)}
 										onKeyDown={(e) => {
-											if (e.key === "Enter" && !e.shiftKey) {
+											if (isSubmitEnter(e)) {
 												e.preventDefault();
 												handleSubmitReply(comment.id);
 											}
@@ -954,6 +966,7 @@ export function CommentsClient({
 										{...stylex.props(styles.replyInput)}
 									/>
 									<button
+										aria-label="답글 등록"
 										type="button"
 										onClick={() => handleSubmitReply(comment.id)}
 										disabled={isPending || !replyText.trim()}

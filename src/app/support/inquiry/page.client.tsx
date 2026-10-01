@@ -22,6 +22,7 @@ import {
 import { Footer } from "@/components/home";
 import { Button, Input } from "@/components/ui";
 import { normalizeEdenError } from "@/lib/elysia/client/error";
+import { formatFullDateTime } from "@/utils/date";
 import { api } from "@/utils/eden";
 
 interface InquiryPageClientProps {
@@ -603,7 +604,11 @@ export default function InquiryPageClient({
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
-				<Link href="/mypage" {...stylex.props(styles.backButton)}>
+				<Link
+					aria-label="마이페이지로 돌아가기"
+					href="/mypage"
+					{...stylex.props(styles.backButton)}
+				>
 					<ArrowLeft size={20} />
 				</Link>
 				<h1 {...stylex.props(styles.headerTitle)}>1:1 문의</h1>
@@ -688,7 +693,11 @@ export default function InquiryPageClient({
 						}
 						placeholder="답변을 받을 이메일을 입력해 주세요"
 						disabled={isSubmitting}
-						error={!!contactEmail && !isEmailValid ? "유효한 이메일을 입력해 주세요" : undefined}
+						error={
+							!!contactEmail && !isEmailValid
+								? "유효한 이메일을 입력해 주세요"
+								: undefined
+						}
 						helperText="로그인 계정과 다른 주소도 사용 가능합니다."
 					/>
 
@@ -774,11 +783,7 @@ export default function InquiryPageClient({
 						)}
 					</div>
 
-					<Button
-						type="submit"
-						disabled={!isValid || isSubmitting}
-						fullWidth
-					>
+					<Button type="submit" disabled={!isValid || isSubmitting} fullWidth>
 						<Send size={18} />
 						{isSubmitting ? "문의 접수 중..." : "문의하기"}
 					</Button>
@@ -818,7 +823,7 @@ export default function InquiryPageClient({
 								<div {...stylex.props(styles.resultItem)}>
 									<p {...stylex.props(styles.resultLabel)}>접수 시각</p>
 									<p {...stylex.props(styles.resultValue)}>
-										{new Date(lastSubmission.createdAt).toLocaleString("ko-KR")}
+										{formatFullDateTime(lastSubmission.createdAt)}
 									</p>
 								</div>
 							)}

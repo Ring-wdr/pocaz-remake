@@ -20,7 +20,16 @@ export interface CreatePostDto {
  */
 export interface UpdatePostDto {
 	content?: string;
+	/** 새로 붙일 이미지 URL */
+	addImageUrls?: string[];
+	/** 뗄 이미지 ID. 이 게시글의 이미지가 아니면 무시한다 */
+	removeImageIds?: string[];
 }
+
+/**
+ * 요청 내용 때문에 댓글을 만들거나 지울 수 없을 때(400). 이 오류의 메시지만 응답에 그대로 내보낸다.
+ */
+export class CommentError extends Error {}
 
 /**
  * Comment 생성 DTO
@@ -186,13 +195,21 @@ export const postService = {
 	},
 
 	/**
-	 * Post 수정
+	 * Post 수정. 본문과 이미지 변경을 한 트랜잭션으로 반영해서 중간에 실패해도 반쯤 바뀐 게시글이 남지 않는다.
 	 */
 	async update(id: string, dto: UpdatePostDto) {
+		const removeImageIds = dto.removeImageIds ?? [];
+		const addImageUrls = dto.addImageUrls ?? [];
 		return prisma.post.update({
 			where: { id },
 			data: {
 				content: dto.content,
+				images: {
+					deleteMany: removeImageIds.length
+						? { id: { in: removeImageIds } }
+						: undefined,
+					create: addImageUrls.map((imageUrl) => ({ imageUrl })),
+				},
 			},
 			include: {
 				user: {
@@ -231,7 +248,7 @@ export const postService = {
 	 * 검색
 	 */
 	async search(keyword: string, options: PaginationOptions = {}) {
-		const { cursor, limit = 20 } = options;
+		const { cursor, limit = 20, category } = options;
 
 		const posts = await prisma.post.findMany({
 			where: {
@@ -239,6 +256,7 @@ export const postService = {
 					contains: keyword,
 					mode: "insensitive",
 				},
+				...(category && { category }),
 			},
 			take: limit + 1,
 			...(cursor && {
@@ -362,11 +380,11 @@ export const commentService = {
 				select: { postId: true, parentId: true },
 			});
 			if (!parent || parent.postId !== dto.postId) {
-				throw new Error("Invalid parent comment");
+				throw new CommentError("Invalid parent comment");
 			}
 			// 대댓글에 또 대댓글을 달 수 없음 (1 depth 제한)
 			if (parent.parentId !== null) {
-				throw new Error("Cannot reply to a reply");
+				throw new CommentError("Cannot reply to a reply");
 			}
 		}
 
@@ -420,7 +438,7 @@ export const commentService = {
 		});
 
 		if (!comment) {
-			throw new Error("Comment not found");
+			throw new CommentError("Comment not found");
 		}
 
 		// 대댓글이 있으면 soft delete, 없으면 hard delete
@@ -488,12 +506,13 @@ export const postImageService = {
 	},
 
 	/**
-	 * 이미지 삭제
+	 * 이미지 삭제. 해당 게시글의 이미지일 때만 지우고, 지웠는지 돌려준다.
 	 */
-	async deleteImage(id: string) {
-		await prisma.postImage.delete({
-			where: { id },
+	async deleteImage(postId: string, imageId: string) {
+		const { count } = await prisma.postImage.deleteMany({
+			where: { id: imageId, postId },
 		});
+		return count > 0;
 	},
 
 	/**

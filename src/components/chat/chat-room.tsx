@@ -1,7 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import dayjs from "dayjs";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, MoreVertical, Send, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,12 +23,15 @@ import { useCallbackRef } from "@/hooks/use-callback-ref";
 import { useEventListener } from "@/hooks/use-event-listener";
 import { useChatMessages } from "@/lib/hooks/use-chat-messages";
 import { preCacheUsers, useChatPresence } from "@/lib/hooks/use-chat-realtime";
+import { chatRoomsQueryKey } from "@/lib/queries/markets";
 import type {
 	ChatMarketInfo,
 	ChatMember,
 	PaginatedMessages,
 } from "@/types/entities";
+import { formatTime } from "@/utils/date";
 import { api } from "@/utils/eden";
+import { isSubmitEnter } from "@/utils/keyboard";
 import { ChatImageUploadButton } from "./chat-image-upload-button";
 import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
@@ -400,6 +403,7 @@ export default function ChatRoom({
 	currentUserId,
 }: ChatRoomProps) {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [inputValue, setInputValue] = useState("");
 	const [isSending, setIsSending] = useState(false);
 	const [isLeaving, setIsLeaving] = useState(false);
@@ -552,8 +556,8 @@ export default function ChatRoom({
 		[removePending],
 	);
 
-	const handleKeyPress = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" && !e.shiftKey) {
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (isSubmitEnter(e)) {
 			e.preventDefault();
 			handleSend();
 		}
@@ -590,6 +594,7 @@ export default function ChatRoom({
 			}
 
 			toast.success("채팅방을 나갔습니다.");
+			void queryClient.invalidateQueries({ queryKey: chatRoomsQueryKey });
 			router.push("/chat/list");
 		} catch (err) {
 			console.error("Leave room error:", err);
@@ -619,7 +624,11 @@ export default function ChatRoom({
 		<div data-chat-container {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.topSection)}>
 				<div {...stylex.props(styles.header)}>
-					<Link href="/chat/list" {...stylex.props(styles.backButton)}>
+					<Link
+						aria-label="채팅 목록으로 돌아가기"
+						href="/chat/list"
+						{...stylex.props(styles.backButton)}
+					>
 						<ArrowLeft size={24} />
 					</Link>
 					<div {...stylex.props(styles.partnerInfo)}>
@@ -641,6 +650,7 @@ export default function ChatRoom({
 						</div>
 					</div>
 					<button
+						aria-label="채팅방 메뉴"
 						type="button"
 						onClick={handleOpenMenu}
 						{...stylex.props(styles.menuButton)}
@@ -767,7 +777,7 @@ export default function ChatRoom({
 													: styles.messageTimeTheirs,
 											)}
 										>
-											{dayjs(message.createdAt).format("HH:mm")}
+											{formatTime(message.createdAt)}
 										</div>
 									)}
 								</div>
@@ -801,11 +811,12 @@ export default function ChatRoom({
 						placeholder="메시지를 입력하세요"
 						value={inputValue}
 						onChange={(e) => setInputValue(e.target.value)}
-						onKeyPress={handleKeyPress}
+						onKeyDown={handleKeyDown}
 						{...stylex.props(styles.input)}
 					/>
 				</div>
 				<button
+					aria-label="메시지 보내기"
 					type="button"
 					onClick={handleSend}
 					disabled={!inputValue.trim() || isSending}

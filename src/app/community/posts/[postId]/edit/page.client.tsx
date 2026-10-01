@@ -25,7 +25,18 @@ interface EditPostClientProps {
 	initialImages: ExistingImage[];
 }
 
+const spin = stylex.keyframes({
+	"0%": { transform: "rotate(0deg)" },
+	"100%": { transform: "rotate(360deg)" },
+});
+
 const styles = stylex.create({
+	spinner: {
+		animationName: spin,
+		animationDuration: "1s",
+		animationTimingFunction: "linear",
+		animationIterationCount: "infinite",
+	},
 	container: {
 		flex: 1,
 		display: "flex",
@@ -314,38 +325,18 @@ export default function EditPostClient({
 		if (isDisabled) return;
 
 		startTransition(async () => {
-			// 1. 삭제할 이미지 처리
-			for (const imageId of deletedImageIds) {
-				const { error } = await api
-					.posts({ id: postId })
-					.images({ imageId })
-					.delete();
-				if (error) {
-					console.error("Failed to delete image:", error);
-				}
-			}
-
-			// 2. 새 이미지 업로드
+			// 1. 새 이미지를 먼저 올린다. 실패하면 게시글은 그대로다.
 			const uploadedUrls = await uploadNewImages(newImages);
 			if (uploadedUrls === null) {
 				toast.error("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
 				return;
 			}
 
-			// 3. 새 이미지 연결
-			if (uploadedUrls.length > 0) {
-				const { error } = await api.posts({ id: postId }).images.post({
-					imageUrls: uploadedUrls,
-				});
-				if (error) {
-					toast.error("이미지 추가에 실패했습니다.");
-					return;
-				}
-			}
-
-			// 4. 게시글 내용 수정
+			// 2. 본문·이미지 추가·삭제를 한 요청으로 저장한다(서버가 한 트랜잭션으로 반영)
 			const { error } = await api.posts({ id: postId }).put({
 				content: content.trim(),
+				addImageUrls: uploadedUrls,
+				removeImageIds: deletedImageIds,
 			});
 
 			if (error) {
@@ -363,6 +354,7 @@ export default function EditPostClient({
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
 				<button
+					aria-label="뒤로 가기"
 					type="button"
 					onClick={() => router.back()}
 					{...stylex.props(styles.backButton)}
@@ -409,13 +401,17 @@ export default function EditPostClient({
 							/>
 						</label>
 						{existingImages.map((image) => (
-							<div key={image.id} {...stylex.props(styles.imagePreviewContainer)}>
+							<div
+								key={image.id}
+								{...stylex.props(styles.imagePreviewContainer)}
+							>
 								<img
 									src={image.imageUrl}
 									alt="첨부 이미지"
 									{...stylex.props(styles.imagePreview)}
 								/>
 								<button
+									aria-label="이미지 삭제"
 									type="button"
 									onClick={() => handleRemoveExistingImage(image.id)}
 									{...stylex.props(styles.removeImageButton)}
@@ -435,6 +431,7 @@ export default function EditPostClient({
 									{...stylex.props(styles.imagePreview)}
 								/>
 								<button
+									aria-label="이미지 삭제"
 									type="button"
 									onClick={() => handleRemoveNewImage(index)}
 									{...stylex.props(styles.removeImageButton)}
@@ -458,7 +455,7 @@ export default function EditPostClient({
 					)}
 				>
 					{isPending ? (
-						<Loader2 size={20} className="animate-spin" />
+						<Loader2 size={20} {...stylex.props(styles.spinner)} />
 					) : (
 						"수정하기"
 					)}

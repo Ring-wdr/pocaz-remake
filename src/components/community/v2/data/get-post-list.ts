@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { api } from "@/utils/eden";
 import type { PostCategory, PostListQuery, PostListResult } from "../types";
 
@@ -28,7 +29,6 @@ export async function getPostList({
 	error: string | null;
 }> {
 	const safeLimit = parseLimit(limit);
-	const limitString = safeLimit.toString();
 
 	try {
 		let response: Awaited<ReturnType<typeof api.posts.get>>;
@@ -38,14 +38,15 @@ export async function getPostList({
 				query: {
 					keyword,
 					cursor: cursor ?? undefined,
-					limit: limitString,
+					limit: safeLimit,
+					category,
 				},
 				fetch: { cache: "no-store" },
 			});
 		} else {
 			response = await api.posts.get({
 				query: {
-					limit: limitString,
+					limit: safeLimit,
 					category,
 					cursor: cursor ?? undefined,
 				},
@@ -59,6 +60,8 @@ export async function getPostList({
 
 		return { data: response.data, error: null };
 	} catch (error) {
+		// 서버 렌더링 중 cookies()가 던지는 동적 렌더링 신호 같은 Next 내부 오류는 삼키지 않는다
+		unstable_rethrow(error);
 		console.error("getPostList failed", error);
 		return { data: null, error: "게시글을 불러오는 중 오류가 발생했습니다." };
 	}

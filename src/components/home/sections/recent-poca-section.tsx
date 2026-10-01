@@ -7,7 +7,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
-import { MainRecentPocaItem } from "@/components/home";
+import { MainPocaItem } from "@/components/home";
 import type { MarketItem } from "@/types/entities";
 import { api } from "@/utils/eden";
 import { layoutStyles } from "../layout-constants.stylex";
@@ -48,7 +48,7 @@ const styles = stylex.create({
 
 async function getRecentPocaItems(): Promise<MarketItem[]> {
 	const { data, error } = await api.markets.get({
-		query: { limit: "5" },
+		query: { limit: 5 },
 	});
 
 	if (error || !data) {
@@ -76,7 +76,7 @@ export default async function RecentPocaSection() {
 					아직 등록된 상품이 없어요
 				</div>
 			) : (
-				<MainRecentPocaItem items={items} />
+				<MainPocaItem items={items} />
 			)}
 		</div>
 	);

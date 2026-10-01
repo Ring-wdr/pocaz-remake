@@ -7,10 +7,6 @@ description: API 라우트, 서비스, Prisma 모델 생성/수정 시 반드시
 
 Pocaz 프로젝트의 서버 개발을 위한 스킬입니다.
 
-## Triggers (reference)
-
-api, route, 서비스, service, prisma, 모델, model, 엔드포인트, endpoint, 백엔드, backend, elysia
-
 ## When to Use
 
 - 새로운 API 엔드포인트 추가
@@ -21,19 +17,21 @@ api, route, 서비스, service, prisma, 모델, model, 엔드포인트, endpoint
 
 ## Tech Stack
 
-| 기술 | 버전 | 용도 |
-|------|------|------|
-| Elysia.js | 1.4.16 | API Framework |
-| Eden | 1.4.5 | Type-safe Client |
-| Prisma | 7.0.1 | ORM (PG Adapter) |
-| Supabase | - | Auth, Realtime, Storage |
+| 기술 | 용도 |
+|------|------|
+| Elysia.js | API Framework (Next.js route handler에 마운트, Node 런타임) |
+| Eden | Type-safe Client |
+| Prisma | ORM (PG Adapter) |
+| Supabase | Auth, Realtime, Storage |
+
+버전은 `package.json`을 기준으로 한다.
 
 ## Instructions
 
 ### 새 도메인 추가 워크플로우
 
 1. **Prisma 모델 정의** → `PRISMA.md` 참조
-2. **마이그레이션 실행** → `npx prisma migrate dev`
+2. **마이그레이션 명령 제안** → `bunx prisma migrate dev --name <name>` (Supabase DB에 적용되므로 사용자가 요청할 때만 실행)
 3. **서비스 레이어 생성** → `SERVICE.md` 참조
 4. **API 라우트 생성** → `ROUTE.md` 참조
 5. **메인 앱 등록** → `src/app/api/[[...slugs]]/route.ts`

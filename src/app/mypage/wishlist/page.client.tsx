@@ -236,6 +236,7 @@ export default function WishlistClient({ products }: WishlistClientProps) {
 										{statusLabels[status]}
 									</span>
 									<button
+										aria-label="찜 해제"
 										type="button"
 										onClick={(e) => handleRemoveWishlist(e, product.id)}
 										disabled={isRemoving || isPending}
@@ -249,8 +250,12 @@ export default function WishlistClient({ products }: WishlistClientProps) {
 									</button>
 								</div>
 								<div {...stylex.props(styles.productInfo)}>
-									<p {...stylex.props(styles.productSeller)}>{product.seller}</p>
-									<h3 {...stylex.props(styles.productTitle)}>{product.title}</h3>
+									<p {...stylex.props(styles.productSeller)}>
+										{product.seller}
+									</p>
+									<h3 {...stylex.props(styles.productTitle)}>
+										{product.title}
+									</h3>
 									<p {...stylex.props(styles.productPrice)}>
 										{product.price
 											? `${product.price.toLocaleString()}원`

@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { type HTMLAttributes } from "react";
+import type { HTMLAttributes } from "react";
 import { colors, radius } from "@/app/global-tokens.stylex";
 
 const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)" as const;

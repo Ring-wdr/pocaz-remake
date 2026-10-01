@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { ChevronLeft, ChevronRight, Store } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { colors, radius, spacing } from "@/app/global-tokens.stylex";
 
@@ -78,10 +78,6 @@ export default function MarketImageCarousel({
 }: MarketImageCarouselProps) {
 	const [currentIndex, setCurrentIndex] = useState(0);
 
-	useEffect(() => {
-		setCurrentIndex(0);
-	}, [images]);
-
 	if (!images || images.length === 0) {
 		return (
 			<div {...stylex.props(styles.placeholder)}>
@@ -109,6 +105,7 @@ export default function MarketImageCarousel({
 			{hasMultipleImages && (
 				<>
 					<button
+						aria-label="이전 이미지"
 						type="button"
 						onClick={handlePrev}
 						{...stylex.props(styles.imageNav, styles.imageNavLeft)}
@@ -116,6 +113,7 @@ export default function MarketImageCarousel({
 						<ChevronLeft size={20} />
 					</button>
 					<button
+						aria-label="다음 이미지"
 						type="button"
 						onClick={handleNext}
 						{...stylex.props(styles.imageNav, styles.imageNavRight)}

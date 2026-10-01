@@ -88,7 +88,7 @@ interface BoastPost {
 
 async function getBoastPosts(): Promise<BoastPost[]> {
 	const { data, error } = await api.posts.get({
-		query: { limit: "9", category: "boast" },
+		query: { limit: 9, category: "boast" },
 	});
 
 	if (error || !data) {
@@ -117,7 +117,10 @@ export default async function BoastGallerySection() {
 			<div {...stylex.props(styles.boastGallery)}>
 				{posts.length === 0 ? (
 					<div
-						{...stylex.props(styles.emptyState, layoutStyles.boastGridMinHeight)}
+						{...stylex.props(
+							styles.emptyState,
+							layoutStyles.boastGridMinHeight,
+						)}
 					>
 						아직 자랑 게시물이 없어요
 					</div>

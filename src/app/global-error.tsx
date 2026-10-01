@@ -185,7 +185,10 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 						>
 							{copied ? "진단 정보 복사됨" : "진단 정보 복사"}
 						</button>
-						<a href="/support/inquiry" {...stylex.props(styles.secondaryButton)}>
+						<a
+							href="/support/inquiry"
+							{...stylex.props(styles.secondaryButton)}
+						>
 							지원 문의하기
 						</a>
 					</div>

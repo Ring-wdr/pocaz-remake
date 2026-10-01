@@ -25,7 +25,7 @@ async function getChatRoomData(roomId: string, currentUserId: string) {
 	const { data: messagesData } = await api.chat
 		.rooms({ id: roomId })
 		.messages.get({
-			query: { limit: "50" },
+			query: { limit: 50 },
 		});
 
 	const members: ChatMember[] = roomData.members.map((m) => ({

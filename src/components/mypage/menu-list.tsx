@@ -15,8 +15,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ComponentType } from "react";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
-import { signOut } from "@/lib/auth/actions";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
+import { useSignOut } from "@/lib/hooks/use-sign-out";
 
 interface MenuItem {
 	id: number;
@@ -162,6 +168,7 @@ const styles = stylex.create({
 });
 
 export default function MenuList() {
+	const signOut = useSignOut();
 	return (
 		<div {...stylex.props(styles.container)}>
 			{menuItems.map((section) => (
@@ -189,14 +196,11 @@ export default function MenuList() {
 				</div>
 			))}
 
-		<form action={signOut}>
-			<button
-				type="submit"
-				{...stylex.props(styles.logoutButton)}
-			>
-				로그아웃
-			</button>
-		</form>
+			<form action={signOut}>
+				<button type="submit" {...stylex.props(styles.logoutButton)}>
+					로그아웃
+				</button>
+			</form>
 		</div>
 	);
 }

@@ -15,7 +15,7 @@ Migrate CSS modules or legacy styles to StyleX.
 1. Read source component and identify all CSS classes
 2. Convert shorthand properties to longhand (see [CONSTRAINTS.md](./CONSTRAINTS.md))
 3. Move keyframes to component file
-4. Import tokens from `src/styles/tokens.stylex.ts`
+4. Import tokens from `src/app/global-tokens.stylex.ts`
 5. Apply styles with `stylex.props()` spread syntax
 6. Run `bun run build` to verify
 7. Test all interactive states
@@ -39,7 +39,7 @@ grep -rn "style={styles\." src/
 | Type | Example | Action |
 |------|---------|--------|
 | Static | `style={{ marginTop: 8 }}` | Convert to StyleX |
-| Static with token | `style={{ color: "var(--muted)" }}` | Use `colors.muted` token |
+| Static with token | `style={{ color: "var(--muted)" }}` | Use `colors.textMuted` token |
 | Dynamic (runtime) | `style={{ width: \`${width}px\` }}` | Keep inline |
 | Dynamic (props) | `style={{ transform: \`rotate(${angle}deg)\` }}` | Keep inline |
 
@@ -62,7 +62,7 @@ const styles = stylex.create({
     verticalAlign: "middle",
   },
   description: {
-    color: colors.muted,  // Use token instead of CSS variable
+    color: colors.textMuted,  // Use token instead of CSS variable
     marginBottom: 0,
   },
 });
@@ -78,7 +78,7 @@ const styles = stylex.create({
 | Inline Style | StyleX Replacement |
 |--------------|-------------------|
 | `marginTop: 8` | `marginTop: spacing.sm` |
-| `color: "var(--muted)"` | `color: colors.muted` |
+| `color: "var(--muted)"` | `color: colors.textMuted` |
 | `display: "inline"` | `display: "inline"` |
 | `verticalAlign: "middle"` | `verticalAlign: "middle"` |
 

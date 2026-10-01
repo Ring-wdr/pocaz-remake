@@ -1,10 +1,12 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import {
 	chatMessageService,
 	chatRoomMemberService,
 	chatRoomService,
 } from "@/lib/services/chat";
+import { marketService } from "@/lib/services/market";
 import { userService } from "@/lib/services/user";
 
 // 공통 스키마
@@ -104,7 +106,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				search: query.search,
 				filter: query.filter as "all" | "trading" | "general" | undefined,
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit, 10) : 20,
+				limit: query.limit ?? 20,
 			});
 
 			return {
@@ -144,7 +146,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				search: t.Optional(t.String()),
 				filter: t.Optional(t.String()),
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: t.Object({
 				rooms: t.Array(RoomItemSchema),
@@ -179,6 +181,11 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				return { error: "At least 2 members required" };
 			}
 
+			if (!(await userService.allExist(memberIds))) {
+				set.status = 400;
+				return { error: "Unknown member" };
+			}
+
 			const room = await chatRoomService.create({
 				name: body.name,
 				memberIds,
@@ -195,7 +202,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 		{
 			body: t.Object({
 				name: t.Optional(t.String()),
-				memberIds: t.Array(t.String(), { minItems: 1 }),
+				memberIds: t.Array(t.String(), { minItems: 1, maxItems: 20 }),
 			}),
 			response: {
 				201: t.Object({
@@ -230,6 +237,11 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				return { error: "Cannot create chat room with yourself" };
 			}
 
+			if (!(await userService.findById(body.targetUserId))) {
+				set.status = 404;
+				return { error: "User not found" };
+			}
+
 			const room = await chatRoomService.findOrCreateDirect(
 				user.id,
 				body.targetUserId,
@@ -254,6 +266,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 					members: t.Array(UserSchema),
 				}),
 				400: ErrorSchema,
+				404: ErrorSchema,
 			},
 			detail: {
 				tags: ["Chat"],
@@ -429,6 +442,16 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				return { error: "Not a member of this chat room" };
 			}
 
+			if (!(await chatRoomService.allowsInvites(params.id))) {
+				set.status = 403;
+				return { error: "Members cannot be added to this chat room" };
+			}
+
+			if (!(await userService.findById(body.userId))) {
+				set.status = 404;
+				return { error: "User not found" };
+			}
+
 			// 이미 멤버인지 확인
 			const isAlreadyMember = await chatRoomService.isMember(
 				params.id,
@@ -465,11 +488,13 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				400: ErrorSchema,
 				401: ErrorSchema,
 				403: ErrorSchema,
+				404: ErrorSchema,
 			},
 			detail: {
 				tags: ["Chat"],
 				summary: "채팅방 멤버 추가",
-				description: "채팅방에 새 멤버를 추가합니다.",
+				description:
+					"이름 있는 그룹 채팅방에 새 멤버를 추가합니다. 거래 채팅방과 1:1 방에는 추가할 수 없습니다.",
 			},
 		},
 	)
@@ -540,7 +565,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 
 			const result = await chatMessageService.findByRoomId(params.id, {
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit) : 50,
+				limit: query.limit ?? 50,
 			});
 
 			return {
@@ -560,7 +585,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			}),
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery,
 			}),
 			response: {
 				200: PaginatedMessagesSchema,
@@ -676,15 +701,22 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				auth.user.user_metadata?.avatar_url,
 			);
 
+			// 판매자는 상품에서 정한다
+			const market = await marketService.findById(body.marketId);
+			if (!market) {
+				set.status = 404;
+				return { error: "Market not found" };
+			}
+
 			// 자기 자신과의 채팅방 생성 방지
-			if (user.id === body.sellerId) {
+			if (user.id === market.userId) {
 				set.status = 400;
 				return { error: "Cannot create chat room with yourself" };
 			}
 
 			const room = await chatRoomService.findOrCreateForMarket(
 				user.id,
-				body.sellerId,
+				market.userId,
 				body.marketId,
 			);
 
@@ -708,7 +740,6 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 		{
 			body: t.Object({
 				marketId: t.String(),
-				sellerId: t.String(),
 			}),
 			response: {
 				200: t.Object({
@@ -719,6 +750,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 					market: t.Nullable(MarketInfoSchema),
 				}),
 				400: ErrorSchema,
+				404: ErrorSchema,
 			},
 			detail: {
 				tags: ["Chat"],
@@ -729,7 +761,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 		},
 	)
 
-	// GET /api/chat/rooms/market/:marketId - 특정 마켓의 채팅방 목록 (판매자용)
+	// GET /api/chat/rooms/market/:marketId - 특정 마켓에서 내가 참여한 채팅방 목록
 	.get(
 		"/rooms/market/:marketId",
 		async ({ auth, params, set }) => {
@@ -739,7 +771,10 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				return { error: "User not found" };
 			}
 
-			const rooms = await chatRoomService.findByMarketId(params.marketId);
+			const rooms = await chatRoomService.findByMarketId(
+				params.marketId,
+				user.id,
+			);
 
 			return {
 				rooms: rooms.map((room) => ({
@@ -784,7 +819,8 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 			detail: {
 				tags: ["Chat"],
 				summary: "마켓 채팅방 목록 조회",
-				description: "특정 마켓에 대한 채팅방 목록을 조회합니다.",
+				description:
+					"특정 마켓의 채팅방 중 내가 참여한 방 목록을 조회합니다. 판매자는 모든 거래 채팅방을 봅니다.",
 			},
 		},
 	);

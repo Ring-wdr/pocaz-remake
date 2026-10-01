@@ -11,8 +11,8 @@ import {
 	publicPhotocardRoutes,
 } from "@/lib/elysia/routes/photocards";
 import { postRoutes, publicPostRoutes } from "@/lib/elysia/routes/posts";
-import { supportRoutes } from "@/lib/elysia/routes/support";
 import { storageRoutes } from "@/lib/elysia/routes/storage";
+import { supportRoutes } from "@/lib/elysia/routes/support";
 import { publicUserRoutes, userRoutes } from "@/lib/elysia/routes/users";
 
 // ==============================================
@@ -114,20 +114,29 @@ const protectedRoutes = new Elysia({ prefix: "/protected" })
 // ==============================================
 // Main App
 // ==============================================
-const baseApp = new Elysia({ prefix: "/api" }).get(
-	"/",
-	() => ({
-		message: "Pocaz API",
-		version: "1.0.0",
-	}),
-	{
-		detail: {
-			tags: ["Auth"],
-			summary: "API 상태 확인",
-			description: "API 서버 상태를 확인합니다.",
+const baseApp = new Elysia({ prefix: "/api" })
+	// 처리하지 않은 오류(Prisma 등)는 서버 로그에만 남기고 일반 메시지를 돌려준다.
+	// 검증 실패(422)·잘못된 본문(400)·없는 경로(404)는 Elysia 기본 응답을 쓴다.
+	.onError(({ code, error, path, set }) => {
+		if (code !== "UNKNOWN" && code !== "INTERNAL_SERVER_ERROR") return;
+		console.error(`[api] ${path}`, error);
+		set.status = 500;
+		return { error: "Internal Server Error" };
+	})
+	.get(
+		"/",
+		() => ({
+			message: "Pocaz API",
+			version: "1.0.0",
+		}),
+		{
+			detail: {
+				tags: ["Auth"],
+				summary: "API 상태 확인",
+				description: "API 서버 상태를 확인합니다.",
+			},
 		},
-	},
-);
+	);
 
 if (process.env.NODE_ENV === "development") {
 	import("@elysiajs/openapi").then(({ openapi }) => {
@@ -149,8 +158,8 @@ if (process.env.NODE_ENV === "development") {
 						{ name: "GalmangPoca", description: "갈망포카 관련 API" },
 						{ name: "Likes", description: "좋아요 관련 API" },
 						{ name: "Chat", description: "채팅 관련 API" },
-					{ name: "Storage", description: "파일 저장소 관련 API" },
-					{ name: "Support", description: "고객지원/문의 API" },
+						{ name: "Storage", description: "파일 저장소 관련 API" },
+						{ name: "Support", description: "고객지원/문의 API" },
 					],
 				},
 			}),

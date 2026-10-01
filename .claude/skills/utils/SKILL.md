@@ -7,10 +7,6 @@ description: 날짜 포맷, URL 처리 등 유틸리티 함수 사용 시 반드
 
 Pocaz 프로젝트의 유틸리티 함수 사용을 위한 스킬입니다.
 
-## Triggers (reference)
-
-날짜, date, 시간, time, 포맷, format, formatDate, toLocaleDateString, dayjs, moment, url, baseUrl
-
 ## When to Use
 
 - 날짜/시간 포맷팅이 필요할 때
@@ -19,7 +15,7 @@ Pocaz 프로젝트의 유틸리티 함수 사용을 위한 스킬입니다.
 
 ## Core Principle
 
-**인라인 구현 금지** - 기존 유틸 함수가 있으면 반드시 사용
+날짜·URL 포맷은 `src/utils`의 함수를 쓴다. 표시 형식(구분자, 오늘/어제 규칙, 시간대)을 한 곳에서 바꿀 수 있게 하기 위해서다. 필요한 형식이 없으면 컴포넌트 안에 만들지 말고 `src/utils/date.ts`에 함수를 추가한다. (`biome.json`의 `noRestrictedImports`가 `src/utils/date.ts`와 테스트 밖의 `dayjs` import를 막는다.)
 
 ```typescript
 // ❌ BAD - 인라인 구현
@@ -38,6 +34,8 @@ const formattedDate = formatKoreanDate(date);
 
 ### Date (`@/utils/date`)
 
+모두 한국 시간(`Asia/Seoul`)으로 표시한다. 서버 시간대와 관계없다.
+
 | 함수 | 출력 형식 | 용도 |
 |------|----------|------|
 | `formatRelativeTime` | "10분 전", "3일 전" | 상대 시간 |
@@ -45,7 +43,11 @@ const formattedDate = formatKoreanDate(date);
 | `formatKoreanDate` | "2024년 11월 30일" | 한국어 날짜 |
 | `formatShortDate` | "11.30" | 짧은 날짜 |
 | `formatDateTime` | "11.30 10:30" | 날짜+시간 |
+| `formatFullDateTime` | "2024.11.30 10:30" | 연도 포함 날짜+시간 |
+| `formatTime` | "10:30" | 시간만 |
 | `formatChatTime` | 컨텍스트별 | 채팅 목록용 |
+| `formatDayLabel` | "오늘", "어제", "2024.11.30" | 날짜 구분선 |
+| `isSameDay` | boolean | 두 시각이 같은 날인지 |
 
 ### URL (`@/utils/url`)
 
@@ -53,6 +55,12 @@ const formattedDate = formatKoreanDate(date);
 |------|------|
 | `getBaseUrl` | 앱 기본 URL |
 | `getApiBaseUrl` | API 기본 URL |
+
+### Keyboard (`@/utils/keyboard`)
+
+| 함수 | 용도 |
+|------|------|
+| `isSubmitEnter` | 입력창 keydown이 "Enter로 보내기"인지 (Shift+Enter·한글 조합 중 Enter 제외). Enter로 전송하는 입력창은 모두 이걸 쓴다 |
 
 ### Eden (`@/utils/eden`)
 
@@ -72,5 +80,4 @@ const formattedDate = formatKoreanDate(date);
 
 1. 적절한 파일에 함수 추가 (`src/utils/*.ts`)
 2. JSDoc 주석 작성
-3. `docs/utils/*.md` 문서 업데이트
-4. 이 스킬 파일 업데이트
+3. 이 스킬의 표(`SKILL.md`, 날짜 함수면 `DATE.md`) 업데이트

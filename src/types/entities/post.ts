@@ -5,9 +5,9 @@
  */
 
 import type {
-	PostModel,
-	PostImageModel,
 	CommentModel,
+	PostImageModel,
+	PostModel,
 } from "@/generated/prisma/models";
 
 /** Post 카테고리 타입 (Prisma 스키마의 category 필드와 동기화) */

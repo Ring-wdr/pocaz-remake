@@ -1,6 +1,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { useQueryClient } from "@tanstack/react-query";
 import { Camera, Check, Loader2, User, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -13,16 +14,18 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-import {
-	colors,
-	fontSize,
-	spacing,
-} from "@/app/global-tokens.stylex";
+import { colors, fontSize, spacing } from "@/app/global-tokens.stylex";
 import { Button, Input } from "@/components/ui";
+import { myUserQueryKey } from "@/lib/queries/users";
 import { api } from "@/utils/eden";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const ALLOWED_FILE_TYPES = [
+	"image/jpeg",
+	"image/png",
+	"image/gif",
+	"image/webp",
+];
 
 const spin = stylex.keyframes({
 	"0%": { transform: "rotate(0deg)" },
@@ -113,6 +116,7 @@ export default function EditProfileForm({
 	initialAvatar,
 }: EditProfileFormProps) {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [nickname, setNickname] = useState(initialNickname);
 	const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatar);
 	const [isSaving, startSaving] = useTransition();
@@ -257,11 +261,19 @@ export default function EditProfileForm({
 			});
 
 			if (error) {
+				if (error.status === 409) {
+					// 확인한 뒤 다른 사람이 먼저 가져간 경우
+					setNicknameStatus("taken");
+					toast.error("이미 사용 중인 닉네임입니다.");
+					return;
+				}
 				toast.error("프로필 업데이트에 실패했습니다.");
 				return;
 			}
 
 			toast.success("프로필이 수정되었습니다.");
+			// 마이페이지 요약은 React Query 캐시(5분)로 그려지므로 함께 갱신한다
+			await queryClient.invalidateQueries({ queryKey: myUserQueryKey });
 			router.refresh();
 		});
 	};
@@ -314,9 +326,7 @@ export default function EditProfileForm({
 					disabled={!canSave}
 					size="sm"
 				>
-					{isSaving && (
-						<Loader2 size={16} {...stylex.props(styles.spinner)} />
-					)}
+					{isSaving && <Loader2 size={16} {...stylex.props(styles.spinner)} />}
 					{isSaving ? "저장 중..." : "저장"}
 				</Button>
 			</div>
@@ -334,6 +344,7 @@ export default function EditProfileForm({
 						</div>
 					)}
 					<button
+						aria-label="프로필 사진 변경"
 						type="button"
 						onClick={() => fileInputRef.current?.click()}
 						disabled={isUploading}

@@ -111,6 +111,7 @@ model Post {
   likes     Like[]
 
   @@index([category, createdAt(sort: Desc)])
+  @@index([userId])
 }
 
 model PostImage {
@@ -120,6 +121,8 @@ model PostImage {
 
   postId    String
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
 }
 
 model Comment {
@@ -163,6 +166,8 @@ model Market {
   likes        MarketLike[]
   transactions Transaction[]
   chatRooms    ChatRoom[]
+
+  @@index([userId])
 }
 
 model MarketImage {
@@ -172,6 +177,8 @@ model MarketImage {
 
   marketId  String
   market    Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  @@index([marketId])
 }
 
 // ============================================
@@ -188,6 +195,7 @@ model Like {
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+  @@index([postId])
 }
 
 // ============================================
@@ -204,6 +212,7 @@ model MarketLike {
   market    Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
 
   @@unique([userId, marketId])
+  @@index([marketId])
 }
 
 // ============================================
@@ -287,6 +296,7 @@ model ChatRoomMember {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([roomId, userId])
+  @@index([userId])
 }
 
 model ChatMessage {
@@ -299,4 +309,6 @@ model ChatMessage {
 
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+
+  @@index([roomId, createdAt])
 }

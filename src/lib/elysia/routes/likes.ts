@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { type Generator, rateLimit } from "elysia-rate-limit";
 import { type AuthenticatedContext, authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import { likeService } from "@/lib/services/like";
 import { marketLikeService } from "@/lib/services/market";
 import { userService } from "@/lib/services/user";
@@ -149,11 +150,10 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 				return { items: [], nextCursor: null, hasMore: false };
 			}
 
-			const parsedLimit = query.limit ? Number.parseInt(query.limit, 10) : 20;
 			const sort = query.sort as "likedAt" | "popular" | "recent" | undefined;
 			const result = await likeService.getLikedPosts(user.id, {
 				cursor: query.cursor,
-				limit: Number.isFinite(parsedLimit) ? parsedLimit : 20,
+				limit: query.limit ?? 20,
 				sort: sort ?? "likedAt",
 			});
 
@@ -175,8 +175,14 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 		{
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
-				sort: t.Optional(t.Union([t.Literal("likedAt"), t.Literal("popular"), t.Literal("recent")])),
+				limit: LimitQuery,
+				sort: t.Optional(
+					t.Union([
+						t.Literal("likedAt"),
+						t.Literal("popular"),
+						t.Literal("recent"),
+					]),
+				),
 			}),
 			response: t.Object({
 				items: t.Array(
@@ -197,7 +203,8 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 			detail: {
 				tags: ["Likes"],
 				summary: "내가 좋아요한 게시글 목록",
-				description: "현재 사용자가 좋아요한 게시글 목록을 조회합니다 (페이지네이션 및 정렬 지원). sort: likedAt(좋아요한 순), popular(인기순), recent(최신순)",
+				description:
+					"현재 사용자가 좋아요한 게시글 목록을 조회합니다 (페이지네이션 및 정렬 지원). sort: likedAt(좋아요한 순), popular(인기순), recent(최신순)",
 			},
 		},
 	)

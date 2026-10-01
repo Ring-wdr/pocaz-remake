@@ -9,6 +9,7 @@
 ```typescript
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
+import { LimitQuery } from "@/lib/elysia/schemas";
 import { {domain}Service } from "@/lib/services/{domain}";
 import { userService } from "@/lib/services/user";
 
@@ -42,7 +43,7 @@ export const public{Domain}Routes = new Elysia({ prefix: "/{domains}" })
 		async ({ query }) => {
 			const result = await {domain}Service.findAll({
 				cursor: query.cursor,
-				limit: query.limit ? Number.parseInt(query.limit) : 20,
+				limit: query.limit ?? 20,
 			});
 
 			return {
@@ -58,7 +59,7 @@ export const public{Domain}Routes = new Elysia({ prefix: "/{domains}" })
 		{
 			query: t.Object({
 				cursor: t.Optional(t.String()),
-				limit: t.Optional(t.String()),
+				limit: LimitQuery, // 1~50, 범위 밖이면 422
 			}),
 			response: Paginated{Domain}Schema,
 			detail: {
@@ -190,6 +191,12 @@ export const {domain}Routes = new Elysia({ prefix: "/{domains}" })
 		},
 	);
 ```
+
+## 오류 처리
+
+- 예상한 실패(없음, 권한 없음, 잘못된 요청)는 상태 코드와 `{ error: "..." }`를 직접 반환한다.
+- 예상하지 못한 오류는 잡지 말고 던진다. 메인 앱의 `onError`가 서버 로그에 남기고 `500 { error: "Internal Server Error" }`로 응답한다.
+- `catch (error) { return { error: error.message } }`처럼 잡은 오류의 메시지를 그대로 내보내지 않는다. Prisma·Supabase 오류 메시지에는 파일 경로, 모델·제약 이름 같은 내부 정보가 들어 있다. 서비스가 요청 내용 때문에 실패를 알려야 하면 전용 오류 클래스(예: `CommentError`)를 던지고, 라우트는 그 클래스만 잡는다.
 
 ## 메인 앱 등록
 

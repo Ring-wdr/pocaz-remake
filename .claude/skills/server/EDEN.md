@@ -7,36 +7,13 @@
 | `src/utils/eden.ts` | Eden Treaty 클라이언트 |
 | `src/utils/url.ts` | Base URL 유틸리티 |
 
-## ⚠️ 중요: 서버/클라이언트 통합 패턴
+## 서버/클라이언트 통합 패턴
 
 Eden Treaty는 `onRequest` 훅을 사용하여 서버/클라이언트 컴포넌트 모두에서 **단일 `api` export**로 사용할 수 있습니다.
 
-### 올바른 구현
+### 구현
 
-```typescript
-// src/utils/eden.ts
-import { treaty } from "@elysiajs/eden";
-import type { app as AppType } from "@/app/api/[[...slugs]]/route";
-import { getApiBaseUrl } from "./url";
-
-export const { api } = treaty<typeof AppType>(getApiBaseUrl(), {
-  fetch: {
-    credentials: "include",
-  },
-  async onRequest() {
-    // 서버 환경에서만 쿠키 주입
-    if (typeof window === "undefined") {
-      const { cookies } = await import("next/headers");
-      const cookieStore = await cookies();
-      return {
-        headers: {
-          cookie: cookieStore.toString(),
-        },
-      };
-    }
-  },
-});
-```
+구현은 `src/utils/eden.ts`에 있다(이 문서에 복사하지 않는다). `api`는 처음 접근할 때 treaty 클라이언트를 만드는 지연 Proxy다. 서버에서는 `onRequest` 훅이 `next/headers`의 `cookies()`를 `cookie` 헤더로 넣고, 브라우저에서는 `credentials: "include"`로 쿠키가 전송된다.
 
 ### 사용법 (서버/클라이언트 동일)
 
@@ -97,28 +74,17 @@ treaty<typeof AppType>(app, { ... }); // HTTP가 아닌 직접 호출
 
 ## Base URL 설정
 
-```typescript
-// src/utils/url.ts
-export function getApiBaseUrl(): string {
-  // 브라우저: 상대 경로 (same-origin)
-  if (typeof window !== "undefined") {
-    return "";
-  }
-  // 서버: 절대 경로
-  return getBaseUrl();
-}
-```
+`src/utils/url.ts`의 `getApiBaseUrl()`은 `getBaseUrl()`을 그대로 쓴다. 브라우저에서는 `window.location.origin`, 서버에서는 `NEXT_PUBLIC_SITE_URL` → `VERCEL_PROJECT_PRODUCTION_URL` → `VERCEL_URL` → `http://localhost:${PORT ?? 3000}` 순서다.
 
-## 인증 라우트와 리다이렉트
+## 인증 실패 처리
 
-`authGuard`가 적용된 라우트는 인증 실패 시 자동으로 `/login`으로 302 리다이렉트합니다.
-Eden Treaty 클라이언트에서는 별도 처리 없이 브라우저가 리다이렉트를 따라갑니다.
+`authGuard` 라우트는 인증 실패 시 `401 { error: "Unauthorized" }`를 반환한다(AUTH.md). 리다이렉트는 일어나지 않으므로 호출하는 쪽에서 처리한다.
 
 ```typescript
-// authGuard 라우트 호출 시
 const { data, error } = await api.users.me.get();
-// 인증 실패 → 자동으로 /login 리다이렉트 (Elysia 레벨에서 처리)
-// 인증 성공 → data에 프로필 정보
+if (error?.status === 401) {
+  unauthorized(); // 서버 컴포넌트 (next/navigation). 클라이언트에서는 로그인 유도 UI
+}
 ```
 
 ## 에러 핸들링

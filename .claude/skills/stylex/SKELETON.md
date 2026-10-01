@@ -1,12 +1,3 @@
----
-name: skeleton-layout-stability
-description: >
-  Guidance for designing and reviewing skeleton loaders so their layout matches
-  the final UI (width/height), preventing layout shift/CLS. Use for questions
-  about skeleton UIs, placeholders, or aligning skeleton and real text in
-  React/Next.js frontends.
----
-
 # Skeleton Layout Stability
 
 Use this skill when designing or reviewing skeleton loaders so that swapping

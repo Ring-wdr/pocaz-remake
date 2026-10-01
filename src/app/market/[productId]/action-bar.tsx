@@ -89,7 +89,6 @@ const SYNC_DEBOUNCE_MS = LIKE_THROTTLE_MS;
 
 interface ActionBarProps {
 	marketId: string;
-	sellerId: string;
 	currentUserId: string | null;
 	isOwner: boolean;
 	marketTitle: string;
@@ -98,7 +97,6 @@ interface ActionBarProps {
 
 export function ActionBar({
 	marketId,
-	sellerId,
 	currentUserId,
 	isOwner,
 	marketTitle,
@@ -208,10 +206,7 @@ export function ActionBar({
 		// 구매자: 채팅방 생성/조회 후 이동
 		setIsLoading(true);
 		try {
-			const { data, error } = await api.chat.rooms.market.post({
-				marketId,
-				sellerId,
-			});
+			const { data, error } = await api.chat.rooms.market.post({ marketId });
 
 			if (error || !data) {
 				console.error("Failed to create/get chat room:", error);
@@ -247,6 +242,7 @@ export function ActionBar({
 				</button>
 			</form>
 			<button
+				aria-label="공유하기"
 				type="button"
 				onClick={handleShare}
 				{...stylex.props(styles.actionButton)}

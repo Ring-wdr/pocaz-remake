@@ -34,6 +34,7 @@
 - [ ] 설정: 다크모드/테마 토글 실제 동작 및 영속화 (`mypage/settings/page.tsx`)
 - [ ] 알림 설정: 서버/푸시 권한 연동, 토글 영속화 (`mypage/notifications/page.client.tsx`) - 현재 localStorage만 지원
 - [v] 보안: 로그아웃/탈퇴 2차 확인 모달, 로딩 표시 강화 (`mypage/security/page.client.tsx`)
+- [ ] 탈퇴 범위: 계정은 익명화되고(이메일·닉네임·프로필 사진 삭제) 다시 로그인해도 복구되지 않는다. 하지만 작성한 글·댓글·판매글·채팅 메시지와 Supabase Auth 계정(이메일·이름)은 남는다. 탈퇴 화면은 "모든 데이터가 영구적으로 삭제"된다고 안내하므로, 삭제 범위(법정 보존 기간이 있는 거래 기록 포함)를 정해 구현하거나 안내 문구를 고친다 (`mypage/security/page.client.tsx`, `lib/services/user.ts`)
 - [v] 판매/구매/거래: 탭 필터링 동작 추가 (`mypage/sales/page.client.tsx`)
 - [v] 찜: 위시 해제 액션 추가 (`mypage/wishlist/page.client.tsx`)
 - [v] 좋아요한 글: 정렬 옵션(좋아요한 순/인기순/최신순) 추가, 페이지네이션 유지 (`mypage/likes/page.tsx`, `lib/services/like.ts`)
@@ -42,3 +43,11 @@
 - [v] 문의: 첨부/연락처 필드, 접수 번호·상태 표시, 로그인 가드 (`support/inquiry/page.client.tsx`)
 - [v] FAQ/약관/오류 페이지에 지원 채널·재시도 링크 강화 (`support/*`, `error.tsx` 등)
 - [v] 전역 에러/권한 페이지에 재시도·피드백/로그 수집 연결
+
+## 운영 반영·결정 필요 (2026-10-01 감사 후속, 자세한 내용은 `docs/opus-5.5-improvements.md`)
+- [ ] RLS: Supabase 대시보드에서 확인한 뒤 `supabase/enable-rls.sql` 실행
+- [ ] 인덱스 마이그레이션(`prisma/migrations/20261001124058_add_query_indexes`)을 운영 DB에 적용 (`bun run db:migrate:prod`)
+- [ ] BEST 포카 기준 정하기: 지금은 최근 포카와 같은 쿼리 (`components/home/sections/best-poca-section.tsx`)
+- [ ] rate limit을 공유 저장소로 옮기고 쓰기 라우트 전반으로 넓히기 (`lib/elysia/routes/likes.ts`)
+- [ ] 이미지 URL 검증: 프로필 사진·게시글/상품 이미지·채팅 `image:` 메시지가 임의 URL을 받아 `<img>`로 그린다 (`lib/elysia/routes/users.ts`, `posts.ts`, `markets.ts`, `components/chat/chat-room.tsx`)
+- [ ] 활동 내역·거래 내역을 만드는 코드가 없어 해당 화면이 항상 비어 있다 (`lib/services/activity.ts`, `lib/services/transaction.ts`)

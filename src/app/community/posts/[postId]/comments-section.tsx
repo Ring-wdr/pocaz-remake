@@ -11,7 +11,7 @@ interface CommentsSectionProps {
 async function getComments(postId: string) {
 	try {
 		const { data, error } = await api.posts({ id: postId }).comments.get({
-			query: { limit: "20" },
+			query: { limit: 20 },
 		});
 
 		if (error || !data || "error" in data) {

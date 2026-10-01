@@ -109,12 +109,6 @@ const styles = stylex.create({
 		paddingTop: spacing.md,
 		paddingBottom: spacing.md,
 	},
-	spinner: {
-		animationName: "spin",
-		animationDuration: "1s",
-		animationIterationCount: "infinite",
-		animationTimingFunction: "linear",
-	},
 });
 
 const spinKeyframes = stylex.keyframes({

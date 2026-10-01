@@ -132,7 +132,10 @@ export default function PocaSliderSkeleton() {
 				{Array.from({ length: 3 }).map((_, index) => (
 					<div key={index} {...stylex.props(styles.card)}>
 						<div
-							{...stylex.props(styles.imageSkeleton, layoutStyles.sliderImageHeight)}
+							{...stylex.props(
+								styles.imageSkeleton,
+								layoutStyles.sliderImageHeight,
+							)}
 						/>
 						<div {...stylex.props(styles.infoContainer)}>
 							<div {...stylex.props(styles.groupSkeleton)} />

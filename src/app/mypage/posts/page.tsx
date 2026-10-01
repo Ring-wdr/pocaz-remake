@@ -1,5 +1,11 @@
 import * as stylex from "@stylexjs/stylex";
-import { AlertTriangle, ArrowLeft, FileText, Heart, MessageCircle } from "lucide-react";
+import {
+	AlertTriangle,
+	ArrowLeft,
+	FileText,
+	Heart,
+	MessageCircle,
+} from "lucide-react";
 import Link from "next/link";
 import {
 	colors,
@@ -9,9 +15,9 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { createMetadata } from "@/lib/metadata";
 import { formatRelativeTime } from "@/utils/date";
 import { api } from "@/utils/eden";
-import { createMetadata } from "@/lib/metadata";
 
 export const metadata = createMetadata({
 	title: "내 게시글 | POCAZ",
@@ -243,7 +249,11 @@ export default async function PostsPage({
 	return (
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
-				<Link href="/mypage" {...stylex.props(styles.backButton)}>
+				<Link
+					aria-label="마이페이지로 돌아가기"
+					href="/mypage"
+					{...stylex.props(styles.backButton)}
+				>
 					<ArrowLeft size={20} />
 				</Link>
 				<h1 {...stylex.props(styles.headerTitle)}>작성한 글</h1>

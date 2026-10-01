@@ -1,6 +1,12 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
-import { colors, fontSize, fontWeight, radius, spacing } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 
 const styles = stylex.create({
 	container: {

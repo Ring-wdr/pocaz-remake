@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { authGuard } from "@/lib/elysia/auth";
+import { adminGuard, authGuard } from "@/lib/elysia/auth";
 import {
 	agencyService,
 	artistGroupService,
@@ -329,10 +329,11 @@ export const publicArtistRoutes = new Elysia()
 	);
 
 /**
- * Protected Artist Routes (인증 필수 - 생성/수정/삭제)
+ * Protected Artist Routes (관리자 전용 - 생성/수정/삭제)
  */
 export const artistRoutes = new Elysia()
 	.use(authGuard)
+	.use(adminGuard)
 	// ============================================
 	// Agency Management
 	// ============================================

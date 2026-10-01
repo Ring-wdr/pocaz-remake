@@ -25,7 +25,18 @@ type SelectedImage = {
 	preview: string;
 };
 
+const spin = stylex.keyframes({
+	"0%": { transform: "rotate(0deg)" },
+	"100%": { transform: "rotate(360deg)" },
+});
+
 const styles = stylex.create({
+	spinner: {
+		animationName: spin,
+		animationDuration: "1s",
+		animationTimingFunction: "linear",
+		animationIterationCount: "infinite",
+	},
 	container: {
 		flex: 1,
 		display: "flex",
@@ -438,6 +449,7 @@ export default function MarketRegisterPage() {
 		<div {...stylex.props(styles.container)}>
 			<header {...stylex.props(styles.header)}>
 				<button
+					aria-label="뒤로 가기"
 					type="button"
 					onClick={() => router.back()}
 					{...stylex.props(styles.backButton)}
@@ -483,6 +495,7 @@ export default function MarketRegisterPage() {
 									<span {...stylex.props(styles.mainImageBadge)}>대표</span>
 								)}
 								<button
+									aria-label="이미지 삭제"
 									type="button"
 									onClick={() => handleRemoveImage(index)}
 									{...stylex.props(styles.removeImageButton)}
@@ -582,7 +595,7 @@ export default function MarketRegisterPage() {
 					fullWidth
 				>
 					{isPending || isUploading ? (
-						<Loader2 size={20} className="animate-spin" />
+						<Loader2 size={20} {...stylex.props(styles.spinner)} />
 					) : (
 						"등록하기"
 					)}
