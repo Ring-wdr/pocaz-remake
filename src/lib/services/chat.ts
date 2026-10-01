@@ -403,6 +403,18 @@ export const chatRoomService = {
 	},
 
 	/**
+	 * 멤버를 초대할 수 있는 방인지. 거래 채팅방과 이름 없는 1:1 방은 대화 당사자끼리만 쓰므로
+	 * 초대할 수 없다(새 멤버가 이전 대화를 모두 보게 된다).
+	 */
+	async allowsInvites(roomId: string) {
+		const room = await prisma.chatRoom.findUnique({
+			where: { id: roomId },
+			select: { marketId: true, name: true },
+		});
+		return !!room && room.marketId === null && room.name !== null;
+	},
+
+	/**
 	 * 사용자가 채팅방 멤버인지 확인
 	 */
 	async isMember(roomId: string, userId: string) {

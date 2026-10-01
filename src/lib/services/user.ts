@@ -75,6 +75,15 @@ export const userService = {
 	},
 
 	/**
+	 * 주어진 ID가 모두 존재하는 사용자인지
+	 */
+	async allExist(ids: string[]) {
+		const unique = Array.from(new Set(ids));
+		const count = await prisma.user.count({ where: { id: { in: unique } } });
+		return count === unique.length;
+	},
+
+	/**
 	 * 모든 User 조회 (soft delete 제외)
 	 */
 	async findAll() {
