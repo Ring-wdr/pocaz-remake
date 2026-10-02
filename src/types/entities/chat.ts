@@ -74,6 +74,8 @@ export interface ChatRoomListItem {
 	members: ChatUser[];
 	lastMessage: ChatLastMessage | null;
 	messageCount: number;
+	/** 내가 마지막으로 읽은 뒤에 상대가 보낸 메시지 수 */
+	unreadCount: number;
 	market: ChatMarketSummary | null;
 }
 
@@ -84,6 +86,8 @@ export interface ChatRoomDetail {
 	createdAt: string;
 	members: ChatMember[];
 	messageCount: number;
+	/** 내가 이 방을 마지막으로 읽은 시각. 읽은 적이 없으면 null */
+	lastReadAt: string | null;
 	market: ChatMarketInfo | null;
 }
 

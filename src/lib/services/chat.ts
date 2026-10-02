@@ -1,3 +1,4 @@
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -35,6 +36,19 @@ export interface ChatRoomFilterOptions {
 	cursor?: string;
 	limit?: number;
 }
+
+/**
+ * 사용자가 안 읽은 메시지를 고르는 FROM/WHERE 조각. 안 읽은 메시지는 내가 보내지 않았고
+ * 내가 마지막으로 읽은 시각(lastReadAt) 뒤에 온 것이다. 읽은 적이 없으면(lastReadAt이 null) 내가 보내지 않은 메시지 전체다.
+ * 방별 집계와 전체 합계가 같은 기준을 쓰도록 한곳에 둔다. 뒤에 AND 조건을 이어 붙일 수 있다.
+ */
+const unreadMessagesOf = (userId: string) => Prisma.sql`
+	FROM "ChatRoomMember" AS crm
+	JOIN "ChatMessage" AS m ON m."roomId" = crm."roomId"
+	WHERE crm."userId" = ${userId}
+		AND m."userId" <> ${userId}
+		AND (crm."lastReadAt" IS NULL OR m."createdAt" > crm."lastReadAt")
+`;
 
 /**
  * ChatRoom Service
@@ -242,8 +256,17 @@ export const chatRoomService = {
 		const items = hasMore ? rooms.slice(0, -1) : rooms;
 		const nextCursor = hasMore ? items[items.length - 1]?.id : null;
 
+		// 이 페이지의 방 전체를 한 번의 쿼리로 센다
+		const unreadCounts = await chatRoomMemberService.unreadCountsByRoom(
+			userId,
+			items.map((room) => room.id),
+		);
+
 		return {
-			items,
+			items: items.map((room) => ({
+				...room,
+				unreadCount: unreadCounts.get(room.id) ?? 0,
+			})),
 			nextCursor,
 			hasMore,
 		};
@@ -358,7 +381,7 @@ export const chatRoomService = {
 	 * 판매자는 자기 상품의 거래 채팅방마다 멤버이므로 전부 보게 된다.
 	 */
 	async findByMarketId(marketId: string, userId: string) {
-		return prisma.chatRoom.findMany({
+		const rooms = await prisma.chatRoom.findMany({
 			where: { marketId, members: { some: { userId } } },
 			include: {
 				members: {
@@ -405,6 +428,17 @@ export const chatRoomService = {
 			},
 			orderBy: { createdAt: "desc" },
 		});
+
+		// 판매자는 상품의 거래 채팅방 전부를 보므로 방마다 세지 않고 한 번의 쿼리로 센다
+		const unreadCounts = await chatRoomMemberService.unreadCountsByRoom(
+			userId,
+			rooms.map((room) => room.id),
+		);
+
+		return rooms.map((room) => ({
+			...room,
+			unreadCount: unreadCounts.get(room.id) ?? 0,
+		}));
 	},
 
 	/**
@@ -504,6 +538,50 @@ export const chatRoomMemberService = {
 				},
 			},
 		});
+	},
+
+	/**
+	 * 채팅방을 읽음 처리한다(lastReadAt = 지금). 멤버가 아니면 아무것도 바꾸지 않고 null을 돌려준다.
+	 * 멤버 확인과 갱신을 한 문장으로 해서, 확인한 뒤 방을 나간 사용자의 행을 건드리는 일이 없게 한다.
+	 */
+	async markRead(roomId: string, userId: string) {
+		const readAt = new Date();
+		const { count } = await prisma.chatRoomMember.updateMany({
+			where: { roomId, userId },
+			data: { lastReadAt: readAt },
+		});
+		return count > 0 ? readAt : null;
+	},
+
+	/**
+	 * 방별 안 읽은 메시지 수. 방마다 쿼리하지 않고 roomIds 전체를 한 번의 집계로 센다.
+	 * 안 읽은 메시지가 없는 방은 결과 맵에 없다(호출하는 쪽에서 0으로 취급한다).
+	 */
+	async unreadCountsByRoom(userId: string, roomIds: string[]) {
+		const counts = new Map<string, number>();
+		if (roomIds.length === 0) return counts;
+
+		const rows = await prisma.$queryRaw<{ roomId: string; unread: number }[]>`
+			SELECT m."roomId" AS "roomId", COUNT(*)::int AS "unread"
+			${unreadMessagesOf(userId)}
+				AND crm."roomId" IN (${Prisma.join(roomIds)})
+			GROUP BY m."roomId"
+		`;
+		for (const row of rows) {
+			counts.set(row.roomId, row.unread);
+		}
+		return counts;
+	},
+
+	/**
+	 * 내가 참여한 모든 방의 안 읽은 메시지 수 합계 (하단 탭 뱃지용)
+	 */
+	async totalUnreadCount(userId: string) {
+		const [row] = await prisma.$queryRaw<{ unread: number }[]>`
+			SELECT COUNT(*)::int AS "unread"
+			${unreadMessagesOf(userId)}
+		`;
+		return row?.unread ?? 0;
 	},
 
 	/**

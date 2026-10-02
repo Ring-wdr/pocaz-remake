@@ -331,6 +331,9 @@ model ChatRoomMember {
   id        String   @id @default(uuid())
   joinedAt  DateTime @default(now())
 
+  // 마지막으로 이 방을 읽은 시각. 이 시각 이후에 상대가 보낸 메시지가 안 읽은 메시지다. null이면 아직 읽은 적이 없다
+  lastReadAt DateTime?
+
   roomId    String
   room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 

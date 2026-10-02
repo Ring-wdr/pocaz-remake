@@ -23,6 +23,7 @@ import { useCallbackRef } from "@/hooks/use-callback-ref";
 import { useEventListener } from "@/hooks/use-event-listener";
 import { useChatMessages } from "@/lib/hooks/use-chat-messages";
 import { preCacheUsers, useChatPresence } from "@/lib/hooks/use-chat-realtime";
+import { useMarkRoomRead } from "@/lib/hooks/use-mark-room-read";
 import { chatRoomsQueryKey } from "@/lib/queries/markets";
 import type {
 	ChatMarketInfo,
@@ -37,6 +38,10 @@ import { ChatMarketBanner } from "./chat-market-banner";
 import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
 import { openChatRoomMenu } from "./open-chat-room-menu";
+import {
+	findLastReadMessageId,
+	findLatestIncomingMessageId,
+} from "./unread-boundary";
 
 const IMAGE_PREFIX = "image:";
 
@@ -344,6 +349,8 @@ interface ChatRoomProps {
 	market: ChatMarketInfo | null;
 	initialPage: PaginatedMessages;
 	currentUserId: string;
+	/** 방에 들어올 때 서버가 알려 준 내 읽음 시각. 읽은 적이 없으면 null */
+	lastReadAt: string | null;
 }
 
 export default function ChatRoom({
@@ -353,6 +360,7 @@ export default function ChatRoom({
 	market,
 	initialPage,
 	currentUserId,
+	lastReadAt,
 }: ChatRoomProps) {
 	const router = useRouter();
 	const queryClient = useQueryClient();
@@ -381,6 +389,22 @@ export default function ChatRoom({
 		currentUserId,
 	});
 	const resetNewMessageCountRef = useCallbackRef(resetNewMessageCount);
+
+	// "여기까지 읽음" 구분선 위치. 들어올 때의 읽음 시각으로 처음 한 번만 정한다.
+	// 아래에서 읽음 처리를 해 서버의 lastReadAt이 바뀌어도 이 방에 있는 동안 구분선은 그대로 둔다
+	const [lastReadMessageId] = useState(() =>
+		findLastReadMessageId(initialPage.messages, lastReadAt, currentUserId),
+	);
+
+	// 들어올 때, 맨 아래에서 상대의 새 메시지가 올 때, 탭이 다시 보일 때 읽음 처리한다
+	useMarkRoomRead({
+		roomId,
+		isAtBottom,
+		latestIncomingMessageId: findLatestIncomingMessageId(
+			messages,
+			currentUserId,
+		),
+	});
 
 	useEffect(() => {
 		if (isAtBottom && messagesRef.current) {
@@ -627,6 +651,7 @@ export default function ChatRoom({
 					<ChatMessageList
 						ref={messagesRef}
 						messages={messages}
+						lastReadMessageId={lastReadMessageId}
 						onStartReached={fetchPrev}
 						hasPrev={hasPrev}
 						isFetchingPrev={isFetchingPrev}

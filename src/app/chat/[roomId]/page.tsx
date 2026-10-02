@@ -72,6 +72,7 @@ async function getChatRoomData(roomId: string, currentUserId: string) {
 		market,
 		messagesPage,
 		currentUserId,
+		lastReadAt: roomData.lastReadAt,
 	};
 }
 
@@ -123,6 +124,7 @@ export default async function ChatRoomPage({
 			market={data.market}
 			initialPage={data.messagesPage}
 			currentUserId={data.currentUserId}
+			lastReadAt={data.lastReadAt}
 		/>
 	);
 }

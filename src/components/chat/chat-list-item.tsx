@@ -13,6 +13,7 @@ import {
 } from "@/app/global-tokens.stylex";
 import type { ChatRoomListItem } from "@/types/entities";
 import { formatChatTime } from "@/utils/date";
+import { ChatUnreadBadge } from "./chat-unread-badge";
 
 const spinKeyframes = stylex.keyframes({
 	"0%": { transform: "rotate(0deg)" },
@@ -125,6 +126,10 @@ const styles = stylex.create({
 		textOverflow: "ellipsis",
 		whiteSpace: "nowrap",
 	},
+	// 안 읽은 메시지가 있는 방은 마지막 메시지를 굵게 보여 준다
+	messageUnread: {
+		fontWeight: fontWeight.semibold,
+	},
 	rightInfo: {
 		display: "flex",
 		alignItems: "center",
@@ -152,6 +157,7 @@ export function ChatListItem({ room }: ChatListItemProps) {
 	const roomName = room.name || displayMember?.nickname || "채팅방";
 	const isTrading = !!room.market;
 	const isLoading = isPending || isNavigating;
+	const hasUnread = room.unreadCount > 0;
 
 	const formatLastMessage = (content: string | null | undefined) => {
 		if (!content) return "대화를 시작해보세요";
@@ -214,9 +220,12 @@ export function ChatListItem({ room }: ChatListItemProps) {
 					</div>
 				</div>
 				<div {...stylex.props(styles.messageWrap)}>
-					<p {...stylex.props(styles.message)}>
+					<p
+						{...stylex.props(styles.message, hasUnread && styles.messageUnread)}
+					>
 						{formatLastMessage(room.lastMessage?.content)}
 					</p>
+					<ChatUnreadBadge count={room.unreadCount} />
 				</div>
 			</div>
 		</button>
