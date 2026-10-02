@@ -3,7 +3,7 @@ import { authGuard } from "@/lib/elysia/auth";
 import { LimitQuery } from "@/lib/elysia/schemas";
 import { prisma } from "@/lib/prisma";
 import { activityService } from "@/lib/services/activity";
-import { marketLikeService } from "@/lib/services/market";
+import { marketLikeService, marketService } from "@/lib/services/market";
 import { notificationService } from "@/lib/services/notification";
 import { postService } from "@/lib/services/post";
 import { reviewService } from "@/lib/services/review";
@@ -31,6 +31,8 @@ const PublicUserSchema = t.Object({
 	// 받은 후기 수와 평균 별점(소수 첫째 자리). 후기가 없으면 averageRating은 null
 	reviewCount: t.Number(),
 	averageRating: t.Nullable(t.Number()),
+	// 판매중(available)인 상품 수. 예약중·판매완료는 세지 않는다
+	activeMarketCount: t.Number(),
 });
 
 // 알림 종류별 수신 설정. 설정한 적이 없는 항목은 켜져 있다
@@ -245,51 +247,6 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				tags: ["Users"],
 				summary: "회원 탈퇴",
 				description: "인증된 사용자의 계정을 삭제합니다 (soft delete).",
-			},
-		},
-	)
-	// GET /api/users/:id - 특정 사용자 조회 (공개 정보만)
-	.get(
-		"/:id",
-		async ({ params, set }) => {
-			const user = await userService.findById(params.id);
-
-			if (!user) {
-				set.status = 404;
-				return {
-					error: "User not found",
-				};
-			}
-
-			const [tradeCount, reviews] = await Promise.all([
-				transactionService.countCompleted(user.id),
-				reviewService.summary(user.id),
-			]);
-
-			return {
-				id: user.id,
-				nickname: user.nickname,
-				profileImage: user.profileImage,
-				score: user.score,
-				createdAt: user.createdAt.toISOString(),
-				tradeCount,
-				reviewCount: reviews.reviewCount,
-				averageRating: reviews.averageRating,
-			};
-		},
-		{
-			params: t.Object({
-				id: t.String(),
-			}),
-			response: {
-				200: PublicUserSchema,
-				404: t.Object({ error: t.String() }),
-			},
-			detail: {
-				tags: ["Users"],
-				summary: "특정 사용자 조회",
-				description:
-					"특정 사용자의 공개 정보(가입일, 거래 수, 받은 후기 수와 평균 별점 포함)를 조회합니다.",
 			},
 		},
 	)
@@ -720,6 +677,53 @@ export const publicUserRoutes = new Elysia({ prefix: "/users" })
 				tags: ["Users"],
 				summary: "전체 사용자 목록 조회",
 				description: "모든 사용자의 공개 정보를 조회합니다.",
+			},
+		},
+	)
+	// GET /api/users/:id - 특정 사용자 조회 (공개 정보만)
+	.get(
+		"/:id",
+		async ({ params, set }) => {
+			const user = await userService.findById(params.id);
+
+			if (!user) {
+				set.status = 404;
+				return {
+					error: "User not found",
+				};
+			}
+
+			const [tradeCount, reviews, activeMarketCount] = await Promise.all([
+				transactionService.countCompleted(user.id),
+				reviewService.summary(user.id),
+				marketService.countAvailableByUser(user.id),
+			]);
+
+			return {
+				id: user.id,
+				nickname: user.nickname,
+				profileImage: user.profileImage,
+				score: user.score,
+				createdAt: user.createdAt.toISOString(),
+				tradeCount,
+				reviewCount: reviews.reviewCount,
+				averageRating: reviews.averageRating,
+				activeMarketCount,
+			};
+		},
+		{
+			params: t.Object({
+				id: t.String(),
+			}),
+			response: {
+				200: PublicUserSchema,
+				404: t.Object({ error: t.String() }),
+			},
+			detail: {
+				tags: ["Users"],
+				summary: "특정 사용자 조회",
+				description:
+					"특정 사용자의 공개 정보(가입일, 거래 수, 받은 후기 수와 평균 별점, 판매중인 상품 수 포함)를 조회합니다. 로그인하지 않아도 볼 수 있고, 탈퇴한 사용자는 404입니다.",
 			},
 		},
 	);

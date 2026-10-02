@@ -304,6 +304,13 @@ export const marketService = {
 		});
 		return market?.status ?? null;
 	},
+
+	/**
+	 * 사용자가 올린 상품 중 판매중(available)인 수. 예약중·판매완료는 세지 않는다
+	 */
+	async countAvailableByUser(userId: string): Promise<number> {
+		return prisma.market.count({ where: { userId, status: "available" } });
+	},
 };
 
 /**

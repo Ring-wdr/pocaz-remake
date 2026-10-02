@@ -97,6 +97,15 @@ const styles = stylex.create({
 		alignItems: "center",
 		gap: spacing.xxs,
 	},
+	// 상대의 아바타와 이름이 상대의 프로필로 가는 링크
+	partnerLink: {
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.xxs,
+		minWidth: 0,
+		color: "inherit",
+		textDecoration: "none",
+	},
 	avatar: {
 		width: size.touchTarget,
 		height: size.touchTarget,
@@ -422,6 +431,9 @@ export default function ChatRoom({
 	// 거래 상대는 나를 뺀 멤버만 된다. 상대가 방을 나갔다면 partner가 나 자신으로 대체되므로 따로 구한다
 	const tradePartner = members.find((m) => m.id !== currentUserId) ?? null;
 	const displayName = roomName || partner?.nickname || "채팅방";
+	// 1:1 채팅이면 헤더의 상대 아바타·이름이 상대의 프로필로 이어진다. 상대가 방을 나갔거나 여럿이 있는 방이면 링크를 두지 않는다
+	const partnerProfileHref =
+		tradePartner && members.length === 2 ? `/users/${tradePartner.id}` : null;
 
 	const scrollToBottom = useCallback(
 		(behavior: "auto" | "smooth" = "smooth") => {
@@ -598,6 +610,28 @@ export default function ChatRoom({
 		);
 	}, [members]);
 
+	// 헤더의 상대 아바타와 이름·접속 상태
+	const partnerSummary = (
+		<>
+			{partner?.profileImage ? (
+				<img
+					src={partner.profileImage}
+					alt={displayName}
+					{...stylex.props(styles.avatar)}
+				/>
+			) : (
+				<div {...stylex.props(styles.avatar)} />
+			)}
+			<div>
+				<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
+				<div {...stylex.props(styles.memberCount)}>
+					{members.length > 2 && `${members.length}명 참여`}
+					<OnlineStatusBadge onlineCount={onlineUsers.length} />
+				</div>
+			</div>
+		</>
+	);
+
 	return (
 		<div data-chat-container {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.topSection)}>
@@ -610,22 +644,17 @@ export default function ChatRoom({
 						<ArrowLeft size={24} />
 					</Link>
 					<div {...stylex.props(styles.partnerInfo)}>
-						{partner?.profileImage ? (
-							<img
-								src={partner.profileImage}
-								alt={displayName}
-								{...stylex.props(styles.avatar)}
-							/>
+						{partnerProfileHref ? (
+							<Link
+								href={partnerProfileHref}
+								aria-label={`${displayName} 프로필 보기`}
+								{...stylex.props(styles.partnerLink)}
+							>
+								{partnerSummary}
+							</Link>
 						) : (
-							<div {...stylex.props(styles.avatar)} />
+							partnerSummary
 						)}
-						<div>
-							<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
-							<div {...stylex.props(styles.memberCount)}>
-								{members.length > 2 && `${members.length}명 참여`}
-								<OnlineStatusBadge onlineCount={onlineUsers.length} />
-							</div>
-						</div>
 					</div>
 					<button
 						aria-label="채팅방 메뉴"

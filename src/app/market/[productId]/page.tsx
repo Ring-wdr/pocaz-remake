@@ -130,7 +130,11 @@ export default async function MarketDetailPage({
 				</div>
 
 				<div {...stylex.props(styles.infoSection)}>
-					<div {...stylex.props(styles.sellerInfo)}>
+					<Link
+						href={`/users/${data.user.id}`}
+						aria-label={`${data.user.nickname} 프로필 보기`}
+						{...stylex.props(styles.sellerInfo, styles.sellerLink)}
+					>
 						{data.user.profileImage ? (
 							<img
 								src={data.user.profileImage}
@@ -143,7 +147,7 @@ export default async function MarketDetailPage({
 							</div>
 						)}
 						<p {...stylex.props(styles.sellerName)}>{data.user.nickname}</p>
-					</div>
+					</Link>
 
 					{artistTagLabel && artistTagHref && (
 						<Link href={artistTagHref} {...stylex.props(styles.artistTag)}>

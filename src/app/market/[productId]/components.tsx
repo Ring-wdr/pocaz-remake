@@ -145,6 +145,11 @@ export const styles = stylex.create({
 		borderBottomStyle: "solid",
 		borderBottomColor: colors.borderPrimary,
 	},
+	// 판매자 줄 전체가 판매자 프로필로 가는 링크
+	sellerLink: {
+		color: "inherit",
+		textDecoration: "none",
+	},
 	sellerAvatar: {
 		width: "44px",
 		height: "44px",

@@ -71,6 +71,11 @@ const styles = stylex.create({
 		gap: spacing.xs,
 		marginBottom: spacing.md,
 	},
+	// 작성자 줄 전체가 작성자 프로필로 가는 링크
+	authorLink: {
+		color: "inherit",
+		textDecoration: "none",
+	},
 	avatar: {
 		width: size.avatarMd,
 		height: size.avatarMd,
@@ -220,7 +225,11 @@ export default async function PostDetailPage({
 			</header>
 
 			<div {...stylex.props(styles.content)}>
-				<div {...stylex.props(styles.authorSection)}>
+				<Link
+					href={`/users/${post.user.id}`}
+					aria-label={`${post.user.nickname} 프로필 보기`}
+					{...stylex.props(styles.authorSection, styles.authorLink)}
+				>
 					{post.user.profileImage ? (
 						<img
 							src={post.user.profileImage}
@@ -236,7 +245,7 @@ export default async function PostDetailPage({
 							{formatFullDateTime(post.createdAt)}
 						</p>
 					</div>
-				</div>
+				</Link>
 
 				<p {...stylex.props(styles.postContent)}>{post.content}</p>
 
