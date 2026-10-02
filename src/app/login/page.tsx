@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
 import { Footer } from "@/components/home";
 import { createMetadata } from "@/lib/metadata";
+import { sanitizeReturnPath } from "@/utils/url";
 import { colors } from "../global-tokens.stylex";
 import LoginForm from "./login-form";
 
@@ -91,7 +92,13 @@ const styles = stylex.create({
 	},
 });
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+	// 로그인을 요구한 화면이 `?redirect=<경로>`로 알려 준다. 로그인하면 그 화면으로 돌아간다
+	const { redirect: redirectParam } = await searchParams;
+	const next = sanitizeReturnPath(
+		Array.isArray(redirectParam) ? redirectParam[0] : redirectParam,
+	);
+
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.content)}>
@@ -101,7 +108,7 @@ export default function LoginPage() {
 				<h1 {...stylex.props(styles.title)}>로그인</h1>
 				<p {...stylex.props(styles.subtitle)}>포카즈에 오신 것을 환영합니다</p>
 
-				<LoginForm />
+				<LoginForm next={next} />
 
 				<div {...stylex.props(styles.divider)}>
 					<div {...stylex.props(styles.dividerLine)} />

@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { Footer } from "@/components/home";
 import { MenuList } from "@/components/mypage";
 import { MyPageContent } from "@/components/mypage/mypage-content";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { FixedPageHeader } from "@/components/ui";
 import { createMetadata } from "@/lib/metadata";
 import { colors } from "../global-tokens.stylex";
@@ -25,7 +26,7 @@ const styles = stylex.create({
 export default function MyPage() {
 	return (
 		<div {...stylex.props(styles.container)}>
-			<FixedPageHeader title="마이페이지" />
+			<FixedPageHeader title="마이페이지" trailing={<NotificationBell />} />
 			<MyPageContent />
 			<MenuList />
 			<Footer />

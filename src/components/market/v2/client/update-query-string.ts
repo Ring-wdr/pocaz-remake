@@ -1,15 +1,24 @@
 type MarketQuery = {
 	keyword: string;
 	status: string;
+	condition: string;
+	negotiable: boolean;
+	groupId: string | null;
+	artistId: string | null;
 	sort: string;
 };
 
 const DEFAULT_STATUS = "all";
+const DEFAULT_CONDITION = "all";
 const DEFAULT_SORT = "latest";
 
 export function updateMarketQueryString({
 	keyword,
 	status,
+	condition,
+	negotiable,
+	groupId,
+	artistId,
 	sort,
 }: MarketQuery) {
 	if (typeof window === "undefined") return;
@@ -29,6 +38,30 @@ export function updateMarketQueryString({
 		params.set("status", status);
 	} else {
 		params.delete("status");
+	}
+
+	if (condition && condition !== DEFAULT_CONDITION) {
+		params.set("condition", condition);
+	} else {
+		params.delete("condition");
+	}
+
+	if (negotiable) {
+		params.set("negotiable", "true");
+	} else {
+		params.delete("negotiable");
+	}
+
+	if (groupId) {
+		params.set("groupId", groupId);
+	} else {
+		params.delete("groupId");
+	}
+
+	if (artistId) {
+		params.set("artistId", artistId);
+	} else {
+		params.delete("artistId");
 	}
 
 	if (sort && sort !== DEFAULT_SORT) {

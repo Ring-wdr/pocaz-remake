@@ -2,8 +2,9 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
-import { colors, fontWeight, spacing } from "@/app/global-tokens.stylex";
+import { spacing } from "@/app/global-tokens.stylex";
 import type { MarketFilterValue } from "../types";
+import FilterChip from "./filter-chip";
 
 const filters: { id: MarketFilterValue; name: string }[] = [
 	{ id: "all", name: "전체" },
@@ -18,25 +19,6 @@ const styles = stylex.create({
 		gap: spacing.xxs,
 		marginBottom: spacing.sm,
 		overflowX: "auto",
-	},
-	tab: {
-		paddingTop: "6px",
-		paddingBottom: "6px",
-		paddingLeft: spacing.xs,
-		paddingRight: spacing.xs,
-		borderRadius: "16px",
-		fontSize: "13px",
-		fontWeight: fontWeight.medium,
-		backgroundColor: colors.bgTertiary,
-		color: colors.textMuted,
-		borderWidth: 0,
-		cursor: "pointer",
-		whiteSpace: "nowrap",
-		transition: "all 0.2s ease",
-	},
-	tabActive: {
-		backgroundColor: colors.bgInverse,
-		color: colors.textInverse,
 	},
 });
 
@@ -63,17 +45,13 @@ export default function FilterTabs({
 	return (
 		<div {...stylex.props(styles.container)}>
 			{filters.map((filter) => (
-				<button
+				<FilterChip
 					key={filter.id}
-					type="button"
+					active={activeFilter === filter.id}
 					onClick={() => handleClick(filter.id)}
-					{...stylex.props(
-						styles.tab,
-						activeFilter === filter.id && styles.tabActive,
-					)}
 				>
 					{filter.name}
-				</button>
+				</FilterChip>
 			))}
 		</div>
 	);

@@ -32,14 +32,30 @@ export interface ChatLastMessage {
 	};
 }
 
-/** 채팅방 연결 마켓 정보 (API MarketInfoSchema 기반) */
-export interface ChatMarketInfo {
+/** 채팅방 연결 마켓의 기본 정보 (API MarketInfoSchema 기반, 목록 응답에 쓰인다) */
+export interface ChatMarketSummary {
 	id: string;
 	title: string;
 	price: number | null;
 	status: string;
 	userId: string;
 	thumbnail: string | null;
+}
+
+/** 채팅방 연결 마켓에서 완료된 거래 (API RoomDetailSchema의 market.transaction 기반) */
+export interface ChatMarketTransaction {
+	id: string;
+	buyerId: string;
+	sellerId: string;
+	price: number;
+	completedAt: string;
+	/** 현재 사용자가 이 거래의 후기를 이미 남겼는지 */
+	myReviewed: boolean;
+}
+
+/** 채팅방 상세의 연결 마켓 정보 (API RoomDetailSchema의 market 기반). 완료된 거래가 없으면 transaction은 null */
+export interface ChatMarketInfo extends ChatMarketSummary {
+	transaction: ChatMarketTransaction | null;
 }
 
 /** 채팅 메시지 (API MessageSchema 기반) */
@@ -58,7 +74,9 @@ export interface ChatRoomListItem {
 	members: ChatUser[];
 	lastMessage: ChatLastMessage | null;
 	messageCount: number;
-	market: ChatMarketInfo | null;
+	/** 내가 마지막으로 읽은 뒤에 상대가 보낸 메시지 수 */
+	unreadCount: number;
+	market: ChatMarketSummary | null;
 }
 
 /** 채팅방 상세 정보 (API RoomDetailSchema 기반) */
@@ -68,6 +86,8 @@ export interface ChatRoomDetail {
 	createdAt: string;
 	members: ChatMember[];
 	messageCount: number;
+	/** 내가 이 방을 마지막으로 읽은 시각. 읽은 적이 없으면 null */
+	lastReadAt: string | null;
 	market: ChatMarketInfo | null;
 }
 

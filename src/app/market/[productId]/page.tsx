@@ -1,8 +1,18 @@
 import * as stylex from "@stylexjs/stylex";
 import { User } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/home";
+import {
+	formatArtistTag,
+	getArtistTagHref,
+} from "@/components/market/artist-tag";
+import {
+	getMarketConditionLabel,
+	negotiableLabel,
+} from "@/components/market/market-condition";
+import { Badge } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
 import { formatKoreanDate } from "@/utils/date";
@@ -62,6 +72,7 @@ export async function generateMetadata({
 		}),
 		path: `/market/${productId}`,
 		ogTitle: data.title,
+		image: data.images[0]?.imageUrl,
 	});
 }
 
@@ -94,6 +105,9 @@ export default async function MarketDetailPage({
 	}
 
 	const status = data.status as MarketStatus;
+	const conditionLabel = getMarketConditionLabel(data.condition);
+	const artistTagLabel = formatArtistTag(data);
+	const artistTagHref = getArtistTagHref(data);
 	const formattedDate = formatKoreanDate(data.createdAt);
 	const isOwner = currentUser?.id === data.user.id;
 	const initialLikeState: MarketLikeState = {
@@ -104,7 +118,7 @@ export default async function MarketDetailPage({
 
 	return (
 		<div {...stylex.props(styles.container)}>
-			<Header />
+			<Header marketId={productId} isOwner={isOwner} />
 
 			<div {...stylex.props(styles.content)}>
 				<div {...stylex.props(styles.imageSection)}>
@@ -117,7 +131,11 @@ export default async function MarketDetailPage({
 				</div>
 
 				<div {...stylex.props(styles.infoSection)}>
-					<div {...stylex.props(styles.sellerInfo)}>
+					<Link
+						href={`/users/${data.user.id}`}
+						aria-label={`${data.user.nickname} 프로필 보기`}
+						{...stylex.props(styles.sellerInfo, styles.sellerLink)}
+					>
 						{data.user.profileImage ? (
 							<img
 								src={data.user.profileImage}
@@ -130,12 +148,25 @@ export default async function MarketDetailPage({
 							</div>
 						)}
 						<p {...stylex.props(styles.sellerName)}>{data.user.nickname}</p>
-					</div>
+					</Link>
 
+					{artistTagLabel && artistTagHref && (
+						<Link href={artistTagHref} {...stylex.props(styles.artistTag)}>
+							{artistTagLabel}
+						</Link>
+					)}
 					<h2 {...stylex.props(styles.productTitle)}>{data.title}</h2>
 					<p {...stylex.props(styles.productPrice)}>
 						{data.price ? `${data.price.toLocaleString()}원` : "가격협의"}
 					</p>
+					{(conditionLabel || data.isNegotiable) && (
+						<div {...stylex.props(styles.productBadges)}>
+							{conditionLabel && <Badge>{conditionLabel}</Badge>}
+							{data.isNegotiable && (
+								<Badge variant="primary">{negotiableLabel}</Badge>
+							)}
+						</div>
+					)}
 					<p {...stylex.props(styles.productMeta)}>{formattedDate}</p>
 
 					{data.description && (

@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ArrowLeft, MoreVertical, Send, X } from "lucide-react";
+import { ArrowLeft, MoreVertical, Send } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -23,6 +23,7 @@ import { useCallbackRef } from "@/hooks/use-callback-ref";
 import { useEventListener } from "@/hooks/use-event-listener";
 import { useChatMessages } from "@/lib/hooks/use-chat-messages";
 import { preCacheUsers, useChatPresence } from "@/lib/hooks/use-chat-realtime";
+import { useMarkRoomRead } from "@/lib/hooks/use-mark-room-read";
 import { chatRoomsQueryKey } from "@/lib/queries/markets";
 import type {
 	ChatMarketInfo,
@@ -32,10 +33,16 @@ import type {
 import { formatTime } from "@/utils/date";
 import { api } from "@/utils/eden";
 import { isSubmitEnter } from "@/utils/keyboard";
+import { ChatFailedMessageActions } from "./chat-failed-message-actions";
 import { ChatImageUploadButton } from "./chat-image-upload-button";
+import { ChatMarketBanner } from "./chat-market-banner";
 import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
 import { openChatRoomMenu } from "./open-chat-room-menu";
+import {
+	findLastReadMessageId,
+	findLatestIncomingMessageId,
+} from "./unread-boundary";
 
 const IMAGE_PREFIX = "image:";
 
@@ -91,6 +98,15 @@ const styles = stylex.create({
 		alignItems: "center",
 		gap: spacing.xxs,
 	},
+	// 상대의 아바타와 이름이 상대의 프로필로 가는 링크
+	partnerLink: {
+		display: "flex",
+		alignItems: "center",
+		gap: spacing.xxs,
+		minWidth: 0,
+		color: "inherit",
+		textDecoration: "none",
+	},
 	avatar: {
 		width: size.touchTarget,
 		height: size.touchTarget,
@@ -123,55 +139,6 @@ const styles = stylex.create({
 		cursor: "pointer",
 		color: colors.textTertiary,
 		fontSize: "20px",
-	},
-	productBanner: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxs,
-		paddingTop: spacing.xxs,
-		paddingBottom: spacing.xxs,
-		paddingLeft: spacing.xs,
-		paddingRight: spacing.xs,
-		backgroundColor: colors.bgPrimary,
-		borderBottomWidth: 1,
-		borderBottomStyle: "solid",
-		borderBottomColor: colors.borderPrimary,
-		textDecoration: "none",
-		color: "inherit",
-	},
-	productImage: {
-		width: "44px",
-		height: "44px",
-		borderRadius: radius.sm,
-		objectFit: "cover",
-		backgroundColor: colors.bgTertiary,
-	},
-	productInfo: {
-		flex: 1,
-	},
-	productTitle: {
-		fontSize: "13px",
-		fontWeight: fontWeight.medium,
-		color: colors.textSecondary,
-		margin: 0,
-		marginBottom: "2px",
-	},
-	productPrice: {
-		fontSize: fontSize.md,
-		fontWeight: fontWeight.bold,
-		color: colors.textPrimary,
-		margin: 0,
-	},
-	productStatus: {
-		fontSize: "11px",
-		fontWeight: fontWeight.semibold,
-		color: colors.accentPrimary,
-		backgroundColor: colors.accentPrimaryBg,
-		paddingTop: spacing.xxxs,
-		paddingBottom: spacing.xxxs,
-		paddingLeft: spacing.xxs,
-		paddingRight: spacing.xxs,
-		borderRadius: radius.xs,
 	},
 	messages: {
 		flex: 1,
@@ -318,33 +285,6 @@ const styles = stylex.create({
 		borderStyle: "solid",
 		borderColor: colors.statusError,
 	},
-	failedActions: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxs,
-		marginTop: spacing.xxxs,
-	},
-	failedText: {
-		fontSize: fontSize.sm,
-		color: colors.statusError,
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxxs,
-	},
-	retryButton: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxxs,
-		paddingTop: spacing.xxxs,
-		paddingBottom: spacing.xxxs,
-		paddingLeft: spacing.xxs,
-		paddingRight: spacing.xxs,
-		fontSize: fontSize.sm,
-		color: colors.accentPrimary,
-		backgroundColor: "transparent",
-		borderWidth: 0,
-		cursor: "pointer",
-	},
 	// 전송중 상태 스타일
 	sendingIndicator: {
 		fontSize: "11px",
@@ -392,6 +332,8 @@ interface ChatRoomProps {
 	market: ChatMarketInfo | null;
 	initialPage: PaginatedMessages;
 	currentUserId: string;
+	/** 방에 들어올 때 서버가 알려 준 내 읽음 시각. 읽은 적이 없으면 null */
+	lastReadAt: string | null;
 }
 
 export default function ChatRoom({
@@ -401,6 +343,7 @@ export default function ChatRoom({
 	market,
 	initialPage,
 	currentUserId,
+	lastReadAt,
 }: ChatRoomProps) {
 	const router = useRouter();
 	const queryClient = useQueryClient();
@@ -422,6 +365,7 @@ export default function ChatRoom({
 		appendLocal,
 		markAsSent,
 		markAsFailed,
+		markAsSending,
 		removePending,
 	} = useChatMessages({
 		roomId,
@@ -429,6 +373,22 @@ export default function ChatRoom({
 		currentUserId,
 	});
 	const resetNewMessageCountRef = useCallbackRef(resetNewMessageCount);
+
+	// "여기까지 읽음" 구분선 위치. 들어올 때의 읽음 시각으로 처음 한 번만 정한다.
+	// 아래에서 읽음 처리를 해 서버의 lastReadAt이 바뀌어도 이 방에 있는 동안 구분선은 그대로 둔다
+	const [lastReadMessageId] = useState(() =>
+		findLastReadMessageId(initialPage.messages, lastReadAt, currentUserId),
+	);
+
+	// 들어올 때, 맨 아래에서 상대의 새 메시지가 올 때, 탭이 다시 보일 때 읽음 처리한다
+	useMarkRoomRead({
+		roomId,
+		isAtBottom,
+		latestIncomingMessageId: findLatestIncomingMessageId(
+			messages,
+			currentUserId,
+		),
+	});
 
 	useEffect(() => {
 		if (isAtBottom && messagesRef.current) {
@@ -443,7 +403,12 @@ export default function ChatRoom({
 
 	// 상대방 찾기 (1:1 채팅 기준)
 	const partner = members.find((m) => m.id !== currentUserId) ?? members[0];
+	// 거래 상대는 나를 뺀 멤버만 된다. 상대가 방을 나갔다면 partner가 나 자신으로 대체되므로 따로 구한다
+	const tradePartner = members.find((m) => m.id !== currentUserId) ?? null;
 	const displayName = roomName || partner?.nickname || "채팅방";
+	// 1:1 채팅이면 헤더의 상대 아바타·이름이 상대의 프로필로 이어진다. 상대가 방을 나갔거나 여럿이 있는 방이면 링크를 두지 않는다
+	const partnerProfileHref =
+		tradePartner && members.length === 2 ? `/users/${tradePartner.id}` : null;
 
 	const scrollToBottom = useCallback(
 		(behavior: "auto" | "smooth" = "smooth") => {
@@ -547,6 +512,15 @@ export default function ChatRoom({
 		[appendLocal, markAsFailed, markAsSent, roomId],
 	);
 
+	/** 실패한 메시지 다시 보내기. 같은 메시지를 전송 중으로 되돌린 뒤 같은 clientId로 다시 보낸다 */
+	const handleRetryFailed = useCallback(
+		(content: string, clientId: string) => {
+			markAsSending(clientId);
+			void sendMessage(content, clientId);
+		},
+		[markAsSending, sendMessage],
+	);
+
 	/** 실패한 메시지 삭제 */
 	const handleDeleteFailed = useCallback(
 		(clientId: string) => {
@@ -620,6 +594,28 @@ export default function ChatRoom({
 		);
 	}, [members]);
 
+	// 헤더의 상대 아바타와 이름·접속 상태
+	const partnerSummary = (
+		<>
+			{partner?.profileImage ? (
+				<img
+					src={partner.profileImage}
+					alt={displayName}
+					{...stylex.props(styles.avatar)}
+				/>
+			) : (
+				<div {...stylex.props(styles.avatar)} />
+			)}
+			<div>
+				<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
+				<div {...stylex.props(styles.memberCount)}>
+					{members.length > 2 && `${members.length}명 참여`}
+					<OnlineStatusBadge onlineCount={onlineUsers.length} />
+				</div>
+			</div>
+		</>
+	);
+
 	return (
 		<div data-chat-container {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.topSection)}>
@@ -632,22 +628,17 @@ export default function ChatRoom({
 						<ArrowLeft size={24} />
 					</Link>
 					<div {...stylex.props(styles.partnerInfo)}>
-						{partner?.profileImage ? (
-							<img
-								src={partner.profileImage}
-								alt={displayName}
-								{...stylex.props(styles.avatar)}
-							/>
+						{partnerProfileHref ? (
+							<Link
+								href={partnerProfileHref}
+								aria-label={`${displayName} 프로필 보기`}
+								{...stylex.props(styles.partnerLink)}
+							>
+								{partnerSummary}
+							</Link>
 						) : (
-							<div {...stylex.props(styles.avatar)} />
+							partnerSummary
 						)}
-						<div>
-							<h2 {...stylex.props(styles.partnerName)}>{displayName}</h2>
-							<div {...stylex.props(styles.memberCount)}>
-								{members.length > 2 && `${members.length}명 참여`}
-								<OnlineStatusBadge onlineCount={onlineUsers.length} />
-							</div>
-						</div>
 					</div>
 					<button
 						aria-label="채팅방 메뉴"
@@ -660,27 +651,11 @@ export default function ChatRoom({
 				</div>
 
 				{market && (
-					<Link
-						href={`/market/${market.id}`}
-						{...stylex.props(styles.productBanner)}
-					>
-						{market.thumbnail && (
-							<img
-								src={market.thumbnail}
-								alt={market.title}
-								{...stylex.props(styles.productImage)}
-							/>
-						)}
-						<div {...stylex.props(styles.productInfo)}>
-							<p {...stylex.props(styles.productTitle)}>{market.title}</p>
-							<p {...stylex.props(styles.productPrice)}>
-								{market.price
-									? `${market.price.toLocaleString()}원`
-									: "가격협의"}
-							</p>
-						</div>
-						<span {...stylex.props(styles.productStatus)}>{market.status}</span>
-					</Link>
+					<ChatMarketBanner
+						market={market}
+						currentUserId={currentUserId}
+						partner={tradePartner}
+					/>
 				)}
 			</div>
 
@@ -689,6 +664,7 @@ export default function ChatRoom({
 					<ChatMessageList
 						ref={messagesRef}
 						messages={messages}
+						lastReadMessageId={lastReadMessageId}
 						onStartReached={fetchPrev}
 						hasPrev={hasPrev}
 						isFetchingPrev={isFetchingPrev}
@@ -749,23 +725,13 @@ export default function ChatRoom({
 										</div>
 									)}
 
-									{isFailed && isMine && (
-										<div {...stylex.props(styles.failedActions)}>
-											<span {...stylex.props(styles.failedText)}>
-												<AlertCircle size={12} />
-												전송 실패
-											</span>
-											<button
-												type="button"
-												onClick={() =>
-													handleDeleteFailed(message.clientId ?? "")
-												}
-												{...stylex.props(styles.retryButton)}
-											>
-												<X size={12} />
-												삭제
-											</button>
-										</div>
+									{isFailed && isMine && message.clientId && (
+										<ChatFailedMessageActions
+											content={message.content}
+											clientId={message.clientId}
+											onRetry={handleRetryFailed}
+											onDelete={handleDeleteFailed}
+										/>
 									)}
 
 									{!isSendingMsg && !isFailed && (

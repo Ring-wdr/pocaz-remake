@@ -8,6 +8,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { MarketActions } from "./market-actions";
 
 const skeletonPulse = stylex.keyframes({
 	"0%": { opacity: 0.6 },
@@ -144,6 +145,11 @@ export const styles = stylex.create({
 		borderBottomStyle: "solid",
 		borderBottomColor: colors.borderPrimary,
 	},
+	// 판매자 줄 전체가 판매자 프로필로 가는 링크
+	sellerLink: {
+		color: "inherit",
+		textDecoration: "none",
+	},
 	sellerAvatar: {
 		width: "44px",
 		height: "44px",
@@ -168,6 +174,21 @@ export const styles = stylex.create({
 		color: colors.textSecondary,
 		margin: 0,
 	},
+	// 그룹·멤버 태그 칩. 누르면 그 그룹·멤버의 상품 목록으로 간다
+	artistTag: {
+		display: "inline-block",
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		marginBottom: spacing.xxs,
+		borderRadius: radius.lg,
+		fontSize: fontSize.sm,
+		fontWeight: fontWeight.medium,
+		color: colors.accentPrimary,
+		backgroundColor: colors.accentPrimaryBg,
+		textDecoration: "none",
+	},
 	productTitle: {
 		fontSize: "20px",
 		fontWeight: fontWeight.bold,
@@ -180,6 +201,12 @@ export const styles = stylex.create({
 		fontWeight: fontWeight.bold,
 		color: colors.textPrimary,
 		margin: 0,
+		marginBottom: spacing.sm,
+	},
+	productBadges: {
+		display: "flex",
+		flexWrap: "wrap",
+		gap: spacing.xxs,
 		marginBottom: spacing.sm,
 	},
 	productMeta: {
@@ -319,7 +346,13 @@ export const statusStyles: Record<MarketStatus, keyof typeof styles> = {
 	sold: "statusSold",
 };
 
-export function Header() {
+interface HeaderProps {
+	marketId: string;
+	/** 상품 주인이면 오른쪽에 더보기 메뉴(수정, 삭제)를 보여 준다 */
+	isOwner: boolean;
+}
+
+export function Header({ marketId, isOwner }: HeaderProps) {
 	return (
 		<header {...stylex.props(styles.header)}>
 			<Link
@@ -330,6 +363,7 @@ export function Header() {
 				<ArrowLeft size={20} />
 			</Link>
 			<h1 {...stylex.props(styles.headerTitle)}>상품 상세</h1>
+			<MarketActions marketId={marketId} isOwner={isOwner} />
 		</header>
 	);
 }

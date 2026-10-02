@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { api } from "@/utils/eden";
+import { loginHref } from "@/utils/url";
 
 import EditPostClient from "./page.client";
 
@@ -24,7 +25,7 @@ export default async function EditPostPage({
 
 	// 로그인 체크
 	if (!currentUser) {
-		redirect("/login");
+		redirect(loginHref(`/community/posts/${postId}/edit`));
 	}
 
 	// 게시글 존재 확인

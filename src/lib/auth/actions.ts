@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getBaseUrl } from "@/utils/url";
+import { getBaseUrl, sanitizeReturnPath } from "@/utils/url";
 
 export type SignInState = {
 	error?: string;
@@ -11,10 +11,18 @@ export type SignInState = {
 
 export async function signInWithGoogle(
 	_prevState: SignInState | undefined,
-	_formData?: FormData,
+	formData?: FormData,
 ): Promise<SignInState | undefined> {
 	const supabase = await createSupabaseServerClient();
-	const redirectTo = `${getBaseUrl()}/auth/callback`;
+
+	// 로그인 뒤 돌아갈 경로. 폼 값은 바꿔 보낼 수 있으므로 서버에서 한 번 더 정리한다
+	const rawNext = formData?.get("next");
+	const next = sanitizeReturnPath(typeof rawNext === "string" ? rawNext : null);
+	const callbackUrl = `${getBaseUrl()}/auth/callback`;
+	const redirectTo =
+		next === "/"
+			? callbackUrl
+			: `${callbackUrl}?next=${encodeURIComponent(next)}`;
 
 	const { data, error } = await supabase.auth.signInWithOAuth({
 		provider: "google",

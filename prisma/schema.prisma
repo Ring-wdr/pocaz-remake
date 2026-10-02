@@ -21,6 +21,9 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  // 알림 종류별 수신 설정. {"chat": false}처럼 바꾼 키만 저장하고, 없는 키는 켜진 것으로 본다
+  notificationSettings Json?
+
   // Relations
   posts        Post[]
   comments     Comment[]
@@ -33,6 +36,9 @@ model User {
   supportInquiries SupportInquiry[]
   chatMessages ChatMessage[]
   chatRooms    ChatRoomMember[]
+  reviewsWritten  Review[] @relation("ReviewsWritten")
+  reviewsReceived Review[] @relation("ReviewsReceived")
+  notifications   Notification[]
 }
 
 // ============================================
@@ -55,6 +61,7 @@ model ArtistGroup {
   agency    Agency?  @relation(fields: [agencyId], references: [id])
 
   artists   Artist[]
+  markets   Market[]
 }
 
 model Artist {
@@ -66,6 +73,7 @@ model Artist {
   group     ArtistGroup? @relation(fields: [groupId], references: [id])
 
   photocards Photocard[]
+  markets    Market[]
 }
 
 // ============================================
@@ -151,16 +159,25 @@ model Comment {
 // Market
 // ============================================
 model Market {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  price       Int?
-  status      String   @default("available") // available, sold, reserved
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  title        String
+  description  String?
+  price        Int?
+  condition    String? // new, like-new, good, used. 비어 있으면 상태를 적지 않은 상품
+  isNegotiable Boolean  @default(false)
+  status       String   @default("available") // available, sold, reserved
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+
+  // 상품에 붙이는 그룹·멤버 태그. 둘 다 선택이고, 그룹이나 아티스트가 지워지면 태그만 풀린다
+  groupId     String?
+  group       ArtistGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  artistId    String?
+  artist      Artist?      @relation(fields: [artistId], references: [id], onDelete: SetNull)
 
   images       MarketImage[]
   likes        MarketLike[]
@@ -168,6 +185,8 @@ model Market {
   chatRooms    ChatRoom[]
 
   @@index([userId])
+  @@index([groupId])
+  @@index([artistId])
 }
 
 model MarketImage {
@@ -234,6 +253,54 @@ model Transaction {
 
   marketId    String
   market      Market   @relation(fields: [marketId], references: [id])
+
+  reviews     Review[]
+}
+
+// ============================================
+// Review (거래 후기)
+// ============================================
+// 거래 하나에 구매자·판매자가 서로에게 한 번씩 남긴다.
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int      // 1~5
+  content   String?
+  createdAt DateTime @default(now())
+
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  // 후기를 쓴 사람
+  reviewerId String
+  reviewer   User   @relation("ReviewsWritten", fields: [reviewerId], references: [id])
+
+  // 후기를 받은 사람(거래 상대)
+  revieweeId String
+  reviewee   User   @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+
+  @@unique([transactionId, reviewerId])
+  @@index([revieweeId, createdAt(sort: Desc)])
+}
+
+// ============================================
+// Notification (알림함)
+// ============================================
+// 받는 사람 한 명에 한 행. 알림을 일으킨 글이나 댓글이 지워져도 알림은 남는다.
+model Notification {
+  id        String    @id @default(uuid())
+  type      String    // comment, like, chat, market, trade, review
+  title     String
+  body      String?
+  href      String?   // 눌렀을 때 이동할 앱 안 경로
+  actorId   String?   // 알림을 일으킨 사용자. 연결하지 않아서 그 사용자가 탈퇴해도 알림은 그대로다
+  readAt    DateTime? // 읽은 시각. null이면 안 읽은 알림
+  createdAt DateTime  @default(now())
+
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
 }
 
 // ============================================
@@ -288,6 +355,9 @@ model ChatRoom {
 model ChatRoomMember {
   id        String   @id @default(uuid())
   joinedAt  DateTime @default(now())
+
+  // 마지막으로 이 방을 읽은 시각. 이 시각 이후에 상대가 보낸 메시지가 안 읽은 메시지다. null이면 아직 읽은 적이 없다
+  lastReadAt DateTime?
 
   roomId    String
   room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)

@@ -1,4 +1,6 @@
+import { isMarketCondition } from "@/components/market/market-condition";
 import type {
+	MarketConditionFilterValue,
 	MarketFilterValue,
 	MarketSearchFilters,
 	MarketSortValue,
@@ -29,12 +31,19 @@ export function normalizeMarketSearchParams(
 ): MarketSearchFilters {
 	const keyword = pickFirst(params?.keyword) ?? "";
 	const statusParam = pickFirst(params?.status);
+	const conditionParam = pickFirst(params?.condition);
+	const negotiableParam = pickFirst(params?.negotiable);
 	const sortParam = pickFirst(params?.sort);
 	const cursor = pickFirst(params?.cursor) ?? null;
 
 	const status =
 		statusParam && statusValues.has(statusParam as MarketFilterValue)
 			? (statusParam as MarketFilterValue)
+			: "all";
+
+	const condition: MarketConditionFilterValue =
+		conditionParam && isMarketCondition(conditionParam)
+			? conditionParam
 			: "all";
 
 	const sort =
@@ -45,6 +54,10 @@ export function normalizeMarketSearchParams(
 	return {
 		keyword,
 		status,
+		condition,
+		negotiable: negotiableParam === "true",
+		groupId: pickFirst(params?.groupId) ?? null,
+		artistId: pickFirst(params?.artistId) ?? null,
 		sort,
 		cursor,
 	};

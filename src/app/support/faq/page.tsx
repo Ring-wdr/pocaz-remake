@@ -9,6 +9,11 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import {
+	WITHDRAW_AUTH_NOTICE,
+	WITHDRAW_DELETED_NOTICE,
+	WITHDRAW_KEPT_NOTICE,
+} from "@/components/mypage/withdraw-notice";
 import { FAQItem } from "@/components/support/faq/item";
 import { SupportHelpCard } from "@/components/support/help-card";
 import { createMetadata } from "@/lib/metadata";
@@ -119,8 +124,7 @@ const faqData: FAQCategory[] = [
 			{
 				id: 3,
 				question: "계정을 탈퇴하고 싶어요.",
-				answer:
-					"마이페이지 > 설정 > 보안에서 회원 탈퇴를 진행할 수 있습니다. 탈퇴 시 모든 데이터가 삭제되며 복구할 수 없으니 신중하게 결정해 주세요.",
+				answer: `마이페이지 > 설정 > 보안에서 회원 탈퇴를 진행할 수 있습니다. ${WITHDRAW_DELETED_NOTICE} ${WITHDRAW_KEPT_NOTICE} ${WITHDRAW_AUTH_NOTICE} 신중하게 결정해 주세요.`,
 			},
 		],
 	},

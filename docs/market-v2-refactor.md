@@ -17,7 +17,8 @@
 - `server/market-page-content.tsx` — 헤더/푸터 포함 페이지 컨테이너, Suspense 경계 포함.
 - `server/market-list-section.tsx` — 서버에서 초기 목록 fetch 후 클라이언트에 초기 상태 전달.
 - `client/market-list-client.tsx` — 상태 관리 + 필터/정렬/더보기 상호작용 (클라이언트 fetch + useTransition).
-- `client/filter-bar.tsx` + `filter-tabs.tsx` + `sort-select.tsx` — 검색/필터 UI.
+- `client/filter-bar.tsx` + `filter-tabs.tsx` + `condition-filter.tsx` + `sort-select.tsx` — 검색/필터 UI. 판매 상태 탭, 상품 상태 칩, 협상 가능 토글은 `filter-chip.tsx` 버튼을 함께 쓴다.
+- `src/components/market/market-condition.ts` — 상품 상태(condition)의 한국어 라벨과 카드 문구. 등록 폼·상세·카드·필터가 같이 쓴다.
 - `client/market-grid.tsx` + `market-grid-item.tsx` — 상품 카드 리스트 렌더링.
 - `client/empty-state.tsx` — 결과 없음/오류 상태 노출.
 - `client/load-more-form.tsx` — 더보기 버튼.

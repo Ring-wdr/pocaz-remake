@@ -20,15 +20,10 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { confirmAction } from "@/components/ui";
+import type { MarketStatus } from "@/types/entities";
 import { api } from "@/utils/eden";
-
-type MarketStatus = "available" | "reserved" | "sold";
-
-const statusLabels: Map<MarketStatus, string> = new Map([
-	["available", "판매중"],
-	["reserved", "예약중"],
-	["sold", "판매완료"],
-]);
+import { marketStatusLabels } from "./market-status";
 
 const styles = stylex.create({
 	container: {
@@ -139,8 +134,21 @@ export default function StatusChanger({
 		setSelectedStatus(currentStatus);
 	}, [currentStatus]);
 
-	const handleStatusChange = (newStatus: MarketStatus) => {
+	const handleStatusChange = async (newStatus: MarketStatus) => {
 		if (newStatus === selectedStatus || isPending) return;
+
+		// 판매완료는 구매자가 남는 채팅방의 "거래 완료"와 다르므로 확인을 받는다.
+		// 선택값은 확인한 뒤에 바꾸기 때문에, 취소하면 이전 상태가 그대로 보인다
+		if (newStatus === "sold") {
+			const confirmed = await confirmAction({
+				title: "판매완료로 변경",
+				description:
+					"채팅방에서 '거래 완료'를 누르면 구매자와의 거래가 내역에 남아요. 구매자 지정 없이 상태만 바꿀까요?",
+				confirmText: "상태만 변경",
+				cancelText: "취소",
+			});
+			if (!confirmed) return;
+		}
 
 		const previousStatus = selectedStatus;
 		setSelectedStatus(newStatus);
@@ -155,12 +163,15 @@ export default function StatusChanger({
 				return;
 			}
 
-			toast.success(`${statusLabels.get(newStatus)} 상태로 변경되었습니다.`);
+			toast.success(`${marketStatusLabels[newStatus]} 상태로 변경되었습니다.`);
 			router.refresh();
 		});
 	};
 
-	const statusOptions = Array.from(statusLabels.entries());
+	const statusOptions = Object.entries(marketStatusLabels) as [
+		MarketStatus,
+		string,
+	][];
 
 	return (
 		<div {...stylex.props(styles.container)}>
@@ -187,7 +198,7 @@ export default function StatusChanger({
 								isFocusVisible && styles.triggerFocusVisible,
 							)}
 						>
-							<SelectValue>{statusLabels.get(selectedStatus)}</SelectValue>
+							<SelectValue>{marketStatusLabels[selectedStatus]}</SelectValue>
 							<ChevronDown size={14} />
 						</span>
 					)}

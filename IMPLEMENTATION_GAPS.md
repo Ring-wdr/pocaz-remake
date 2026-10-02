@@ -32,9 +32,9 @@
 - [v] 내 글 링크: 이미 `/community/posts/${id}` 사용 중 (버그 아님) (`mypage/posts/page.tsx`)
 - [v] 프로필 수정: 닉네임 중복 검증(API + debounce), 파일 타입/용량 제한(5MB), 저장 중 로딩 표시 (`mypage/edit/profile-form.tsx`, `lib/elysia/routes/users.ts`)
 - [ ] 설정: 다크모드/테마 토글 실제 동작 및 영속화 (`mypage/settings/page.tsx`)
-- [ ] 알림 설정: 서버/푸시 권한 연동, 토글 영속화 (`mypage/notifications/page.client.tsx`) - 현재 localStorage만 지원
+- [v] 알림 설정: 서버에 토글 저장(`/users/me/notification-settings`)하고 알림함(`/notifications`)·종 아이콘과 연동 (`mypage/notifications/page.client.tsx`, `components/notifications`). 웹 푸시(권한 요청·서비스 워커)는 아직 없다
 - [v] 보안: 로그아웃/탈퇴 2차 확인 모달, 로딩 표시 강화 (`mypage/security/page.client.tsx`)
-- [ ] 탈퇴 범위: 계정은 익명화되고(이메일·닉네임·프로필 사진 삭제) 다시 로그인해도 복구되지 않는다. 하지만 작성한 글·댓글·판매글·채팅 메시지와 Supabase Auth 계정(이메일·이름)은 남는다. 탈퇴 화면은 "모든 데이터가 영구적으로 삭제"된다고 안내하므로, 삭제 범위(법정 보존 기간이 있는 거래 기록 포함)를 정해 구현하거나 안내 문구를 고친다 (`mypage/security/page.client.tsx`, `lib/services/user.ts`)
+- [v] 탈퇴 범위: 안내 문구를 실제 동작에 맞췄다(이메일·닉네임·프로필 사진은 계정에서 지워지고 복구되지 않으며, 글·댓글·판매글·채팅 메시지·거래 내역은 "탈퇴한 사용자"의 기록으로 남고, 소셜 로그인 인증 정보는 인증 서비스에 남는다고 적음). 삭제 동작은 그대로라 Supabase Auth 계정(이메일·이름)과 스토리지의 프로필 사진 파일은 남는다. 지우려면 따로 구현한다 (`components/mypage/withdraw-notice.ts`, `mypage/security/page.client.tsx`, `lib/services/user.ts`)
 - [v] 판매/구매/거래: 탭 필터링 동작 추가 (`mypage/sales/page.client.tsx`)
 - [v] 찜: 위시 해제 액션 추가 (`mypage/wishlist/page.client.tsx`)
 - [v] 좋아요한 글: 정렬 옵션(좋아요한 순/인기순/최신순) 추가, 페이지네이션 유지 (`mypage/likes/page.tsx`, `lib/services/like.ts`)

@@ -4,6 +4,7 @@ import * as stylex from "@stylexjs/stylex";
 import { Copy, Lock, LogIn, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { LoginLink } from "@/components/auth/login-link";
 import { colors } from "./global-tokens.stylex";
 
 const styles = stylex.create({
@@ -133,10 +134,10 @@ export default function Unauthorized() {
 				<br />
 				로그인하고 포카즈의 모든 기능을 이용해보세요!
 			</p>
-			<Link href="/login" {...stylex.props(styles.loginButton)}>
+			<LoginLink {...stylex.props(styles.loginButton)}>
 				<LogIn size={18} />
 				로그인하기
-			</Link>
+			</LoginLink>
 			<Link href="/" {...stylex.props(styles.homeLink)}>
 				홈으로 돌아가기
 			</Link>

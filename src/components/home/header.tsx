@@ -11,6 +11,7 @@ import {
 	fontWeight,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const fixHeader = stylex.keyframes({
 	"0%": { top: "-5rem" },
@@ -37,6 +38,9 @@ const styles = stylex.create({
 		zIndex: 501,
 	},
 	logo: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
 		padding: spacing.sm,
 	},
 	logoText: {
@@ -86,6 +90,7 @@ export default function Header() {
 						POCAZ<span {...stylex.props(styles.logoDot)}>.</span>
 					</Link>
 				</h1>
+				<NotificationBell />
 			</div>
 		</header>
 	);

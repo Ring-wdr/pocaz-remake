@@ -5,7 +5,9 @@
  * Prisma generated 타입을 기반으로 하여 스키마 변경에 안전합니다.
  */
 
+export * from "./artist";
 export * from "./chat";
 export * from "./market";
+export * from "./notification";
 export * from "./post";
 export * from "./user";

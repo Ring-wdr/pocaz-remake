@@ -20,7 +20,7 @@
 - 접근성/키보드: role="log" aria-live="polite"; 배지 버튼 포커스; 단축키는 입력 포커스 시 무시.
 
 ### 남은 과제/QA
-- 서버에서 lastRead 전달하여 unread divider 활성화.
+- ~~서버에서 lastRead 전달하여 unread divider 활성화.~~ 완료(3a): 채팅방 상세가 내 `lastReadAt`을 내려 주고, 들어올 때 안 읽은 상대 메시지가 있으면 그 위에 "여기까지 읽음"을 그린다.
 - iOS/Android에서 prepend 연속 호출 시 점프 여부 검증.
 - 배지/단축키 안내 노출 여부 결정.
 - Realtime 재접속/중복 삽입 시 dedupe 추가 검토.

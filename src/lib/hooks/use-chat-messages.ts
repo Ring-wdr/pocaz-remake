@@ -35,10 +35,21 @@ interface UseChatMessagesResult {
 	appendLocal: (content: string) => { clientId: string };
 	markAsSent: (clientId: string, serverMessage: ChatMessage) => void;
 	markAsFailed: (clientId: string) => void;
+	/** 실패한 메시지를 다시 보내기 직전에 전송 중 상태로 되돌린다 */
+	markAsSending: (clientId: string) => void;
 	removePending: (clientId: string) => void;
 }
 
 const queryKey = (roomId: string) => ["chat", roomId, "messages"];
+
+// 같은 밀리초에 여러 메시지를 쌓거나 받으면 Date.now()가 같아 정렬이 임시 id(무작위 UUID)에 좌우된다.
+// 받은 시각을 단조 증가시켜 나중 메시지가 항상 뒤에 놓이게 한다.
+let lastReceivedAt = 0;
+const nextReceivedAt = () => {
+	const now = Math.max(Date.now(), lastReceivedAt + 1);
+	lastReceivedAt = now;
+	return now;
+};
 
 const getEffectiveTime = (item: { createdAt: string; receivedAt?: number }) => {
 	const created = new Date(item.createdAt).getTime();
@@ -111,7 +122,7 @@ const withReceivedAt = (
 	message: ChatMessage,
 ): ChatMessage & { receivedAt: number } => ({
 	...message,
-	receivedAt: Date.now(),
+	receivedAt: nextReceivedAt(),
 });
 
 export function useChatMessages({
@@ -203,7 +214,7 @@ export function useChatMessages({
 			clientId,
 			content,
 			createdAt: new Date().toISOString(),
-			receivedAt: Date.now(),
+			receivedAt: nextReceivedAt(),
 			user: {
 				id: currentUserId,
 				nickname: "",
@@ -233,6 +244,16 @@ export function useChatMessages({
 		);
 	};
 
+	const markAsSending = (clientId: string) => {
+		setPendingMessages((prev) =>
+			prev.map((message) =>
+				message.clientId === clientId
+					? { ...message, status: "sending" }
+					: message,
+			),
+		);
+	};
+
 	const removePending = (clientId: string) => {
 		setPendingMessages((prev) =>
 			prev.filter((message) => message.clientId !== clientId),
@@ -251,6 +272,7 @@ export function useChatMessages({
 		appendLocal,
 		markAsSent,
 		markAsFailed,
+		markAsSending,
 		removePending,
 	};
 }

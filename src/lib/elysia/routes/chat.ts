@@ -7,6 +7,11 @@ import {
 	chatRoomService,
 } from "@/lib/services/chat";
 import { marketService } from "@/lib/services/market";
+import {
+	chatHref,
+	chatPreview,
+	notificationService,
+} from "@/lib/services/notification";
 import { userService } from "@/lib/services/user";
 
 // 공통 스키마
@@ -50,6 +55,22 @@ const MarketInfoSchema = t.Object({
 	thumbnail: t.Nullable(t.String()),
 });
 
+// 채팅방 상세에서만 내려가는, 이 상품의 완료된 거래
+const MarketTransactionSchema = t.Object({
+	id: t.String(),
+	buyerId: t.String(),
+	sellerId: t.String(),
+	price: t.Number(),
+	completedAt: t.String(),
+	// 내가 이 거래의 후기를 이미 남겼는지
+	myReviewed: t.Boolean(),
+});
+
+const RoomDetailMarketSchema = t.Composite([
+	MarketInfoSchema,
+	t.Object({ transaction: t.Nullable(MarketTransactionSchema) }),
+]);
+
 const RoomItemSchema = t.Object({
 	id: t.String(),
 	name: t.Nullable(t.String()),
@@ -57,6 +78,8 @@ const RoomItemSchema = t.Object({
 	members: t.Array(UserSchema),
 	lastMessage: t.Nullable(LastMessageSchema),
 	messageCount: t.Number(),
+	// 내가 마지막으로 읽은 뒤에 상대가 보낸 메시지 수 (읽은 적이 없으면 내가 보내지 않은 메시지 전체)
+	unreadCount: t.Number(),
 	market: t.Nullable(MarketInfoSchema),
 });
 
@@ -66,7 +89,9 @@ const RoomDetailSchema = t.Object({
 	createdAt: t.String(),
 	members: t.Array(MemberSchema),
 	messageCount: t.Number(),
-	market: t.Nullable(MarketInfoSchema),
+	// 내가 이 방을 마지막으로 읽은 시각. 읽은 적이 없으면 null
+	lastReadAt: t.Nullable(t.String()),
+	market: t.Nullable(RoomDetailMarketSchema),
 });
 
 const PaginatedMessagesSchema = t.Object({
@@ -88,6 +113,31 @@ const SuccessMessageSchema = t.Object({
  */
 export const chatRoutes = new Elysia({ prefix: "/chat" })
 	.use(authGuard)
+
+	// GET /api/chat/unread-count - 내 모든 채팅방의 안 읽은 메시지 수 합계
+	.get(
+		"/unread-count",
+		async ({ auth }) => {
+			const user = await userService.findBySupabaseId(auth.user.id);
+			if (!user) {
+				return { count: 0 };
+			}
+
+			return { count: await chatRoomMemberService.totalUnreadCount(user.id) };
+		},
+		{
+			response: {
+				200: t.Object({ count: t.Number() }),
+				401: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "안 읽은 채팅 메시지 수 조회",
+				description:
+					"참여 중인 모든 채팅방에서 내가 마지막으로 읽은 뒤에 상대가 보낸 메시지 수의 합계를 조회합니다.",
+			},
+		},
+	)
 
 	// ==========================================
 	// ChatRoom Routes
@@ -126,6 +176,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 							}
 						: null,
 					messageCount: room._count.messages,
+					unreadCount: room.unreadCount,
 					market: room.market
 						? {
 								id: room.market.id,
@@ -300,6 +351,11 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				return { error: "Not a member of this chat room" };
 			}
 
+			// 이 상품의 완료된 거래(없으면 undefined)
+			const trade = room.market?.transactions[0];
+			// 내 읽음 시각은 멤버 행에 있다. 다른 멤버의 값은 내보내지 않는다
+			const myMembership = room.members.find((m) => m.userId === user.id);
+
 			return {
 				id: room.id,
 				name: room.name,
@@ -309,6 +365,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 					joinedAt: m.joinedAt.toISOString(),
 				})),
 				messageCount: room._count.messages,
+				lastReadAt: myMembership?.lastReadAt?.toISOString() ?? null,
 				market: room.market
 					? {
 							id: room.market.id,
@@ -317,6 +374,18 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 							status: room.market.status,
 							userId: room.market.userId,
 							thumbnail: room.market.images[0]?.imageUrl ?? null,
+							transaction: trade
+								? {
+										id: trade.id,
+										buyerId: trade.buyerId,
+										sellerId: trade.sellerId,
+										price: trade.price,
+										completedAt: trade.completedAt.toISOString(),
+										myReviewed: trade.reviews.some(
+											(review) => review.reviewerId === user.id,
+										),
+									}
+								: null,
 						}
 					: null,
 			};
@@ -418,6 +487,46 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				tags: ["Chat"],
 				summary: "채팅방 나가기",
 				description: "채팅방에서 나갑니다.",
+			},
+		},
+	)
+
+	// POST /api/chat/rooms/:id/read - 채팅방 읽음 처리
+	.post(
+		"/rooms/:id/read",
+		async ({ auth, params, status }) => {
+			const user = await userService.findBySupabaseId(auth.user.id);
+			if (!user) {
+				return status(401, { error: "User not found" });
+			}
+
+			const lastReadAt = await chatRoomMemberService.markRead(
+				params.id,
+				user.id,
+			);
+			if (!lastReadAt) {
+				return status(403, { error: "Not a member of this chat room" });
+			}
+
+			// 이 방의 안 읽은 채팅 알림도 읽은 것으로 처리해, 알림함과 종 아이콘에 남지 않게 한다
+			await notificationService.markReadByHref(user.id, chatHref(params.id));
+
+			return { lastReadAt: lastReadAt.toISOString() };
+		},
+		{
+			params: t.Object({
+				id: t.String(),
+			}),
+			response: {
+				200: t.Object({ lastReadAt: t.String() }),
+				401: ErrorSchema,
+				403: ErrorSchema,
+			},
+			detail: {
+				tags: ["Chat"],
+				summary: "채팅방 읽음 처리",
+				description:
+					"채팅방을 지금 시각까지 읽은 것으로 기록하고, 그 방의 안 읽은 채팅 알림도 함께 읽음 처리합니다. 참여 중인 멤버만 할 수 있습니다.",
 			},
 		},
 	)
@@ -623,6 +732,22 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				userId: user.id,
 			});
 
+			// 방의 다른 멤버에게 새 메시지를 알린다. 알림은 부가 기능이라 실패해도 전송은 성공으로 응답한다
+			try {
+				const members = await chatRoomMemberService.findByRoomId(params.id);
+				await notificationService.createForChatMessage({
+					roomId: params.id,
+					senderId: user.id,
+					senderNickname: user.nickname,
+					recipientIds: members
+						.map((member) => member.userId)
+						.filter((memberId) => memberId !== user.id),
+					preview: chatPreview(message.content),
+				});
+			} catch (error) {
+				console.error("[chat] 새 메시지 알림을 만들지 못했습니다", error);
+			}
+
 			return {
 				id: message.id,
 				content: message.content,
@@ -793,6 +918,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 							}
 						: null,
 					messageCount: room._count.messages,
+					unreadCount: room.unreadCount,
 					market: room.market
 						? {
 								id: room.market.id,
