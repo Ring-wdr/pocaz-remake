@@ -9,6 +9,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { WriteReviewButton } from "@/components/review/write-review-button";
 import { createMetadata } from "@/lib/metadata";
 import { formatDate } from "@/utils/date";
 import { api } from "@/utils/eden";
@@ -73,6 +74,7 @@ const styles = stylex.create({
 	},
 	tradeItem: {
 		display: "flex",
+		flexDirection: "column",
 		gap: spacing.xs,
 		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
@@ -80,8 +82,17 @@ const styles = stylex.create({
 		paddingRight: spacing.sm,
 		backgroundColor: colors.bgSecondary,
 		borderRadius: radius.md,
+	},
+	// 상품 상세로 가는 링크. 후기 버튼은 중첩된 인터랙티브 요소가 되지 않도록 링크 밖 형제 요소에 둔다
+	tradeLink: {
+		display: "flex",
+		gap: spacing.xs,
 		textDecoration: "none",
 		color: "inherit",
+	},
+	tradeAction: {
+		display: "flex",
+		justifyContent: "flex-end",
 	},
 	tradeImage: {
 		width: "64px",
@@ -189,45 +200,53 @@ export default async function TradesPage() {
 				{trades.length > 0 ? (
 					<div {...stylex.props(styles.tradeList)}>
 						{trades.map((trade) => (
-							<Link
-								key={trade.id}
-								href={trade.href}
-								{...stylex.props(styles.tradeItem)}
-							>
-								{trade.image ? (
-									<img
-										src={trade.image}
-										alt={trade.title}
-										{...stylex.props(styles.tradeImage)}
-									/>
-								) : (
-									<div {...stylex.props(styles.tradeImagePlaceholder)}>
-										<Store size={24} />
+							<div key={trade.id} {...stylex.props(styles.tradeItem)}>
+								<Link href={trade.href} {...stylex.props(styles.tradeLink)}>
+									{trade.image ? (
+										<img
+											src={trade.image}
+											alt={trade.title}
+											{...stylex.props(styles.tradeImage)}
+										/>
+									) : (
+										<div {...stylex.props(styles.tradeImagePlaceholder)}>
+											<Store size={24} />
+										</div>
+									)}
+									<div {...stylex.props(styles.tradeInfo)}>
+										<h3 {...stylex.props(styles.tradeTitle)}>{trade.title}</h3>
+										<p {...stylex.props(styles.tradePrice)}>
+											{trade.price.toLocaleString()}원
+										</p>
+										<div {...stylex.props(styles.tradeMeta)}>
+											<span
+												{...stylex.props(
+													styles.tradeType,
+													trade.type === "buy"
+														? styles.typeBuy
+														: styles.typeSell,
+												)}
+											>
+												{trade.type === "buy" ? "구매" : "판매"}
+											</span>
+											<span {...stylex.props(styles.tradeDate)}>
+												{formatDate(trade.date)}
+											</span>
+											<span {...stylex.props(styles.tradePartner)}>
+												{trade.partner}
+											</span>
+										</div>
+									</div>
+								</Link>
+								{!trade.reviewed && (
+									<div {...stylex.props(styles.tradeAction)}>
+										<WriteReviewButton
+											transactionId={trade.id}
+											partnerNickname={trade.partner}
+										/>
 									</div>
 								)}
-								<div {...stylex.props(styles.tradeInfo)}>
-									<h3 {...stylex.props(styles.tradeTitle)}>{trade.title}</h3>
-									<p {...stylex.props(styles.tradePrice)}>
-										{trade.price.toLocaleString()}원
-									</p>
-									<div {...stylex.props(styles.tradeMeta)}>
-										<span
-											{...stylex.props(
-												styles.tradeType,
-												trade.type === "buy" ? styles.typeBuy : styles.typeSell,
-											)}
-										>
-											{trade.type === "buy" ? "구매" : "판매"}
-										</span>
-										<span {...stylex.props(styles.tradeDate)}>
-											{formatDate(trade.date)}
-										</span>
-										<span {...stylex.props(styles.tradePartner)}>
-											{trade.partner}
-										</span>
-									</div>
-								</div>
-							</Link>
+							</div>
 						))}
 					</div>
 				) : (

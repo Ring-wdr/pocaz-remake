@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { activityService } from "@/lib/services/activity";
 import { marketLikeService } from "@/lib/services/market";
 import { postService } from "@/lib/services/post";
+import { reviewService } from "@/lib/services/review";
 import { transactionService } from "@/lib/services/transaction";
 import { normalizeNickname, userService } from "@/lib/services/user";
 
@@ -23,6 +24,12 @@ const PublicUserSchema = t.Object({
 	nickname: t.String(),
 	profileImage: t.Nullable(t.String()),
 	score: t.Number(),
+	createdAt: t.String(),
+	// 완료된 거래 수(구매 + 판매)
+	tradeCount: t.Number(),
+	// 받은 후기 수와 평균 별점(소수 첫째 자리). 후기가 없으면 averageRating은 null
+	reviewCount: t.Number(),
+	averageRating: t.Nullable(t.Number()),
 });
 
 const UserSummarySchema = t.Object({
@@ -242,11 +249,20 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				};
 			}
 
+			const [tradeCount, reviews] = await Promise.all([
+				transactionService.countCompleted(user.id),
+				reviewService.summary(user.id),
+			]);
+
 			return {
 				id: user.id,
 				nickname: user.nickname,
 				profileImage: user.profileImage,
 				score: user.score,
+				createdAt: user.createdAt.toISOString(),
+				tradeCount,
+				reviewCount: reviews.reviewCount,
+				averageRating: reviews.averageRating,
 			};
 		},
 		{
@@ -260,7 +276,8 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 			detail: {
 				tags: ["Users"],
 				summary: "특정 사용자 조회",
-				description: "특정 사용자의 공개 정보를 조회합니다.",
+				description:
+					"특정 사용자의 공개 정보(가입일, 거래 수, 받은 후기 수와 평균 별점 포함)를 조회합니다.",
 			},
 		},
 	)
@@ -346,9 +363,11 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 					title: purchase.title,
 					price: purchase.price,
 					seller: purchase.seller.nickname,
+					partnerId: purchase.seller.id,
 					date: purchase.date.toISOString(),
 					image: purchase.image,
 					href: `/market/${purchase.marketId}`,
+					reviewed: purchase.reviewed,
 				})),
 			};
 		},
@@ -360,9 +379,13 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 						title: t.String(),
 						price: t.Number(),
 						seller: t.String(),
+						// 거래 상대(판매자)의 id
+						partnerId: t.String(),
 						date: t.String(),
 						image: t.Nullable(t.String()),
 						href: t.String(),
+						// 내가 이 거래의 후기를 이미 남겼는지
+						reviewed: t.Boolean(),
 					}),
 				),
 			}),
@@ -481,9 +504,11 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 					price: t.price,
 					type: t.type,
 					partner: t.partner.nickname,
+					partnerId: t.partner.id,
 					date: t.date.toISOString(),
 					image: t.image,
 					href: `/market/${t.marketId}`,
+					reviewed: t.reviewed,
 				})),
 			};
 		},
@@ -496,9 +521,13 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 						price: t.Number(),
 						type: t.String(),
 						partner: t.String(),
+						// 거래 상대의 id
+						partnerId: t.String(),
 						date: t.String(),
 						image: t.Nullable(t.String()),
 						href: t.String(),
+						// 내가 이 거래의 후기를 이미 남겼는지
+						reviewed: t.Boolean(),
 					}),
 				),
 			}),

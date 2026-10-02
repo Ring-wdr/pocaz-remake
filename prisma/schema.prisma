@@ -33,6 +33,8 @@ model User {
   supportInquiries SupportInquiry[]
   chatMessages ChatMessage[]
   chatRooms    ChatRoomMember[]
+  reviewsWritten  Review[] @relation("ReviewsWritten")
+  reviewsReceived Review[] @relation("ReviewsReceived")
 }
 
 // ============================================
@@ -234,6 +236,33 @@ model Transaction {
 
   marketId    String
   market      Market   @relation(fields: [marketId], references: [id])
+
+  reviews     Review[]
+}
+
+// ============================================
+// Review (거래 후기)
+// ============================================
+// 거래 하나에 구매자·판매자가 서로에게 한 번씩 남긴다.
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int      // 1~5
+  content   String?
+  createdAt DateTime @default(now())
+
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  // 후기를 쓴 사람
+  reviewerId String
+  reviewer   User   @relation("ReviewsWritten", fields: [reviewerId], references: [id])
+
+  // 후기를 받은 사람(거래 상대)
+  revieweeId String
+  reviewee   User   @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+
+  @@unique([transactionId, reviewerId])
+  @@index([revieweeId, createdAt(sort: Desc)])
 }
 
 // ============================================

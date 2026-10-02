@@ -76,6 +76,7 @@ const completedTransaction = {
 	sellerId: owner.id,
 	price: 12000,
 	completedAt: "2026-10-02T00:00:00.000Z",
+	myReviewed: false,
 };
 
 let queryClient = new QueryClient();

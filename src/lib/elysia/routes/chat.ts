@@ -57,6 +57,8 @@ const MarketTransactionSchema = t.Object({
 	sellerId: t.String(),
 	price: t.Number(),
 	completedAt: t.String(),
+	// 내가 이 거래의 후기를 이미 남겼는지
+	myReviewed: t.Boolean(),
 });
 
 const RoomDetailMarketSchema = t.Composite([
@@ -341,6 +343,9 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 										sellerId: trade.sellerId,
 										price: trade.price,
 										completedAt: trade.completedAt.toISOString(),
+										myReviewed: trade.reviews.some(
+											(review) => review.reviewerId === user.id,
+										),
 									}
 								: null,
 						}

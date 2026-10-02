@@ -72,6 +72,8 @@ export interface PurchaseItem {
 	date: Date;
 	image: string | null;
 	marketId: string;
+	/** 내가 이 거래의 후기를 이미 남겼는지 */
+	reviewed: boolean;
 }
 
 /**
@@ -98,6 +100,8 @@ export interface TradeItem {
 	date: Date;
 	image: string | null;
 	marketId: string;
+	/** 내가 이 거래의 후기를 이미 남겼는지 */
+	reviewed: boolean;
 }
 
 /**
@@ -258,6 +262,11 @@ export const transactionService = {
 						images: true,
 					},
 				},
+				// 내가 쓴 후기. (거래, 작성자)가 유일해서 최대 한 건이다
+				reviews: {
+					where: { reviewerId: userId },
+					select: { id: true },
+				},
 			},
 			orderBy: { completedAt: "desc" },
 		});
@@ -270,6 +279,7 @@ export const transactionService = {
 			date: tx.completedAt,
 			image: tx.market.images[0]?.imageUrl ?? null,
 			marketId: tx.marketId,
+			reviewed: tx.reviews.length > 0,
 		}));
 	},
 
@@ -334,6 +344,11 @@ export const transactionService = {
 						images: true,
 					},
 				},
+				// 내가 쓴 후기. (거래, 작성자)가 유일해서 최대 한 건이다
+				reviews: {
+					where: { reviewerId: userId },
+					select: { id: true },
+				},
 			},
 			orderBy: { completedAt: "desc" },
 		});
@@ -347,7 +362,20 @@ export const transactionService = {
 			date: tx.completedAt,
 			image: tx.market.images[0]?.imageUrl ?? null,
 			marketId: tx.marketId,
+			reviewed: tx.reviews.length > 0,
 		}));
+	},
+
+	/**
+	 * 완료된 거래 수 (구매 + 판매)
+	 */
+	async countCompleted(userId: string) {
+		return prisma.transaction.count({
+			where: {
+				OR: [{ buyerId: userId }, { sellerId: userId }],
+				status: "completed",
+			},
+		});
 	},
 
 	/**

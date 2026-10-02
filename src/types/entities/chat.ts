@@ -49,6 +49,8 @@ export interface ChatMarketTransaction {
 	sellerId: string;
 	price: number;
 	completedAt: string;
+	/** 현재 사용자가 이 거래의 후기를 이미 남겼는지 */
+	myReviewed: boolean;
 }
 
 /** 채팅방 상세의 연결 마켓 정보 (API RoomDetailSchema의 market 기반). 완료된 거래가 없으면 transaction은 null */

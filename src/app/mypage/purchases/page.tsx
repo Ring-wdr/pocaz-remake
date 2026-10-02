@@ -9,6 +9,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import { WriteReviewButton } from "@/components/review/write-review-button";
 import { createMetadata } from "@/lib/metadata";
 import { formatDate } from "@/utils/date";
 import { api } from "@/utils/eden";
@@ -73,6 +74,7 @@ const styles = stylex.create({
 	},
 	productItem: {
 		display: "flex",
+		flexDirection: "column",
 		gap: spacing.xs,
 		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
@@ -80,8 +82,17 @@ const styles = stylex.create({
 		paddingRight: spacing.sm,
 		backgroundColor: colors.bgSecondary,
 		borderRadius: radius.md,
+	},
+	// 상품 상세로 가는 링크. 후기 버튼은 중첩된 인터랙티브 요소가 되지 않도록 링크 밖 형제 요소에 둔다
+	productLink: {
+		display: "flex",
+		gap: spacing.xs,
 		textDecoration: "none",
 		color: "inherit",
+	},
+	productAction: {
+		display: "flex",
+		justifyContent: "flex-end",
 	},
 	productImage: {
 		width: "72px",
@@ -171,39 +182,45 @@ export default async function PurchasesPage() {
 				{purchasedProducts.length > 0 ? (
 					<div {...stylex.props(styles.productList)}>
 						{purchasedProducts.map((product) => (
-							<Link
-								key={product.id}
-								href={product.href}
-								{...stylex.props(styles.productItem)}
-							>
-								{product.image ? (
-									<img
-										src={product.image}
-										alt={product.title}
-										{...stylex.props(styles.productImage)}
-									/>
-								) : (
-									<div {...stylex.props(styles.productImagePlaceholder)}>
-										<Store size={24} />
+							<div key={product.id} {...stylex.props(styles.productItem)}>
+								<Link href={product.href} {...stylex.props(styles.productLink)}>
+									{product.image ? (
+										<img
+											src={product.image}
+											alt={product.title}
+											{...stylex.props(styles.productImage)}
+										/>
+									) : (
+										<div {...stylex.props(styles.productImagePlaceholder)}>
+											<Store size={24} />
+										</div>
+									)}
+									<div {...stylex.props(styles.productInfo)}>
+										<h3 {...stylex.props(styles.productTitle)}>
+											{product.title}
+										</h3>
+										<p {...stylex.props(styles.productPrice)}>
+											{product.price.toLocaleString()}원
+										</p>
+										<div {...stylex.props(styles.productMeta)}>
+											<span {...stylex.props(styles.productDate)}>
+												{formatDate(product.date)}
+											</span>
+											<span {...stylex.props(styles.productSeller)}>
+												판매자: {product.seller}
+											</span>
+										</div>
+									</div>
+								</Link>
+								{!product.reviewed && (
+									<div {...stylex.props(styles.productAction)}>
+										<WriteReviewButton
+											transactionId={product.id}
+											partnerNickname={product.seller}
+										/>
 									</div>
 								)}
-								<div {...stylex.props(styles.productInfo)}>
-									<h3 {...stylex.props(styles.productTitle)}>
-										{product.title}
-									</h3>
-									<p {...stylex.props(styles.productPrice)}>
-										{product.price.toLocaleString()}원
-									</p>
-									<div {...stylex.props(styles.productMeta)}>
-										<span {...stylex.props(styles.productDate)}>
-											{formatDate(product.date)}
-										</span>
-										<span {...stylex.props(styles.productSeller)}>
-											판매자: {product.seller}
-										</span>
-									</div>
-								</div>
-							</Link>
+							</div>
 						))}
 					</div>
 				) : (
