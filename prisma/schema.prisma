@@ -57,6 +57,7 @@ model ArtistGroup {
   agency    Agency?  @relation(fields: [agencyId], references: [id])
 
   artists   Artist[]
+  markets   Market[]
 }
 
 model Artist {
@@ -68,6 +69,7 @@ model Artist {
   group     ArtistGroup? @relation(fields: [groupId], references: [id])
 
   photocards Photocard[]
+  markets    Market[]
 }
 
 // ============================================
@@ -166,12 +168,21 @@ model Market {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
 
+  // 상품에 붙이는 그룹·멤버 태그. 둘 다 선택이고, 그룹이나 아티스트가 지워지면 태그만 풀린다
+  groupId     String?
+  group       ArtistGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  artistId    String?
+  artist      Artist?      @relation(fields: [artistId], references: [id], onDelete: SetNull)
+
   images       MarketImage[]
   likes        MarketLike[]
   transactions Transaction[]
   chatRooms    ChatRoom[]
 
   @@index([userId])
+  @@index([groupId])
+  @@index([artistId])
 }
 
 model MarketImage {

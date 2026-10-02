@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -34,6 +35,55 @@ function buildOrderBy(sort: MarketSort | undefined) {
 }
 
 /**
+ * 목록·상세·작성·수정 조회가 함께 쓰는 관계. 판매자는 화면에 필요한 필드만, 그룹·아티스트 태그는 id와 이름만 싣는다
+ */
+const marketInclude = {
+	user: {
+		select: {
+			id: true,
+			nickname: true,
+			profileImage: true,
+		},
+	},
+	images: true,
+	group: { select: { id: true, name: true } },
+	artist: { select: { id: true, name: true } },
+} satisfies Prisma.MarketInclude;
+
+/**
+ * 요청 내용 때문에 상품을 만들거나 고칠 수 없을 때(400). 이 오류의 메시지만 응답에 그대로 내보낸다.
+ */
+export class MarketError extends Error {}
+
+/**
+ * 상품에 붙일 그룹·멤버 태그를 검사한다. 없는 그룹이나 아티스트이거나, 둘 다 있는데
+ * 아티스트가 그 그룹 소속이 아니면 MarketError. null은 태그를 붙이지 않는다는 뜻이라 검사하지 않는다.
+ */
+async function assertArtistTags(
+	groupId: string | null,
+	artistId: string | null,
+): Promise<void> {
+	if (groupId !== null) {
+		const group = await prisma.artistGroup.findUnique({
+			where: { id: groupId },
+			select: { id: true },
+		});
+		if (!group) throw new MarketError("Group not found");
+	}
+
+	if (artistId !== null) {
+		const artist = await prisma.artist.findUnique({
+			where: { id: artistId },
+			select: { groupId: true },
+		});
+		if (!artist) throw new MarketError("Artist not found");
+		if (groupId !== null && artist.groupId !== groupId) {
+			throw new MarketError("Artist does not belong to the group");
+		}
+	}
+}
+
+/**
  * Market 생성 DTO
  */
 export interface CreateMarketDto {
@@ -42,6 +92,10 @@ export interface CreateMarketDto {
 	price?: number;
 	condition?: MarketCondition;
 	isNegotiable?: boolean;
+	/** 태그할 그룹. 생략하면 태그하지 않는다 */
+	groupId?: string;
+	/** 태그할 멤버. groupId와 함께 보내면 그 그룹 소속이어야 한다 */
+	artistId?: string;
 	userId: string;
 	imageUrls?: string[];
 }
@@ -56,6 +110,10 @@ export interface UpdateMarketDto {
 	price?: number | null;
 	condition?: MarketCondition;
 	isNegotiable?: boolean;
+	/** null이면 그룹 태그를 푼다. 생략하면 그대로 둔다 */
+	groupId?: string | null;
+	/** null이면 멤버 태그를 푼다. 생략하면 그대로 둔다 */
+	artistId?: string | null;
 	status?: MarketStatus;
 }
 
@@ -74,12 +132,16 @@ export interface PaginationOptions {
 export interface MarketFilters extends PaginationOptions {
 	/** 이 사용자가 올린 상품만 */
 	userId?: string;
-	/** 제목이나 설명에 들어 있는 글자 (대소문자 무시) */
+	/** 제목, 설명, 그룹 이름, 멤버 이름에 들어 있는 글자 (대소문자 무시) */
 	keyword?: string;
 	status?: MarketStatus;
 	condition?: MarketCondition;
 	/** true면 협상 가능한 상품만, false면 협상 불가인 상품만 */
 	negotiable?: boolean;
+	/** 이 그룹으로 태그한 상품만 */
+	groupId?: string;
+	/** 이 멤버로 태그한 상품만 */
+	artistId?: string;
 }
 
 /**
@@ -99,6 +161,8 @@ export const marketService = {
 			status,
 			condition,
 			negotiable,
+			groupId,
+			artistId,
 		} = filters;
 
 		const markets = await prisma.market.findMany({
@@ -108,11 +172,15 @@ export const marketService = {
 					OR: [
 						{ title: { contains: keyword, mode: "insensitive" } },
 						{ description: { contains: keyword, mode: "insensitive" } },
+						{ artist: { name: { contains: keyword, mode: "insensitive" } } },
+						{ group: { name: { contains: keyword, mode: "insensitive" } } },
 					],
 				}),
 				...(status && { status }),
 				...(condition && { condition }),
 				...(negotiable !== undefined && { isNegotiable: negotiable }),
+				...(groupId && { groupId }),
+				...(artistId && { artistId }),
 			},
 			take: limit + 1,
 			...(cursor && {
@@ -120,16 +188,7 @@ export const marketService = {
 				skip: 1,
 			}),
 			orderBy: buildOrderBy(sort),
-			include: {
-				user: {
-					select: {
-						id: true,
-						nickname: true,
-						profileImage: true,
-					},
-				},
-				images: true,
-			},
+			include: marketInclude,
 		});
 
 		const hasMore = markets.length > limit;
@@ -149,23 +208,16 @@ export const marketService = {
 	async findById(id: string) {
 		return prisma.market.findUnique({
 			where: { id },
-			include: {
-				user: {
-					select: {
-						id: true,
-						nickname: true,
-						profileImage: true,
-					},
-				},
-				images: true,
-			},
+			include: marketInclude,
 		});
 	},
 
 	/**
-	 * Market 생성
+	 * Market 생성. 그룹·멤버 태그가 올바르지 않으면 MarketError
 	 */
 	async create(dto: CreateMarketDto) {
+		await assertArtistTags(dto.groupId ?? null, dto.artistId ?? null);
+
 		return prisma.market.create({
 			data: {
 				title: dto.title,
@@ -173,6 +225,8 @@ export const marketService = {
 				price: dto.price,
 				condition: dto.condition,
 				isNegotiable: dto.isNegotiable,
+				groupId: dto.groupId,
+				artistId: dto.artistId,
 				userId: dto.userId,
 				...(dto.imageUrls &&
 					dto.imageUrls.length > 0 && {
@@ -181,23 +235,29 @@ export const marketService = {
 						},
 					}),
 			},
-			include: {
-				user: {
-					select: {
-						id: true,
-						nickname: true,
-						profileImage: true,
-					},
-				},
-				images: true,
-			},
+			include: marketInclude,
 		});
 	},
 
 	/**
-	 * Market 수정
+	 * Market 수정. 그룹·멤버 태그가 올바르지 않으면 MarketError.
+	 * 둘 중 하나만 바꾸면 나머지는 지금 저장된 값과 짝이 맞는지 본다(그룹만 바꾸고 이전 그룹의 멤버를 남기지 못한다).
 	 */
 	async update(id: string, dto: UpdateMarketDto) {
+		if (dto.groupId !== undefined || dto.artistId !== undefined) {
+			const current =
+				dto.groupId === undefined || dto.artistId === undefined
+					? await prisma.market.findUnique({
+							where: { id },
+							select: { groupId: true, artistId: true },
+						})
+					: null;
+			await assertArtistTags(
+				dto.groupId !== undefined ? dto.groupId : (current?.groupId ?? null),
+				dto.artistId !== undefined ? dto.artistId : (current?.artistId ?? null),
+			);
+		}
+
 		return prisma.market.update({
 			where: { id },
 			data: {
@@ -206,18 +266,11 @@ export const marketService = {
 				price: dto.price,
 				condition: dto.condition,
 				isNegotiable: dto.isNegotiable,
+				groupId: dto.groupId,
+				artistId: dto.artistId,
 				status: dto.status,
 			},
-			include: {
-				user: {
-					select: {
-						id: true,
-						nickname: true,
-						profileImage: true,
-					},
-				},
-				images: true,
-			},
+			include: marketInclude,
 		});
 	},
 

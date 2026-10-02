@@ -43,7 +43,25 @@ const filled: MarketFormValues = {
 	price: 15000,
 	condition: "like-new",
 	isNegotiable: true,
+	groupId: null,
+	artistId: null,
 };
+
+const groups = [
+	{
+		id: "group-1",
+		name: "르세라핌",
+		artists: [
+			{ id: "artist-1", name: "김채원" },
+			{ id: "artist-2", name: "사쿠라" },
+		],
+	},
+	{
+		id: "group-2",
+		name: "뉴진스",
+		artists: [{ id: "artist-3", name: "민지" }],
+	},
+];
 
 function imageFile(name = "new.png", type = "image/png", bytes = 4) {
 	return new File([new Uint8Array(bytes)], name, { type });
@@ -83,6 +101,13 @@ function renderForm(props: Partial<ComponentProps<typeof MarketForm>> = {}) {
 			view.getByLabelText("상품 이미지 업로드") as HTMLInputElement,
 		condition: (label: string) =>
 			view.getByRole("button", { name: label }) as HTMLButtonElement,
+		groupSelect: () =>
+			view.getByRole("combobox", { name: "그룹" }) as HTMLSelectElement,
+		/** 그룹을 고르기 전에는 없다 */
+		artistSelect: () =>
+			view.queryByRole("combobox", {
+				name: "멤버",
+			}) as HTMLSelectElement | null,
 		removeButtons: () => view.queryAllByRole("button", { name: "이미지 삭제" }),
 		/** 파일 선택 창에서 파일을 고른 것처럼 change 이벤트를 보낸다 */
 		pickFiles: (...files: File[]) =>
@@ -239,6 +264,8 @@ describe("상품 폼 (수정 모드)", () => {
 			price: 12000,
 			condition: "good",
 			isNegotiable: false,
+			groupId: null,
+			artistId: null,
 			newFiles: [fresh],
 			removedImageIds: ["image-1"],
 		});
@@ -473,6 +500,8 @@ describe("상품 폼 (등록 모드)", () => {
 			price: 1500,
 			condition: "used",
 			isNegotiable: false,
+			groupId: null,
+			artistId: null,
 			newFiles: [first, second],
 			removedImageIds: [],
 		});
@@ -497,5 +526,142 @@ describe("상품 폼 (등록 모드)", () => {
 				name: "이미지 삭제",
 			}),
 		).toHaveLength(1);
+	});
+});
+
+describe("상품 폼 (아티스트 태그)", () => {
+	afterEach(cleanup);
+
+	beforeEach(() => {
+		for (const fn of [back, toast.success, toast.error]) {
+			fn.mockClear();
+		}
+	});
+
+	/** select의 선택지 라벨을 순서대로 */
+	function optionLabels(select: HTMLSelectElement) {
+		return Array.from(select.options).map((option) => option.textContent);
+	}
+
+	test("그룹을 고르면 멤버 select가 나타나고, 그룹을 바꾸면 멤버 선택이 풀린다", () => {
+		const form = renderForm({ groups });
+
+		expect(
+			isShown(form.view.queryByRole("group", { name: "아티스트(선택)" })),
+		).toBe(true);
+		expect(optionLabels(form.groupSelect())).toEqual([
+			"선택 안 함",
+			"르세라핌",
+			"뉴진스",
+		]);
+		expect(form.groupSelect().value).toBe("");
+		// 그룹을 고르기 전에는 멤버 select가 없다
+		expect(form.artistSelect()).toBeNull();
+
+		fireEvent.change(form.groupSelect(), { target: { value: "group-1" } });
+
+		const artistSelect = form.artistSelect();
+		expect(artistSelect).not.toBeNull();
+		expect(optionLabels(artistSelect as HTMLSelectElement)).toEqual([
+			"그룹 전체",
+			"김채원",
+			"사쿠라",
+		]);
+		expect(artistSelect?.value).toBe("");
+
+		fireEvent.change(artistSelect as HTMLSelectElement, {
+			target: { value: "artist-2" },
+		});
+		expect(form.artistSelect()?.value).toBe("artist-2");
+
+		// 다른 그룹을 고르면 그 그룹의 멤버로 바뀌고 선택은 풀린다
+		fireEvent.change(form.groupSelect(), { target: { value: "group-2" } });
+		expect(optionLabels(form.artistSelect() as HTMLSelectElement)).toEqual([
+			"그룹 전체",
+			"민지",
+		]);
+		expect(form.artistSelect()?.value).toBe("");
+
+		// 선택 안 함으로 돌리면 멤버 select도 사라진다
+		fireEvent.change(form.groupSelect(), { target: { value: "" } });
+		expect(form.artistSelect()).toBeNull();
+	});
+
+	test("초기값의 그룹·멤버가 골라져 있고, 고른 값을 저장 값으로 넘긴다", async () => {
+		const form = renderForm({
+			groups,
+			initialValues: { ...filled, groupId: "group-1", artistId: "artist-2" },
+		});
+
+		expect(form.groupSelect().value).toBe("group-1");
+		expect(form.artistSelect()?.value).toBe("artist-2");
+
+		fireEvent.click(form.submit());
+		await waitFor(() => expect(form.onSubmit).toHaveBeenCalledTimes(1));
+		expect(form.onSubmit.mock.calls[0][0]).toMatchObject({
+			groupId: "group-1",
+			artistId: "artist-2",
+		});
+		await waitFor(() => expect(form.submit().disabled).toBe(false));
+
+		// 멤버만 그룹 전체로 돌리면 그룹은 남고 멤버만 비운다
+		fireEvent.change(form.artistSelect() as HTMLSelectElement, {
+			target: { value: "" },
+		});
+		fireEvent.click(form.submit());
+		await waitFor(() => expect(form.onSubmit).toHaveBeenCalledTimes(2));
+		expect(form.onSubmit.mock.calls[1][0]).toMatchObject({
+			groupId: "group-1",
+			artistId: null,
+		});
+		await waitFor(() => expect(form.submit().disabled).toBe(false));
+
+		// 선택 안 함으로 돌리면 둘 다 비운다
+		fireEvent.change(form.groupSelect(), { target: { value: "" } });
+		fireEvent.click(form.submit());
+		await waitFor(() => expect(form.onSubmit).toHaveBeenCalledTimes(3));
+		expect(form.onSubmit.mock.calls[2][0]).toMatchObject({
+			groupId: null,
+			artistId: null,
+		});
+	});
+
+	test("멤버가 그 그룹 소속이 아닌 옛 태그는 비우고 시작하고, 그룹 태그는 남긴다", async () => {
+		// artist-3(민지)는 group-2 소속인데 group-1과 함께 저장돼 있다
+		const form = renderForm({
+			groups,
+			initialValues: { ...filled, groupId: "group-1", artistId: "artist-3" },
+		});
+
+		expect(form.groupSelect().value).toBe("group-1");
+		expect(form.artistSelect()?.value).toBe("");
+
+		fireEvent.click(form.submit());
+
+		await waitFor(() => expect(form.onSubmit).toHaveBeenCalledTimes(1));
+		expect(form.onSubmit.mock.calls[0][0]).toMatchObject({
+			groupId: "group-1",
+			artistId: null,
+		});
+	});
+
+	test("그룹 목록이 없으면 아티스트 영역을 그리지 않고, 기존 태그는 그대로 넘긴다", async () => {
+		const form = renderForm({
+			groups: [],
+			initialValues: { ...filled, groupId: "group-1", artistId: "artist-1" },
+		});
+
+		expect(
+			isShown(form.view.queryByRole("group", { name: "아티스트(선택)" })),
+		).toBe(false);
+		expect(form.view.queryByRole("combobox")).toBeNull();
+
+		fireEvent.click(form.submit());
+
+		await waitFor(() => expect(form.onSubmit).toHaveBeenCalledTimes(1));
+		expect(form.onSubmit.mock.calls[0][0]).toMatchObject({
+			groupId: "group-1",
+			artistId: "artist-1",
+		});
 	});
 });

@@ -65,6 +65,8 @@ export default function FilterBarSkeleton() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<div {...stylex.props(styles.search)} />
+			{/* 그룹 칩 줄, 판매 상태 탭, 상품 상태 칩 줄 */}
+			<FilterTabsSkeleton />
 			<FilterTabsSkeleton />
 			<FilterTabsSkeleton />
 			<div {...stylex.props(styles.optionRow)}>

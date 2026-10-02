@@ -7,6 +7,7 @@ import {
 	spyOn,
 	test,
 } from "bun:test";
+import type { MarketFormValues } from "@/components/market/market-form";
 import { registerDom } from "../helpers/dom";
 
 /** Eden treaty 응답과 같은 모양 */
@@ -97,20 +98,39 @@ const initialValues = {
 	price: 15000,
 	condition: "like-new",
 	isNegotiable: false,
+	groupId: null,
+	artistId: null,
 } as const;
+
+const groups = [
+	{
+		id: "group-1",
+		name: "르세라핌",
+		artists: [
+			{ id: "artist-1", name: "김채원" },
+			{ id: "artist-2", name: "사쿠라" },
+		],
+	},
+	{
+		id: "group-2",
+		name: "뉴진스",
+		artists: [{ id: "artist-3", name: "민지" }],
+	},
+];
 
 const INFO_FAILED =
 	"상품 정보를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
 
 let queryClient = new QueryClient();
 
-function renderEditPage() {
+function renderEditPage(values: MarketFormValues = initialValues) {
 	const view = render(
 		<QueryClientProvider client={queryClient}>
 			<MarketEditPageClient
 				marketId="market-1"
-				initialValues={initialValues}
+				initialValues={values}
 				existingImages={existingImages}
+				groups={groups}
 			/>
 		</QueryClientProvider>,
 	);
@@ -186,6 +206,8 @@ describe("상품 수정 저장", () => {
 			price: 12000,
 			condition: "like-new",
 			isNegotiable: true,
+			groupId: null,
+			artistId: null,
 		});
 		expect(uploadFiles).toHaveBeenCalledWith({
 			bucket: "markets",
@@ -230,6 +252,47 @@ describe("상품 수정 저장", () => {
 			price: null,
 			isNegotiable: true,
 		});
+	});
+
+	test("그룹·멤버 태그를 바꾸거나 풀면 groupId·artistId로 그대로 보낸다(풀 때는 null)", async () => {
+		const tagged = {
+			...initialValues,
+			groupId: "group-1",
+			artistId: "artist-1",
+		};
+		const page = renderEditPage(tagged);
+		const groupSelect = () =>
+			page.view.getByRole("combobox", { name: "그룹" }) as HTMLSelectElement;
+		const artistSelect = () =>
+			page.view.getByRole("combobox", { name: "멤버" }) as HTMLSelectElement;
+		expect(groupSelect().value).toBe("group-1");
+		expect(artistSelect().value).toBe("artist-1");
+
+		// 손대지 않고 저장하면 기존 태그를 그대로 보낸다
+		await save(page);
+		expect(put.mock.calls[0][0]).toMatchObject({
+			groupId: "group-1",
+			artistId: "artist-1",
+		});
+
+		// 다른 그룹·멤버로 바꾼다
+		fireEvent.change(groupSelect(), { target: { value: "group-2" } });
+		fireEvent.change(artistSelect(), { target: { value: "artist-3" } });
+		await save(page);
+		expect(put.mock.calls[1][0]).toMatchObject({
+			groupId: "group-2",
+			artistId: "artist-3",
+		});
+
+		// 태그를 비운다
+		fireEvent.change(groupSelect(), { target: { value: "" } });
+		await save(page);
+		expect(put).toHaveBeenCalledTimes(3);
+		expect(put.mock.calls[2][0]).toMatchObject({
+			groupId: null,
+			artistId: null,
+		});
+		expect(toast.error).not.toHaveBeenCalled();
 	});
 
 	test.each([

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { getArtistCatalog } from "@/components/market/get-artist-catalog";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
 import { api } from "@/utils/eden";
@@ -22,9 +23,10 @@ export default async function MarketEditPage({
 	params,
 }: PageProps<"/market/[productId]/edit">) {
 	const { productId } = await params;
-	const [currentUser, { data, error }] = await Promise.all([
+	const [currentUser, { data, error }, groups] = await Promise.all([
 		getCurrentUser(),
 		api.markets({ id: productId }).get(),
+		getArtistCatalog(),
 	]);
 
 	// 로그인 체크
@@ -52,8 +54,11 @@ export default async function MarketEditPage({
 				price: data.price,
 				condition: data.condition,
 				isNegotiable: data.isNegotiable,
+				groupId: data.group?.id ?? null,
+				artistId: data.artist?.id ?? null,
 			}}
 			existingImages={data.images}
+			groups={groups}
 		/>
 	);
 }

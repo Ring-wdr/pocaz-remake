@@ -80,6 +80,14 @@ bun install
 bunx prisma migrate dev
 ```
 
+### 아티스트 카탈로그 시드
+
+상품에 태그하고 마켓 목록에서 거르는 소속사·그룹·멤버 명단은 DB에 있어야 보입니다. `DATABASE_URL`이 가리키는 DB에 넣으며, 이름 기준으로 채우므로 여러 번 실행해도 결과가 같습니다. 명단은 `prisma/seed-catalog.ts`에 있습니다.
+
+```bash
+bun run db:seed:catalog
+```
+
 ### 개발 서버 실행
 
 ```bash
@@ -117,7 +125,7 @@ Vercel 배포 시 환경 변수를 설정하면 자동으로 빌드됩니다.
 - **Agency / ArtistGroup / Artist**: 소속사, 그룹, 아티스트
 - **Photocard / GalmangPoca**: 포토카드, 갈망 포카
 - **Post / Reply / Like**: 게시글, 댓글, 좋아요
-- **Market**: 마켓 거래 상품
+- **Market**: 마켓 거래 상품 (그룹·멤버 태그를 붙일 수 있음)
 - **ChatRoom / ChatMessage**: 채팅방, 메시지
 
 ## AI 에이전트에게 요청할 때

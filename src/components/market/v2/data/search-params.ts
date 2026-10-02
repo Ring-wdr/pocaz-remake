@@ -56,6 +56,8 @@ export function normalizeMarketSearchParams(
 		status,
 		condition,
 		negotiable: negotiableParam === "true",
+		groupId: pickFirst(params?.groupId) ?? null,
+		artistId: pickFirst(params?.artistId) ?? null,
 		sort,
 		cursor,
 	};

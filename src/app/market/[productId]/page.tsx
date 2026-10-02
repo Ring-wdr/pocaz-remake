@@ -1,8 +1,13 @@
 import * as stylex from "@stylexjs/stylex";
 import { User } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/home";
+import {
+	formatArtistTag,
+	getArtistTagHref,
+} from "@/components/market/artist-tag";
 import {
 	getMarketConditionLabel,
 	negotiableLabel,
@@ -100,6 +105,8 @@ export default async function MarketDetailPage({
 
 	const status = data.status as MarketStatus;
 	const conditionLabel = getMarketConditionLabel(data.condition);
+	const artistTagLabel = formatArtistTag(data);
+	const artistTagHref = getArtistTagHref(data);
 	const formattedDate = formatKoreanDate(data.createdAt);
 	const isOwner = currentUser?.id === data.user.id;
 	const initialLikeState: MarketLikeState = {
@@ -138,6 +145,11 @@ export default async function MarketDetailPage({
 						<p {...stylex.props(styles.sellerName)}>{data.user.nickname}</p>
 					</div>
 
+					{artistTagLabel && artistTagHref && (
+						<Link href={artistTagHref} {...stylex.props(styles.artistTag)}>
+							{artistTagLabel}
+						</Link>
+					)}
 					<h2 {...stylex.props(styles.productTitle)}>{data.title}</h2>
 					<p {...stylex.props(styles.productPrice)}>
 						{data.price ? `${data.price.toLocaleString()}원` : "가격협의"}

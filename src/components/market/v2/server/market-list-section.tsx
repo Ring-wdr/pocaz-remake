@@ -1,3 +1,7 @@
+import {
+	getArtistGroups,
+	getGroupArtists,
+} from "@/components/market/get-artist-catalog";
 import MarketListClient from "../client/market-list-client";
 import { getMarketList } from "../data/get-market-list";
 import type { MarketListState, MarketSearchFilters } from "../types";
@@ -11,19 +15,28 @@ export default async function MarketListSection({
 	status,
 	condition,
 	negotiable,
+	groupId,
+	artistId,
 	sort,
 	cursor,
 	limit = 20,
 }: MarketListSectionProps) {
-	const { data, error } = await getMarketList({
-		keyword,
-		status,
-		condition,
-		negotiable,
-		sort,
-		cursor,
-		limit,
-	});
+	// 그룹 칩 줄과, 주소창에 그룹이 있으면 그 멤버 칩 줄도 첫 화면에 같이 나오도록 목록과 함께 가져온다
+	const [{ data, error }, groups, groupArtists] = await Promise.all([
+		getMarketList({
+			keyword,
+			status,
+			condition,
+			negotiable,
+			groupId,
+			artistId,
+			sort,
+			cursor,
+			limit,
+		}),
+		getArtistGroups(),
+		groupId ? getGroupArtists(groupId) : null,
+	]);
 
 	const initialState: MarketListState = {
 		items: data?.items ?? [],
@@ -35,7 +48,19 @@ export default async function MarketListSection({
 	return (
 		<MarketListClient
 			initialState={initialState}
-			initialFilters={{ keyword, status, condition, negotiable, sort }}
+			initialFilters={{
+				keyword,
+				status,
+				condition,
+				negotiable,
+				groupId,
+				artistId,
+				sort,
+			}}
+			groups={groups}
+			initialGroupArtists={
+				groupId && groupArtists ? { groupId, artists: groupArtists } : null
+			}
 			limit={limit}
 		/>
 	);

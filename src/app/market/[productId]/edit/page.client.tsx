@@ -16,18 +16,22 @@ import {
 	chatRoomsQueryKey,
 	marketInfoQueryOptions,
 } from "@/lib/queries/markets";
+import type { ArtistCatalogGroup } from "@/types/entities";
 import { api } from "@/utils/eden";
 
 interface MarketEditPageClientProps {
 	marketId: string;
 	initialValues: MarketFormValues;
 	existingImages: ExistingMarketImage[];
+	/** 아티스트 태그로 고를 수 있는 그룹과 멤버 */
+	groups: ArtistCatalogGroup[];
 }
 
 export default function MarketEditPageClient({
 	marketId,
 	initialValues,
 	existingImages,
+	groups,
 }: MarketEditPageClientProps) {
 	const router = useRouter();
 	const queryClient = useQueryClient();
@@ -37,7 +41,7 @@ export default function MarketEditPageClient({
 		removedIds: new Set<string>(),
 	});
 
-	/** 1단계: 제목·가격·협상·상태·설명. 실패하면 토스트를 띄우고 false */
+	/** 1단계: 제목·가격·협상·상태·설명·아티스트 태그. 실패하면 토스트를 띄우고 false */
 	const saveInfo = async (values: MarketFormSubmitValues) => {
 		try {
 			const { error } = await api.markets({ id: marketId }).put({
@@ -47,6 +51,9 @@ export default function MarketEditPageClient({
 				price: values.price,
 				condition: values.condition,
 				isNegotiable: values.isNegotiable,
+				// 태그를 풀었으면 null을 보내 기존 태그를 지운다
+				groupId: values.groupId,
+				artistId: values.artistId,
 			});
 			if (!error) return true;
 			console.error("Failed to update market item:", error);
@@ -164,6 +171,7 @@ export default function MarketEditPageClient({
 			mode="edit"
 			initialValues={initialValues}
 			existingImages={existingImages}
+			groups={groups}
 			onSubmit={handleSubmit}
 		/>
 	);

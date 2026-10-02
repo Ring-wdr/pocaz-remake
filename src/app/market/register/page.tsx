@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getArtistCatalog } from "@/components/market/get-artist-catalog";
 import { createMetadata } from "@/lib/metadata";
 import { api } from "@/utils/eden";
 import MarketRegisterPageClient from "./page.client";
@@ -11,11 +12,14 @@ export const metadata = createMetadata({
 });
 
 export default async function MarketRegisterPage() {
-	const { data } = await api.auth.me.get();
+	const [{ data }, groups] = await Promise.all([
+		api.auth.me.get(),
+		getArtistCatalog(),
+	]);
 	if (!data?.authenticated) {
 		const redirectUrl = encodeURIComponent("/market/register");
 		redirect(`/login?redirect=${redirectUrl}`);
 	}
 
-	return <MarketRegisterPageClient />;
+	return <MarketRegisterPageClient groups={groups} />;
 }

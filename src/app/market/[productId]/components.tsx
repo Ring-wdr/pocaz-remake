@@ -169,6 +169,21 @@ export const styles = stylex.create({
 		color: colors.textSecondary,
 		margin: 0,
 	},
+	// 그룹·멤버 태그 칩. 누르면 그 그룹·멤버의 상품 목록으로 간다
+	artistTag: {
+		display: "inline-block",
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+		marginBottom: spacing.xxs,
+		borderRadius: radius.lg,
+		fontSize: fontSize.sm,
+		fontWeight: fontWeight.medium,
+		color: colors.accentPrimary,
+		backgroundColor: colors.accentPrimaryBg,
+		textDecoration: "none",
+	},
 	productTitle: {
 		fontSize: "20px",
 		fontWeight: fontWeight.bold,

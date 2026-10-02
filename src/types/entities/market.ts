@@ -5,6 +5,7 @@
  */
 
 import type { MarketImageModel, MarketModel } from "@/generated/prisma/models";
+import type { ArtistTag } from "./artist";
 
 /** Market 상태 타입 (Prisma 스키마의 status 필드와 동기화) */
 export type MarketStatus = "available" | "sold" | "reserved";
@@ -48,6 +49,10 @@ export interface MarketItem {
 	/** 상태를 적지 않은 상품은 null */
 	condition: MarketCondition | null;
 	isNegotiable: boolean;
+	/** 태그한 그룹. 태그하지 않았으면 null */
+	group: ArtistTag | null;
+	/** 태그한 멤버. 그룹만 태그했거나 태그하지 않았으면 null */
+	artist: ArtistTag | null;
 	status: string;
 	createdAt: string;
 	user: {

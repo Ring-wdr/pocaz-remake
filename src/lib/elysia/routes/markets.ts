@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
 import { LimitQuery } from "@/lib/elysia/schemas";
 import {
+	MarketError,
 	marketImageService,
 	marketService,
 	toMarketCondition,
@@ -21,6 +22,12 @@ const ImageSchema = t.Object({
 	imageUrl: t.String(),
 });
 
+// 상품에 붙인 그룹·멤버 태그
+const ArtistTagSchema = t.Object({
+	id: t.String(),
+	name: t.String(),
+});
+
 // 상품 상태. 등록 폼의 선택지 id와 같다
 const ConditionEnum = t.Union([
 	t.Literal("new"),
@@ -36,6 +43,8 @@ const MarketItemSchema = t.Object({
 	price: t.Nullable(t.Number()),
 	condition: t.Nullable(ConditionEnum),
 	isNegotiable: t.Boolean(),
+	group: t.Nullable(ArtistTagSchema),
+	artist: t.Nullable(ArtistTagSchema),
 	status: t.String(),
 	createdAt: t.String(),
 	user: UserSchema,
@@ -60,10 +69,13 @@ const StatusEnum = t.Union([
 	t.Literal("sold"),
 ]);
 
-// 목록·검색·상태별 조회가 함께 쓰는 필터. negotiable이 true면 협상 가능한 상품만, false면 협상 불가인 상품만
+// 목록·검색·상태별 조회가 함께 쓰는 필터. negotiable이 true면 협상 가능한 상품만, false면 협상 불가인 상품만.
+// groupId·artistId는 그 그룹·멤버로 태그한 상품만 돌려준다
 const FilterQuery = {
 	condition: t.Optional(ConditionEnum),
 	negotiable: t.Optional(t.Boolean()),
+	groupId: t.Optional(t.String()),
+	artistId: t.Optional(t.String()),
 };
 
 const ErrorSchema = t.Object({
@@ -102,6 +114,8 @@ function toMarketItem(market: MarketWithRelations) {
 		price: market.price,
 		condition: toMarketCondition(market.condition),
 		isNegotiable: market.isNegotiable,
+		group: market.group,
+		artist: market.artist,
 		status: market.status,
 		createdAt: market.createdAt.toISOString(),
 		user: market.user,
@@ -123,6 +137,8 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				sort: query.sort,
 				condition: query.condition,
 				negotiable: query.negotiable,
+				groupId: query.groupId,
+				artistId: query.artistId,
 			});
 
 			return {
@@ -143,7 +159,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				tags: ["Markets"],
 				summary: "장터 목록 조회",
 				description:
-					"장터 목록을 페이지네이션하여 조회합니다. 상품 상태(condition)와 협상 가능 여부(negotiable)로 거를 수 있습니다.",
+					"장터 목록을 페이지네이션하여 조회합니다. 상품 상태(condition), 협상 가능 여부(negotiable), 그룹(groupId)·멤버(artistId) 태그로 거를 수 있습니다.",
 			},
 		},
 	)
@@ -163,6 +179,8 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				sort: query.sort,
 				condition: query.condition,
 				negotiable: query.negotiable,
+				groupId: query.groupId,
+				artistId: query.artistId,
 			});
 
 			return {
@@ -185,7 +203,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				tags: ["Markets"],
 				summary: "장터 검색",
 				description:
-					"키워드로 장터를 검색합니다. 판매 상태, 상품 상태(condition), 협상 가능 여부(negotiable)로 함께 거를 수 있습니다.",
+					"키워드로 장터를 검색합니다. 키워드는 제목, 설명, 그룹 이름, 멤버 이름에서 찾습니다. 판매 상태, 상품 상태(condition), 협상 가능 여부(negotiable), 그룹(groupId)·멤버(artistId) 태그로 함께 거를 수 있습니다.",
 			},
 		},
 	)
@@ -205,6 +223,8 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				sort: query.sort,
 				condition: query.condition,
 				negotiable: query.negotiable,
+				groupId: query.groupId,
+				artistId: query.artistId,
 			});
 
 			return {
@@ -228,7 +248,7 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				tags: ["Markets"],
 				summary: "상태별 장터 조회",
 				description:
-					"장터 상태(available, sold, reserved)별로 목록을 조회합니다. 상품 상태(condition)와 협상 가능 여부(negotiable)로 거를 수 있습니다.",
+					"장터 상태(available, sold, reserved)별로 목록을 조회합니다. 상품 상태(condition), 협상 가능 여부(negotiable), 그룹(groupId)·멤버(artistId) 태그로 거를 수 있습니다.",
 			},
 		},
 	)
@@ -260,6 +280,8 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 					price: t.Nullable(t.Number()),
 					condition: t.Nullable(ConditionEnum),
 					isNegotiable: t.Boolean(),
+					group: t.Nullable(ArtistTagSchema),
+					artist: t.Nullable(ArtistTagSchema),
 					status: t.String(),
 					createdAt: t.String(),
 					updatedAt: t.String(),
@@ -318,7 +340,7 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 	// POST /api/markets - 장터 글 작성
 	.post(
 		"/",
-		async ({ auth, body, set }) => {
+		async ({ auth, body, status }) => {
 			const user = await userService.findOrCreate(
 				auth.user.id,
 				auth.user.email,
@@ -326,18 +348,24 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				auth.user.user_metadata?.avatar_url,
 			);
 
-			const market = await marketService.create({
-				title: body.title,
-				description: body.description,
-				price: body.price,
-				condition: body.condition,
-				isNegotiable: body.isNegotiable,
-				userId: user.id,
-				imageUrls: body.imageUrls,
-			});
+			try {
+				const market = await marketService.create({
+					title: body.title,
+					description: body.description,
+					price: body.price,
+					condition: body.condition,
+					isNegotiable: body.isNegotiable,
+					groupId: body.groupId,
+					artistId: body.artistId,
+					userId: user.id,
+					imageUrls: body.imageUrls,
+				});
 
-			set.status = 201;
-			return toMarketItem(market);
+				return status(201, toMarketItem(market));
+			} catch (error) {
+				if (!(error instanceof MarketError)) throw error;
+				return status(400, { error: error.message });
+			}
 		},
 		{
 			body: t.Object({
@@ -346,20 +374,27 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				price: t.Optional(t.Number({ minimum: 0 })),
 				condition: t.Optional(ConditionEnum),
 				isNegotiable: t.Optional(t.Boolean()),
+				// 그룹과 멤버를 함께 보내면 멤버가 그 그룹 소속이어야 한다
+				groupId: t.Optional(t.String()),
+				artistId: t.Optional(t.String()),
 				imageUrls: t.Optional(t.Array(t.String())),
 			}),
-			response: MarketItemSchema,
+			response: {
+				201: MarketItemSchema,
+				400: ErrorSchema,
+			},
 			detail: {
 				tags: ["Markets"],
 				summary: "장터 글 작성",
-				description: "새 장터 글을 작성합니다.",
+				description:
+					"새 장터 글을 작성합니다. 그룹(groupId)과 멤버(artistId)를 태그할 수 있고, 둘 다 보내면 멤버가 그 그룹 소속이어야 합니다. 없는 그룹·멤버나 짝이 맞지 않는 값은 400입니다.",
 			},
 		},
 	)
 	// PUT /api/markets/:id - 장터 글 수정
 	.put(
 		"/:id",
-		async ({ auth, params, body, set }) => {
+		async ({ auth, params, body, set, status }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
 				set.status = 401;
@@ -372,25 +407,34 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				return { error: "Forbidden" };
 			}
 
-			const market = await marketService.update(params.id, {
-				title: body.title,
-				description: body.description,
-				price: body.price,
-				condition: body.condition,
-				isNegotiable: body.isNegotiable,
-				status: body.status as "available" | "sold" | "reserved" | undefined,
-			});
+			try {
+				const market = await marketService.update(params.id, {
+					title: body.title,
+					description: body.description,
+					price: body.price,
+					condition: body.condition,
+					isNegotiable: body.isNegotiable,
+					groupId: body.groupId,
+					artistId: body.artistId,
+					status: body.status as "available" | "sold" | "reserved" | undefined,
+				});
 
-			return {
-				id: market.id,
-				title: market.title,
-				description: market.description,
-				price: market.price,
-				condition: toMarketCondition(market.condition),
-				isNegotiable: market.isNegotiable,
-				status: market.status,
-				updatedAt: market.updatedAt.toISOString(),
-			};
+				return {
+					id: market.id,
+					title: market.title,
+					description: market.description,
+					price: market.price,
+					condition: toMarketCondition(market.condition),
+					isNegotiable: market.isNegotiable,
+					group: market.group,
+					artist: market.artist,
+					status: market.status,
+					updatedAt: market.updatedAt.toISOString(),
+				};
+			} catch (error) {
+				if (!(error instanceof MarketError)) throw error;
+				return status(400, { error: error.message });
+			}
 		},
 		{
 			params: t.Object({
@@ -403,6 +447,9 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				price: t.Optional(t.Nullable(t.Number({ minimum: 0 }))),
 				condition: t.Optional(ConditionEnum),
 				isNegotiable: t.Optional(t.Boolean()),
+				// null이면 태그를 푼다. 생략하면 그대로 둔다. 둘을 함께 보내면 멤버가 그 그룹 소속이어야 한다
+				groupId: t.Optional(t.Nullable(t.String())),
+				artistId: t.Optional(t.Nullable(t.String())),
 				status: t.Optional(
 					t.Union([
 						t.Literal("available"),
@@ -419,9 +466,12 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 					price: t.Nullable(t.Number()),
 					condition: t.Nullable(ConditionEnum),
 					isNegotiable: t.Boolean(),
+					group: t.Nullable(ArtistTagSchema),
+					artist: t.Nullable(ArtistTagSchema),
 					status: t.String(),
 					updatedAt: t.String(),
 				}),
+				400: ErrorSchema,
 				401: ErrorSchema,
 				403: ErrorSchema,
 			},
@@ -429,7 +479,7 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				tags: ["Markets"],
 				summary: "장터 글 수정",
 				description:
-					"장터 글을 수정합니다. 보내지 않은 필드는 그대로 두고, price에 null을 보내면 가격을 비웁니다(가격협의).",
+					"장터 글을 수정합니다. 보내지 않은 필드는 그대로 두고, price에 null을 보내면 가격을 비웁니다(가격협의). groupId·artistId에 null을 보내면 태그를 풉니다. 없는 그룹·멤버나 짝이 맞지 않는 값은 400입니다.",
 			},
 		},
 	)

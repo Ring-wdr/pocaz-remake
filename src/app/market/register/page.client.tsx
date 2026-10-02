@@ -8,9 +8,17 @@ import {
 	type MarketFormSubmitValues,
 } from "@/components/market/market-form";
 import { uploadMarketImages } from "@/components/market/upload-market-images";
+import type { ArtistCatalogGroup } from "@/types/entities";
 import { api } from "@/utils/eden";
 
-export default function MarketRegisterPage() {
+interface MarketRegisterPageProps {
+	/** 아티스트 태그로 고를 수 있는 그룹과 멤버 */
+	groups: ArtistCatalogGroup[];
+}
+
+export default function MarketRegisterPage({
+	groups,
+}: MarketRegisterPageProps) {
 	const router = useRouter();
 
 	const handleSubmit = async (values: MarketFormSubmitValues) => {
@@ -28,6 +36,8 @@ export default function MarketRegisterPage() {
 				price: values.price ?? undefined,
 				condition: values.condition,
 				isNegotiable: values.isNegotiable,
+				groupId: values.groupId ?? undefined,
+				artistId: values.artistId ?? undefined,
 				imageUrls: upload.urls,
 			});
 
@@ -46,5 +56,5 @@ export default function MarketRegisterPage() {
 		router.push("/market");
 	};
 
-	return <MarketForm mode="create" onSubmit={handleSubmit} />;
+	return <MarketForm mode="create" groups={groups} onSubmit={handleSubmit} />;
 }

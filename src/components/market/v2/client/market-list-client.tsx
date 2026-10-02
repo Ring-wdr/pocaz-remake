@@ -4,8 +4,10 @@ import * as stylex from "@stylexjs/stylex";
 import { useRef, useState, useTransition } from "react";
 
 import { colors, fontSize, spacing } from "@/app/global-tokens.stylex";
+import type { ArtistTag } from "@/types/entities";
 import { getMarketList } from "../data/get-market-list";
 import type {
+	InitialGroupArtists,
 	MarketConditionFilterValue,
 	MarketFilterValue,
 	MarketListFilters,
@@ -31,6 +33,10 @@ const styles = stylex.create({
 type MarketListClientProps = {
 	initialState: MarketListState;
 	initialFilters: MarketListFilters;
+	/** 그룹 칩 줄에 놓을 그룹 전체 목록. 비어 있으면 그룹 칩 줄을 그리지 않는다 */
+	groups: ArtistTag[];
+	/** 주소창에 그룹이 있을 때 서버가 미리 가져온 그 그룹의 멤버 목록 */
+	initialGroupArtists: InitialGroupArtists | null;
 	limit: number;
 };
 
@@ -48,6 +54,8 @@ const mergeItems = (existing: MarketListItem[], incoming: MarketListItem[]) => {
 export default function MarketListClient({
 	initialState,
 	initialFilters,
+	groups,
+	initialGroupArtists,
 	limit,
 }: MarketListClientProps) {
 	const [state, setState] = useState<MarketListState>(initialState);
@@ -58,6 +66,8 @@ export default function MarketListClient({
 		initialFilters.condition,
 	);
 	const [negotiable, setNegotiable] = useState(initialFilters.negotiable);
+	const [groupId, setGroupId] = useState(initialFilters.groupId);
+	const [artistId, setArtistId] = useState(initialFilters.artistId);
 	const [sort, setSort] = useState<MarketSortValue>(initialFilters.sort);
 	const [keywordInput, setKeywordInput] = useState(initialFilters.keyword);
 	const [appliedFilters, setAppliedFilters] = useState(initialFilters);
@@ -127,6 +137,8 @@ export default function MarketListClient({
 		status,
 		condition,
 		negotiable,
+		groupId,
+		artistId,
 		sort,
 	};
 
@@ -151,6 +163,18 @@ export default function MarketListClient({
 		replaceList({ ...currentFilters, negotiable: value });
 	};
 
+	const handleGroupChange = (value: string | null) => {
+		setGroupId(value);
+		// 멤버는 그룹에 딸려 있으므로 그룹을 바꾸면 멤버 선택은 풀린다
+		setArtistId(null);
+		replaceList({ ...currentFilters, groupId: value, artistId: null });
+	};
+
+	const handleArtistChange = (value: string | null) => {
+		setArtistId(value);
+		replaceList({ ...currentFilters, artistId: value });
+	};
+
 	const handleSortChange = (value: MarketSortValue) => {
 		setSort(value);
 		replaceList({ ...currentFilters, sort: value });
@@ -165,12 +189,18 @@ export default function MarketListClient({
 			status={status}
 			condition={condition}
 			negotiable={negotiable}
+			groups={groups}
+			groupId={groupId}
+			artistId={artistId}
+			initialGroupArtists={initialGroupArtists}
 			sort={sort}
 			onKeywordChange={setKeywordInput}
 			onKeywordSubmit={handleKeywordSubmit}
 			onStatusChange={handleStatusChange}
 			onConditionChange={handleConditionChange}
 			onNegotiableChange={handleNegotiableChange}
+			onGroupChange={handleGroupChange}
+			onArtistChange={handleArtistChange}
 			onSortChange={handleSortChange}
 			disabled={isPending}
 		/>

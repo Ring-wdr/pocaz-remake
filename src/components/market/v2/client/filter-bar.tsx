@@ -4,11 +4,14 @@ import * as stylex from "@stylexjs/stylex";
 
 import { spacing } from "@/app/global-tokens.stylex";
 import SearchBar from "@/components/market/search-bar";
+import type { ArtistTag } from "@/types/entities";
 import type {
+	InitialGroupArtists,
 	MarketConditionFilterValue,
 	MarketFilterValue,
 	MarketSortValue,
 } from "../types";
+import ArtistFilter from "./artist-filter";
 import ConditionFilter from "./condition-filter";
 import FilterChip from "./filter-chip";
 import FilterTabs from "./filter-tabs";
@@ -36,12 +39,19 @@ type FilterBarProps = {
 	status: MarketFilterValue;
 	condition: MarketConditionFilterValue;
 	negotiable: boolean;
+	/** 그룹 칩 줄에 놓을 그룹 전체 목록 */
+	groups: ArtistTag[];
+	groupId: string | null;
+	artistId: string | null;
+	initialGroupArtists: InitialGroupArtists | null;
 	sort: MarketSortValue;
 	onKeywordChange: (value: string) => void;
 	onKeywordSubmit: (value: string) => void;
 	onStatusChange: (value: MarketFilterValue) => void;
 	onConditionChange: (value: MarketConditionFilterValue) => void;
 	onNegotiableChange: (value: boolean) => void;
+	onGroupChange: (groupId: string | null) => void;
+	onArtistChange: (artistId: string | null) => void;
 	onSortChange: (value: MarketSortValue) => void;
 	disabled?: boolean;
 };
@@ -51,12 +61,18 @@ export default function FilterBar({
 	status,
 	condition,
 	negotiable,
+	groups,
+	groupId,
+	artistId,
+	initialGroupArtists,
 	sort,
 	onKeywordChange,
 	onKeywordSubmit,
 	onStatusChange,
 	onConditionChange,
 	onNegotiableChange,
+	onGroupChange,
+	onArtistChange,
 	onSortChange,
 	disabled,
 }: FilterBarProps) {
@@ -66,6 +82,14 @@ export default function FilterBar({
 				value={keyword}
 				onChange={onKeywordChange}
 				onSearch={onKeywordSubmit}
+			/>
+			<ArtistFilter
+				groups={groups}
+				groupId={groupId}
+				artistId={artistId}
+				initialGroupArtists={initialGroupArtists}
+				onGroupChange={onGroupChange}
+				onArtistChange={onArtistChange}
 			/>
 			<FilterTabs value={status} onFilterChange={onStatusChange} />
 			<ConditionFilter value={condition} onChange={onConditionChange} />

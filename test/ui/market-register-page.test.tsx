@@ -64,11 +64,22 @@ const { default: MarketRegisterPage } = await import(
 
 const CREATE_FAILED = "상품 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.";
 
+const groups = [
+	{
+		id: "group-1",
+		name: "르세라핌",
+		artists: [
+			{ id: "artist-1", name: "김채원" },
+			{ id: "artist-2", name: "사쿠라" },
+		],
+	},
+];
+
 function imageFile(name: string) {
 	return new File([new Uint8Array(4)], name, { type: "image/png" });
 }
 
-/** 등록 폼을 그리고, 모든 항목을 채운다(가격과 협상 가능은 옵션) */
+/** 등록 폼을 그리고, 모든 항목을 채운다(가격과 협상 가능은 옵션, 아티스트 태그는 고르지 않는다) */
 function renderFilledForm({
 	price = "15000",
 	negotiable = false,
@@ -76,7 +87,7 @@ function renderFilledForm({
 	price?: string;
 	negotiable?: boolean;
 } = {}) {
-	const view = render(<MarketRegisterPage />);
+	const view = render(<MarketRegisterPage groups={groups} />);
 	const files = [imageFile("first.png"), imageFile("second.png")];
 	fireEvent.change(view.getByLabelText("상품 이미지 업로드"), {
 		target: { files },
@@ -141,6 +152,41 @@ describe("상품 등록 저장", () => {
 		expect(toast.error).not.toHaveBeenCalled();
 		expect(push).toHaveBeenCalledTimes(1);
 		expect(push).toHaveBeenCalledWith("/market");
+		const body = createMarket.mock.calls[0][0];
+		expect(body.groupId).toBeUndefined();
+		expect(body.artistId).toBeUndefined();
+	});
+
+	test("그룹과 멤버를 고르면 groupId·artistId를 함께 보내고, 고르지 않으면 보내지 않는다", async () => {
+		const tagged = renderFilledForm();
+		fireEvent.change(tagged.view.getByRole("combobox", { name: "그룹" }), {
+			target: { value: "group-1" },
+		});
+		fireEvent.change(tagged.view.getByRole("combobox", { name: "멤버" }), {
+			target: { value: "artist-1" },
+		});
+
+		fireEvent.click(tagged.submit());
+
+		await waitFor(() => expect(toast.success).toHaveBeenCalled());
+		expect(createMarket.mock.calls[0][0]).toMatchObject({
+			groupId: "group-1",
+			artistId: "artist-1",
+		});
+		cleanup();
+
+		// 그룹만 고르면 멤버는 보내지 않는다
+		createMarket.mockClear();
+		const groupOnly = renderFilledForm();
+		fireEvent.change(groupOnly.view.getByRole("combobox", { name: "그룹" }), {
+			target: { value: "group-1" },
+		});
+		fireEvent.click(groupOnly.submit());
+
+		await waitFor(() => expect(createMarket).toHaveBeenCalledTimes(1));
+		const body = createMarket.mock.calls[0][0];
+		expect(body.groupId).toBe("group-1");
+		expect(body.artistId).toBeUndefined();
 	});
 
 	test("가격을 비우고 협상 가능으로 등록하면 price 없이 보낸다", async () => {

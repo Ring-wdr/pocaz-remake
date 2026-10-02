@@ -3,6 +3,8 @@ type MarketQuery = {
 	status: string;
 	condition: string;
 	negotiable: boolean;
+	groupId: string | null;
+	artistId: string | null;
 	sort: string;
 };
 
@@ -15,6 +17,8 @@ export function updateMarketQueryString({
 	status,
 	condition,
 	negotiable,
+	groupId,
+	artistId,
 	sort,
 }: MarketQuery) {
 	if (typeof window === "undefined") return;
@@ -46,6 +50,18 @@ export function updateMarketQueryString({
 		params.set("negotiable", "true");
 	} else {
 		params.delete("negotiable");
+	}
+
+	if (groupId) {
+		params.set("groupId", groupId);
+	} else {
+		params.delete("groupId");
+	}
+
+	if (artistId) {
+		params.set("artistId", artistId);
+	} else {
+		params.delete("artistId");
 	}
 
 	if (sort && sort !== DEFAULT_SORT) {

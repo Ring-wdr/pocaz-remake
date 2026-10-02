@@ -12,6 +12,8 @@ export type MarketListQuery = {
 	status?: MarketFilterValue;
 	condition?: MarketConditionFilterValue;
 	negotiable?: boolean;
+	groupId?: string | null;
+	artistId?: string | null;
 	sort?: MarketSortValue;
 	cursor?: string | null;
 	limit?: number;
@@ -22,6 +24,8 @@ export async function getMarketList({
 	status = "all",
 	condition = "all",
 	negotiable = false,
+	groupId,
+	artistId,
 	sort = "latest",
 	cursor,
 	limit = 20,
@@ -32,13 +36,15 @@ export async function getMarketList({
 	try {
 		let response: Awaited<ReturnType<typeof api.markets.get>>;
 
-		// 세 조회(검색·상태별·기본 목록)가 같은 쿼리를 쓰므로 상품 상태·협상 가능 필터가 빠지는 경로가 없다
+		// 세 조회(검색·상태별·기본 목록)가 같은 쿼리를 쓰므로 상품 상태·협상 가능·그룹·멤버 필터가 빠지는 경로가 없다
 		const query = {
 			cursor: cursor ?? undefined,
 			limit,
 			sort,
 			condition: condition !== "all" ? condition : undefined,
 			negotiable: negotiable ? true : undefined,
+			groupId: groupId ?? undefined,
+			artistId: artistId ?? undefined,
 		};
 
 		if (keyword) {

@@ -11,6 +11,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { formatArtistTag } from "@/components/market/artist-tag";
 import { formatMarketTraits } from "@/components/market/market-condition";
 import type { MarketListItem } from "../types";
 
@@ -71,6 +72,15 @@ const styles = stylex.create({
 		color: colors.textMuted,
 		marginBottom: "2px",
 	},
+	// "그룹 · 멤버" 태그. 판매자 이름 아래에 흐리게 놓고, 길면 줄여서 한 줄만 쓴다
+	artistTag: {
+		fontSize: fontSize.sm,
+		color: colors.textMuted,
+		marginBottom: "2px",
+		overflow: "hidden",
+		textOverflow: "ellipsis",
+		whiteSpace: "nowrap",
+	},
 	title: {
 		fontSize: fontSize.md,
 		fontWeight: fontWeight.medium,
@@ -124,8 +134,10 @@ type MarketGridItemProps = {
 export default function MarketGridItem({ item }: MarketGridItemProps) {
 	const statusKey = (item.status as MarketStatus) ?? "available";
 	const traits = formatMarketTraits(item);
+	const artistTag = formatArtistTag(item);
 	const label = [
 		item.title,
+		artistTag,
 		statusLabels[statusKey],
 		formatPrice(item.price),
 		traits,
@@ -159,6 +171,7 @@ export default function MarketGridItem({ item }: MarketGridItemProps) {
 			</div>
 			<div {...stylex.props(styles.info)}>
 				<p {...stylex.props(styles.seller)}>{item.user.nickname}</p>
+				{artistTag && <p {...stylex.props(styles.artistTag)}>{artistTag}</p>}
 				<h3 {...stylex.props(styles.title)}>{item.title}</h3>
 				<div {...stylex.props(styles.priceRow)}>
 					<span {...stylex.props(styles.price)}>{formatPrice(item.price)}</span>

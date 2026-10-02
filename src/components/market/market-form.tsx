@@ -20,10 +20,11 @@ import {
 	lineHeight,
 	radius,
 	size,
+	spacing,
 } from "@/app/global-tokens.stylex";
 import { marketConditionOptions } from "@/components/market/market-condition";
 import { Button, Input } from "@/components/ui";
-import type { MarketCondition } from "@/types/entities";
+import type { ArtistCatalogGroup, MarketCondition } from "@/types/entities";
 
 const MAX_IMAGE_COUNT = 10;
 const MAX_FILE_SIZE_MB = 20;
@@ -37,6 +38,10 @@ export interface MarketFormValues {
 	/** 아직 고르지 않았으면 null. 저장하려면 하나를 골라야 한다 */
 	condition: MarketCondition | null;
 	isNegotiable: boolean;
+	/** 태그한 그룹. 태그하지 않았으면 null */
+	groupId: string | null;
+	/** 태그한 멤버. 그룹만 태그했거나 태그하지 않았으면 null */
+	artistId: string | null;
 }
 
 /** 이미 올라가 있는 상품 이미지 */
@@ -61,6 +66,8 @@ export interface MarketFormProps {
 	initialValues?: MarketFormValues;
 	/** 수정할 상품에 이미 올라가 있는 이미지. 등록에서는 생략한다 */
 	existingImages?: ExistingMarketImage[];
+	/** 아티스트 태그로 고를 수 있는 그룹과 그 멤버. 비어 있으면(카탈로그가 없거나 불러오지 못함) 아티스트 영역을 그리지 않는다 */
+	groups?: ArtistCatalogGroup[];
 	/**
 	 * 저장을 맡는 함수. 업로드·API 호출·이동은 호출하는 쪽이 하고, 실패하면 토스트로 알린 뒤 돌아오면 된다.
 	 * 끝날 때까지 저장 버튼은 잠기고 스피너가 돈다.
@@ -74,6 +81,8 @@ const emptyValues: MarketFormValues = {
 	price: null,
 	condition: null,
 	isNegotiable: false,
+	groupId: null,
+	artistId: null,
 };
 
 /** 새로 고른 이미지 파일과 그 미리보기 */
@@ -256,6 +265,26 @@ const styles = stylex.create({
 		fontWeight: fontWeight.medium,
 		color: colors.textMuted,
 	},
+	// 그룹을 고르면 멤버 select가 그 아래에 나타난다
+	artistSelects: {
+		display: "flex",
+		flexDirection: "column",
+		gap: spacing.xs,
+	},
+	select: {
+		width: "100%",
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
+		fontSize: fontSize.md,
+		color: colors.textPrimary,
+		backgroundColor: colors.bgPrimary,
+		borderWidth: 1,
+		borderStyle: "solid",
+		borderColor: colors.borderPrimary,
+		borderRadius: radius.sm,
+	},
 	conditionContainer: {
 		display: "flex",
 		gap: "8px",
@@ -383,6 +412,7 @@ export function MarketForm({
 	mode,
 	initialValues = emptyValues,
 	existingImages = [],
+	groups = [],
 	onSubmit,
 }: MarketFormProps) {
 	const router = useRouter();
@@ -396,6 +426,16 @@ export function MarketForm({
 	);
 	const [description, setDescription] = useState(initialValues.description);
 	const [isNegotiable, setIsNegotiable] = useState(initialValues.isNegotiable);
+	const [groupId, setGroupId] = useState(initialValues.groupId);
+	const [artistId, setArtistId] = useState(() => {
+		// 카탈로그가 바뀌어 멤버가 그 그룹 소속이 아니게 된 옛 태그는 고를 수 없는 값이라 비우고 시작한다.
+		// 그룹을 목록에서 찾을 수 없으면(카탈로그를 불러오지 못함) 저장된 태그를 그대로 둔다
+		const group = groups.find((item) => item.id === initialValues.groupId);
+		const isStale =
+			group !== undefined &&
+			!group.artists.some((artist) => artist.id === initialValues.artistId);
+		return isStale ? null : initialValues.artistId;
+	});
 	// 미리보기용 object URL. 지울 때 바로 해제하고, 남은 것은 폼이 사라질 때 한꺼번에 해제한다
 	const previewUrls = useRef(new Set<string>());
 
@@ -415,6 +455,7 @@ export function MarketForm({
 		(image) => !removedImageIds.includes(image.id),
 	);
 	const imageCount = keptImages.length + newImages.length;
+	const selectedGroup = groups.find((group) => group.id === groupId) ?? null;
 
 	const hasImages = imageCount > 0;
 	const hasTitle = title.trim().length > 0;
@@ -487,6 +528,12 @@ export function MarketForm({
 		setNewImages((prev) => prev.filter((_, i) => i !== index));
 	};
 
+	const handleGroupChange = (nextGroupId: string) => {
+		setGroupId(nextGroupId === "" ? null : nextGroupId);
+		// 멤버는 그룹에 딸려 있으므로 그룹을 바꾸면 멤버 선택은 풀린다
+		setArtistId(null);
+	};
+
 	const handlePriceChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value.replace(/[^0-9]/g, "");
 		if (value === "") {
@@ -505,6 +552,8 @@ export function MarketForm({
 			price: hasPrice ? Number.parseInt(price.replace(/,/g, ""), 10) : null,
 			condition,
 			isNegotiable,
+			groupId,
+			artistId,
 			newFiles: newImages.map((image) => image.file),
 			removedImageIds,
 		};
@@ -586,6 +635,42 @@ export function MarketForm({
 					/>
 					<div {...stylex.props(styles.charCount)}>{title.length}/50</div>
 				</div>
+
+				{groups.length > 0 && (
+					<fieldset {...stylex.props(styles.fieldset)}>
+						<legend {...stylex.props(styles.label)}>아티스트(선택)</legend>
+						<div {...stylex.props(styles.artistSelects)}>
+							<select
+								aria-label="그룹"
+								value={groupId ?? ""}
+								onChange={(e) => handleGroupChange(e.target.value)}
+								{...stylex.props(styles.select)}
+							>
+								<option value="">선택 안 함</option>
+								{groups.map((group) => (
+									<option key={group.id} value={group.id}>
+										{group.name}
+									</option>
+								))}
+							</select>
+							{selectedGroup && (
+								<select
+									aria-label="멤버"
+									value={artistId ?? ""}
+									onChange={(e) => setArtistId(e.target.value || null)}
+									{...stylex.props(styles.select)}
+								>
+									<option value="">그룹 전체</option>
+									{selectedGroup.artists.map((artist) => (
+										<option key={artist.id} value={artist.id}>
+											{artist.name}
+										</option>
+									))}
+								</select>
+							)}
+						</div>
+					</fieldset>
+				)}
 
 				<div {...stylex.props(styles.formGroup)}>
 					<Input
