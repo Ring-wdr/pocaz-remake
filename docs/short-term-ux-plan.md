@@ -205,7 +205,7 @@
 1. [v] `bun run db:migrate:prod` 로 새 마이그레이션 적용.
 2. [v] `supabase/enable-rls.sql` 다시 실행. 정책은 채팅 메시지 읽기 1개만 조회되는 것이 정상이다(나머지 테이블은 정책 없이 RLS만 켜져 anon 접근이 막힌다).
 3. [v] `prisma/seed-catalog.ts` 명단을 확인한 뒤 `bun run db:seed:catalog`.
-4. [ ] Supabase Auth > URL Configuration의 Redirect URLs. 인증 서버는 Site URL과 scheme·host·port가 같은 주소는 항상 허용하고, 그 외에는 허용 목록을 글롭(`*`는 `.`과 `/`를 제외한 문자열, `**`는 모든 문자열)으로 정확히 비교한다. 현재 목록은 쿼리스트링 없는 정확한 주소 2개라 `http://localhost:3000/auth/callback?next=…`는 매치되지 않는다. `http://localhost:3000/auth/callback**`를 추가하고, 운영도 Site URL이 `https://pocaz-remake.vercel.app`가 아닐 경우를 대비해 `https://pocaz-remake.vercel.app/auth/callback**`를 추가한다. 반영 뒤 로그아웃 상태에서 상품 상세 → 찜 → 로그인 → 상품 상세로 돌아오는지 한 번 확인한다(4b).
+4. [v] Supabase Auth > URL Configuration의 Redirect URLs(`http://localhost:3000/auth/callback**`, `https://pocaz-remake.vercel.app/auth/callback**` 추가함). 인증 서버는 Site URL과 scheme·host·port가 같은 주소는 항상 허용하고, 그 외에는 허용 목록을 글롭(`*`는 `.`과 `/`를 제외한 문자열, `**`는 모든 문자열)으로 정확히 비교한다. 현재 목록은 쿼리스트링 없는 정확한 주소 2개라 `http://localhost:3000/auth/callback?next=…`는 매치되지 않는다. `http://localhost:3000/auth/callback**`를 추가하고, 운영도 Site URL이 `https://pocaz-remake.vercel.app`가 아닐 경우를 대비해 `https://pocaz-remake.vercel.app/auth/callback**`를 추가한다. 반영 뒤 로그아웃 상태에서 상품 상세 → 찜 → 로그인 → 상품 상세로 돌아오는지 한 번 확인한다(4b).
 5. [v] 탈퇴 범위 결정: Supabase Auth 계정은 지우지 않고 유지한다. 화면 문구가 이미 그 사실을 적고 있으므로 코드 변경은 없다(4c).
 
 ## 후속 후보 (작업 중 발견, 범위 밖)
