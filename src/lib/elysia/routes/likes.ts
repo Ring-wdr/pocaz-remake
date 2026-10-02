@@ -4,6 +4,7 @@ import { type AuthenticatedContext, authGuard } from "@/lib/elysia/auth";
 import { LimitQuery } from "@/lib/elysia/schemas";
 import { likeService } from "@/lib/services/like";
 import { marketLikeService } from "@/lib/services/market";
+import { notificationService } from "@/lib/services/notification";
 import { userService } from "@/lib/services/user";
 
 type DerivedAuth = {
@@ -79,6 +80,14 @@ export const likeRoutes = new Elysia({ prefix: "/likes" })
 
 			const result = await likeService.toggle(user.id, params.postId);
 			const count = await likeService.getCount(params.postId);
+
+			// 좋아요가 켜질 때만 글쓴이에게 알린다
+			if (result.liked) {
+				await notificationService.createForLike({
+					postId: params.postId,
+					actor: user,
+				});
+			}
 
 			return {
 				liked: result.liked,

@@ -21,6 +21,9 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  // 알림 종류별 수신 설정. {"chat": false}처럼 바꾼 키만 저장하고, 없는 키는 켜진 것으로 본다
+  notificationSettings Json?
+
   // Relations
   posts        Post[]
   comments     Comment[]
@@ -35,6 +38,7 @@ model User {
   chatRooms    ChatRoomMember[]
   reviewsWritten  Review[] @relation("ReviewsWritten")
   reviewsReceived Review[] @relation("ReviewsReceived")
+  notifications   Notification[]
 }
 
 // ============================================
@@ -276,6 +280,27 @@ model Review {
 
   @@unique([transactionId, reviewerId])
   @@index([revieweeId, createdAt(sort: Desc)])
+}
+
+// ============================================
+// Notification (알림함)
+// ============================================
+// 받는 사람 한 명에 한 행. 알림을 일으킨 글이나 댓글이 지워져도 알림은 남는다.
+model Notification {
+  id        String    @id @default(uuid())
+  type      String    // comment, like, chat, market, trade, review
+  title     String
+  body      String?
+  href      String?   // 눌렀을 때 이동할 앱 안 경로
+  actorId   String?   // 알림을 일으킨 사용자. 연결하지 않아서 그 사용자가 탈퇴해도 알림은 그대로다
+  readAt    DateTime? // 읽은 시각. null이면 안 읽은 알림
+  createdAt DateTime  @default(now())
+
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
 }
 
 // ============================================

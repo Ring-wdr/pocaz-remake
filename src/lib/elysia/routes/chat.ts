@@ -7,6 +7,7 @@ import {
 	chatRoomService,
 } from "@/lib/services/chat";
 import { marketService } from "@/lib/services/market";
+import { chatPreview, notificationService } from "@/lib/services/notification";
 import { userService } from "@/lib/services/user";
 
 // 공통 스키마
@@ -723,6 +724,22 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				roomId: params.id,
 				userId: user.id,
 			});
+
+			// 방의 다른 멤버에게 새 메시지를 알린다. 알림은 부가 기능이라 실패해도 전송은 성공으로 응답한다
+			try {
+				const members = await chatRoomMemberService.findByRoomId(params.id);
+				await notificationService.createForChatMessage({
+					roomId: params.id,
+					senderId: user.id,
+					senderNickname: user.nickname,
+					recipientIds: members
+						.map((member) => member.userId)
+						.filter((memberId) => memberId !== user.id),
+					preview: chatPreview(message.content),
+				});
+			} catch (error) {
+				console.error("[chat] 새 메시지 알림을 만들지 못했습니다", error);
+			}
 
 			return {
 				id: message.id,

@@ -7,6 +7,7 @@ import {
 	marketService,
 	toMarketCondition,
 } from "@/lib/services/market";
+import { notificationService } from "@/lib/services/notification";
 import { TradeError, transactionService } from "@/lib/services/transaction";
 import { userService } from "@/lib/services/user";
 
@@ -407,6 +408,11 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				return { error: "Forbidden" };
 			}
 
+			// 상태가 바뀌었는지 알려면 바꾸기 전 값이 필요하다
+			const previousStatus = body.status
+				? await marketService.getStatus(params.id)
+				: null;
+
 			try {
 				const market = await marketService.update(params.id, {
 					title: body.title,
@@ -418,6 +424,19 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 					artistId: body.artistId,
 					status: body.status as "available" | "sold" | "reserved" | undefined,
 				});
+
+				// 상태가 바뀌면 이 상품을 찜한 사용자에게 알린다
+				if (
+					body.status &&
+					previousStatus !== null &&
+					previousStatus !== body.status
+				) {
+					await notificationService.createForMarketStatus({
+						marketId: market.id,
+						ownerId: user.id,
+						status: body.status,
+					});
+				}
 
 				return {
 					id: market.id,
@@ -528,6 +547,9 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				return status(401, { error: "User not found" });
 			}
 
+			// 이미 판매완료인 상품이면 찜한 사용자는 그때 알림을 받았으므로, 바꾸기 전 상태를 읽어 둔다
+			const previousStatus = await marketService.getStatus(params.id);
+
 			try {
 				const trade = await transactionService.completeTrade({
 					marketId: params.id,
@@ -535,6 +557,21 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 					buyerId: body.buyerId,
 					price: body.price,
 				});
+
+				// 구매자에게는 거래 완료를, 판매완료로 바뀐 상품을 찜한 다른 사용자에게는 상태 변경을 알린다
+				await notificationService.createForTrade({
+					marketId: trade.marketId,
+					sellerId: trade.sellerId,
+					buyerId: trade.buyerId,
+				});
+				if (previousStatus !== "sold") {
+					await notificationService.createForMarketStatus({
+						marketId: trade.marketId,
+						ownerId: trade.sellerId,
+						status: "sold",
+						excludeUserIds: [trade.buyerId],
+					});
+				}
 
 				return status(201, {
 					id: trade.id,

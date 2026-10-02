@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
 import { LimitQuery } from "@/lib/elysia/schemas";
+import { notificationService } from "@/lib/services/notification";
 import { ReviewError, reviewService } from "@/lib/services/review";
 import { userService } from "@/lib/services/user";
 
@@ -115,6 +116,14 @@ export const reviewRoutes = new Elysia({ prefix: "/transactions" })
 					reviewerId: user.id,
 					rating: body.rating,
 					content: body.content,
+				});
+
+				// 후기를 받은 거래 상대에게 알린다
+				await notificationService.createForReview({
+					actor: user,
+					revieweeId: review.revieweeId,
+					rating: review.rating,
+					content: review.content,
 				});
 
 				return status(201, {

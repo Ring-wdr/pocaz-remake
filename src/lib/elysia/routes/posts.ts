@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
 import { LimitQuery } from "@/lib/elysia/schemas";
+import { notificationService } from "@/lib/services/notification";
 import {
 	CommentError,
 	commentService,
@@ -474,6 +475,15 @@ export const postRoutes = new Elysia({ prefix: "/posts" })
 					postId: params.id,
 					userId: user.id,
 					parentId: body.parentId,
+				});
+
+				// 댓글은 글쓴이에게, 답글은 부모 댓글 작성자에게 알린다
+				await notificationService.createForComment({
+					postId: params.id,
+					postAuthorId: post.userId,
+					parentId: body.parentId,
+					actor: user,
+					content: comment.content,
 				});
 
 				set.status = 201;

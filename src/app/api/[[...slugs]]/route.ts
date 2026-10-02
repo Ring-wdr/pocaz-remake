@@ -4,6 +4,7 @@ import { artistRoutes, publicArtistRoutes } from "@/lib/elysia/routes/artists";
 import { chatRoutes } from "@/lib/elysia/routes/chat";
 import { likeRoutes } from "@/lib/elysia/routes/likes";
 import { marketRoutes, publicMarketRoutes } from "@/lib/elysia/routes/markets";
+import { notificationRoutes } from "@/lib/elysia/routes/notifications";
 import {
 	galmangPocaRoutes,
 	photocardRoutes,
@@ -160,6 +161,7 @@ if (process.env.NODE_ENV === "development") {
 						{ name: "Likes", description: "좋아요 관련 API" },
 						{ name: "Chat", description: "채팅 관련 API" },
 						{ name: "Reviews", description: "거래 후기 관련 API" },
+						{ name: "Notifications", description: "알림 관련 API" },
 						{ name: "Storage", description: "파일 저장소 관련 API" },
 						{ name: "Support", description: "고객지원/문의 API" },
 					],
@@ -198,6 +200,8 @@ export const app = baseApp
 	// Review
 	.use(publicReviewRoutes)
 	.use(reviewRoutes)
+	// Notification
+	.use(notificationRoutes)
 	// Support
 	.use(supportRoutes)
 	// Storage

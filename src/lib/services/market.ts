@@ -293,6 +293,17 @@ export const marketService = {
 		});
 		return market?.userId === userId;
 	},
+
+	/**
+	 * Market의 현재 판매 상태. 없는 상품이면 null. 상태가 바뀌었는지 알려면 바꾸기 전에 읽어 둔다.
+	 */
+	async getStatus(marketId: string): Promise<string | null> {
+		const market = await prisma.market.findUnique({
+			where: { id: marketId },
+			select: { status: true },
+		});
+		return market?.status ?? null;
+	},
 };
 
 /**

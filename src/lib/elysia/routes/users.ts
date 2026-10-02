@@ -4,6 +4,7 @@ import { LimitQuery } from "@/lib/elysia/schemas";
 import { prisma } from "@/lib/prisma";
 import { activityService } from "@/lib/services/activity";
 import { marketLikeService } from "@/lib/services/market";
+import { notificationService } from "@/lib/services/notification";
 import { postService } from "@/lib/services/post";
 import { reviewService } from "@/lib/services/review";
 import { transactionService } from "@/lib/services/transaction";
@@ -30,6 +31,17 @@ const PublicUserSchema = t.Object({
 	// 받은 후기 수와 평균 별점(소수 첫째 자리). 후기가 없으면 averageRating은 null
 	reviewCount: t.Number(),
 	averageRating: t.Nullable(t.Number()),
+});
+
+// 알림 종류별 수신 설정. 설정한 적이 없는 항목은 켜져 있다
+const NotificationSettingsSchema = t.Object({
+	chat: t.Boolean(),
+	like: t.Boolean(),
+	comment: t.Boolean(),
+	// 찜한 상품의 상태 변경
+	market: t.Boolean(),
+	// 거래 완료와 후기
+	trade: t.Boolean(),
 });
 
 const UserSummarySchema = t.Object({
@@ -621,6 +633,59 @@ export const userRoutes = new Elysia({ prefix: "/users" })
 				tags: ["Users"],
 				summary: "내 활동 내역",
 				description: "현재 사용자의 활동 내역을 조회합니다.",
+			},
+		},
+	)
+	// GET /api/users/me/notification-settings - 내 알림 설정
+	.get(
+		"/me/notification-settings",
+		async ({ auth }) => {
+			const user = await userService.findOrCreate(
+				auth.user.id,
+				auth.user.email,
+				auth.user.user_metadata?.full_name,
+				auth.user.user_metadata?.avatar_url,
+			);
+
+			return notificationService.getSettings(user.id);
+		},
+		{
+			response: NotificationSettingsSchema,
+			detail: {
+				tags: ["Users"],
+				summary: "내 알림 설정 조회",
+				description:
+					"채팅, 좋아요, 댓글, 관심 상품, 거래 알림의 수신 여부를 조회합니다. 설정한 적이 없는 항목은 켜져 있습니다.",
+			},
+		},
+	)
+	// PUT /api/users/me/notification-settings - 내 알림 설정 부분 갱신
+	.put(
+		"/me/notification-settings",
+		async ({ auth, body }) => {
+			const user = await userService.findOrCreate(
+				auth.user.id,
+				auth.user.email,
+				auth.user.user_metadata?.full_name,
+				auth.user.user_metadata?.avatar_url,
+			);
+
+			return notificationService.updateSettings(user.id, body);
+		},
+		{
+			body: t.Object({
+				chat: t.Optional(t.Boolean()),
+				like: t.Optional(t.Boolean()),
+				comment: t.Optional(t.Boolean()),
+				market: t.Optional(t.Boolean()),
+				trade: t.Optional(t.Boolean()),
+			}),
+			response: NotificationSettingsSchema,
+			detail: {
+				tags: ["Users"],
+				summary: "내 알림 설정 수정",
+				description:
+					"보낸 항목만 바꾸고 나머지는 그대로 둡니다. 바뀐 뒤의 전체 설정을 돌려줍니다.",
 			},
 		},
 	);
