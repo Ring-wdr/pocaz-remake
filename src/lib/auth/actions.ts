@@ -24,15 +24,10 @@ export async function signInWithGoogle(
 			? callbackUrl
 			: `${callbackUrl}?next=${encodeURIComponent(next)}`;
 
+	// prompt를 지정하지 않아야 이미 동의한 사용자는 Google 화면 없이 바로 돌아온다
 	const { data, error } = await supabase.auth.signInWithOAuth({
 		provider: "google",
-		options: {
-			redirectTo,
-			queryParams: {
-				access_type: "offline",
-				prompt: "consent",
-			},
-		},
+		options: { redirectTo },
 	});
 
 	if (error) {
