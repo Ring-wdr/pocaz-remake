@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ArrowLeft, MoreVertical, Send, X } from "lucide-react";
+import { ArrowLeft, MoreVertical, Send } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -33,6 +33,7 @@ import type {
 import { formatTime } from "@/utils/date";
 import { api } from "@/utils/eden";
 import { isSubmitEnter } from "@/utils/keyboard";
+import { ChatFailedMessageActions } from "./chat-failed-message-actions";
 import { ChatImageUploadButton } from "./chat-image-upload-button";
 import { ChatMarketBanner } from "./chat-market-banner";
 import { ChatMessageList } from "./chat-message-list";
@@ -284,33 +285,6 @@ const styles = stylex.create({
 		borderStyle: "solid",
 		borderColor: colors.statusError,
 	},
-	failedActions: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxs,
-		marginTop: spacing.xxxs,
-	},
-	failedText: {
-		fontSize: fontSize.sm,
-		color: colors.statusError,
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxxs,
-	},
-	retryButton: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxxs,
-		paddingTop: spacing.xxxs,
-		paddingBottom: spacing.xxxs,
-		paddingLeft: spacing.xxs,
-		paddingRight: spacing.xxs,
-		fontSize: fontSize.sm,
-		color: colors.accentPrimary,
-		backgroundColor: "transparent",
-		borderWidth: 0,
-		cursor: "pointer",
-	},
 	// 전송중 상태 스타일
 	sendingIndicator: {
 		fontSize: "11px",
@@ -391,6 +365,7 @@ export default function ChatRoom({
 		appendLocal,
 		markAsSent,
 		markAsFailed,
+		markAsSending,
 		removePending,
 	} = useChatMessages({
 		roomId,
@@ -535,6 +510,15 @@ export default function ChatRoom({
 			}
 		},
 		[appendLocal, markAsFailed, markAsSent, roomId],
+	);
+
+	/** 실패한 메시지 다시 보내기. 같은 메시지를 전송 중으로 되돌린 뒤 같은 clientId로 다시 보낸다 */
+	const handleRetryFailed = useCallback(
+		(content: string, clientId: string) => {
+			markAsSending(clientId);
+			void sendMessage(content, clientId);
+		},
+		[markAsSending, sendMessage],
 	);
 
 	/** 실패한 메시지 삭제 */
@@ -741,23 +725,13 @@ export default function ChatRoom({
 										</div>
 									)}
 
-									{isFailed && isMine && (
-										<div {...stylex.props(styles.failedActions)}>
-											<span {...stylex.props(styles.failedText)}>
-												<AlertCircle size={12} />
-												전송 실패
-											</span>
-											<button
-												type="button"
-												onClick={() =>
-													handleDeleteFailed(message.clientId ?? "")
-												}
-												{...stylex.props(styles.retryButton)}
-											>
-												<X size={12} />
-												삭제
-											</button>
-										</div>
+									{isFailed && isMine && message.clientId && (
+										<ChatFailedMessageActions
+											content={message.content}
+											clientId={message.clientId}
+											onRetry={handleRetryFailed}
+											onDelete={handleDeleteFailed}
+										/>
 									)}
 
 									{!isSendingMsg && !isFailed && (

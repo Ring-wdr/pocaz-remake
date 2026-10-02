@@ -72,6 +72,7 @@ export async function generateMetadata({
 		}),
 		path: `/market/${productId}`,
 		ogTitle: data.title,
+		image: data.images[0]?.imageUrl,
 	});
 }
 

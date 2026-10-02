@@ -284,6 +284,14 @@ export const marketService = {
 	},
 
 	/**
+	 * 이 상품으로 남은 거래 기록이 있는지. Transaction.marketId는 Restrict라 거래 기록이 있는 상품은 지울 수 없다
+	 */
+	async hasTransactions(marketId: string): Promise<boolean> {
+		const count = await prisma.transaction.count({ where: { marketId } });
+		return count > 0;
+	},
+
+	/**
 	 * Market 소유자 확인
 	 */
 	async isOwner(marketId: string, userId: string): Promise<boolean> {

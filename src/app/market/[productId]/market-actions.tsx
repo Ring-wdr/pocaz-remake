@@ -93,15 +93,15 @@ const styles = stylex.create({
 
 const DELETE_FAILED_MESSAGE =
 	"상품을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const HAS_TRANSACTIONS_MESSAGE =
+	"거래 내역이 있는 상품은 삭제할 수 없어요. 판매완료 상태로 남겨 두세요";
 
 /**
- * 삭제 실패 안내 문구.
- * 거래가 완료된 상품은 거래 기록이 상품을 참조해 서버가 지우지 못하고 500을 돌려준다(Transaction.marketId는 Restrict).
+ * 삭제 실패 안내 문구. 서버 메시지는 영어라서 쓰지 않는다.
+ * 거래 기록이 있는 상품은 거래 내역이 상품을 참조해 지울 수 없어 서버가 409를 돌려준다.
  */
 function getDeleteErrorMessage(status: number): string {
-	return status === 500
-		? "상품을 삭제하지 못했어요. 거래 내역이 있는 상품은 삭제할 수 없어요."
-		: DELETE_FAILED_MESSAGE;
+	return status === 409 ? HAS_TRANSACTIONS_MESSAGE : DELETE_FAILED_MESSAGE;
 }
 
 interface MarketActionsProps {

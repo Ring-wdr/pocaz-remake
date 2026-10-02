@@ -145,6 +145,21 @@ describe("하단 탭의 채팅 안 읽음 뱃지", () => {
 
 	afterEach(cleanup);
 
+	test("탭 이름을 한국어로 보여 주고 각 탭은 해당 화면으로 이어진다", () => {
+		const view = renderMenu();
+
+		const tabs = view
+			.getAllByRole("link")
+			.map((link) => [link.textContent, link.getAttribute("href")]);
+		expect(tabs).toEqual([
+			["홈", "/"],
+			["마켓", "/market"],
+			["채팅", "/chat/list"],
+			["커뮤니티", "/community"],
+			["마이페이지", "/mypage"],
+		]);
+	});
+
 	test("안 읽은 수를 채팅 탭 아이콘에만 보여 준다", async () => {
 		getUnreadCount.mockImplementation(async () =>
 			edenResult(200, { count: 7 }),
@@ -181,7 +196,7 @@ describe("하단 탭의 채팅 안 읽음 뱃지", () => {
 		);
 		expect(view.queryByLabelText(unreadLabel)).toBeNull();
 		// 탭 이름은 그대로 보인다
-		expect(within(chatTab(view)).queryByText("CHAT")).not.toBeNull();
+		expect(within(chatTab(view)).queryByText("채팅")).not.toBeNull();
 	});
 
 	test("로그인하지 않아 401이면 0으로 보고 뱃지를 숨긴다", async () => {

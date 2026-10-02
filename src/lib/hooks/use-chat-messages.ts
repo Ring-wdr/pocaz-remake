@@ -35,6 +35,8 @@ interface UseChatMessagesResult {
 	appendLocal: (content: string) => { clientId: string };
 	markAsSent: (clientId: string, serverMessage: ChatMessage) => void;
 	markAsFailed: (clientId: string) => void;
+	/** 실패한 메시지를 다시 보내기 직전에 전송 중 상태로 되돌린다 */
+	markAsSending: (clientId: string) => void;
 	removePending: (clientId: string) => void;
 }
 
@@ -233,6 +235,16 @@ export function useChatMessages({
 		);
 	};
 
+	const markAsSending = (clientId: string) => {
+		setPendingMessages((prev) =>
+			prev.map((message) =>
+				message.clientId === clientId
+					? { ...message, status: "sending" }
+					: message,
+			),
+		);
+	};
+
 	const removePending = (clientId: string) => {
 		setPendingMessages((prev) =>
 			prev.filter((message) => message.clientId !== clientId),
@@ -251,6 +263,7 @@ export function useChatMessages({
 		appendLocal,
 		markAsSent,
 		markAsFailed,
+		markAsSending,
 		removePending,
 	};
 }

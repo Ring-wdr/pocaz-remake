@@ -190,6 +190,7 @@ export async function generateMetadata({
 		path: `/community/posts/${postId}`,
 		ogTitle: summary,
 		type: "article",
+		image: post.images[0]?.imageUrl,
 	});
 }
 

@@ -19,6 +19,11 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { Footer } from "@/components/home";
+import {
+	WITHDRAW_AUTH_NOTICE,
+	WITHDRAW_DELETED_NOTICE,
+	WITHDRAW_KEPT_NOTICE,
+} from "@/components/mypage/withdraw-notice";
 import { useSignOut } from "@/lib/hooks/use-sign-out";
 import { api } from "@/utils/eden";
 
@@ -414,8 +419,8 @@ export default function SecurityPageClient({
 				<div {...stylex.props(styles.warningBox)}>
 					<AlertTriangle size={20} {...stylex.props(styles.warningIcon)} />
 					<p {...stylex.props(styles.warningText)}>
-						회원 탈퇴 시 모든 데이터(게시글, 댓글, 거래 내역 등)가 영구적으로
-						삭제되며 복구할 수 없습니다.
+						회원 탈퇴 시 {WITHDRAW_DELETED_NOTICE} {WITHDRAW_KEPT_NOTICE}{" "}
+						{WITHDRAW_AUTH_NOTICE}
 					</p>
 				</div>
 			</div>
@@ -478,8 +483,10 @@ export default function SecurityPageClient({
 								<br />
 								<br />
 								<span {...stylex.props(styles.modalTextStrong)}>
-									모든 데이터가 삭제되며 복구할 수 없습니다.
+									{WITHDRAW_DELETED_NOTICE}
 								</span>
+								<br />
+								{WITHDRAW_KEPT_NOTICE}
 							</p>
 						</div>
 						<div {...stylex.props(styles.modalActions)}>

@@ -17,11 +17,19 @@ const createRoom = mock(
 	async (_body: { marketId: string }): Promise<unknown> =>
 		edenResult(200, { id: "room-1" }),
 );
+const toggleLike = mock(
+	async (): Promise<unknown> => edenResult(200, { liked: true, count: 4 }),
+);
 const push = mock((_href: string) => {});
 const toast = { success: mock(), error: mock(), info: mock() };
 
 mock.module("@/utils/eden", () => ({
-	api: { chat: { rooms: { market: { post: createRoom } } } },
+	api: {
+		chat: { rooms: { market: { post: createRoom } } },
+		likes: {
+			markets: (_params: { marketId: string }) => ({ post: toggleLike }),
+		},
+	},
 }));
 mock.module("sonner", () => ({ toast }));
 
@@ -39,14 +47,24 @@ const { cleanup, fireEvent, render, waitFor } = await import(
 );
 const { ActionBar } = await import("@/app/market/[productId]/action-bar");
 
-function renderActionBar({ loggedIn }: { loggedIn: boolean }) {
+function renderActionBar({
+	loggedIn,
+	isOwner = false,
+	liked = false,
+	count = 3,
+}: {
+	loggedIn: boolean;
+	isOwner?: boolean;
+	liked?: boolean;
+	count?: number;
+}) {
 	return render(
 		<ActionBar
 			marketId="market-1"
 			currentUserId={loggedIn ? "user-1" : null}
-			isOwner={false}
+			isOwner={isOwner}
 			marketTitle="르세라핌 포토카드"
-			initialLikeState={{ liked: false, count: 3, error: null }}
+			initialLikeState={{ liked, count, error: null }}
 		/>,
 	);
 }
@@ -95,5 +113,88 @@ describe("상품 상세 액션바의 로그인 이동", () => {
 		for (const [href] of push.mock.calls) {
 			expect(href).not.toContain("/login");
 		}
+	});
+});
+
+describe("상품 상세 액션바의 찜 수", () => {
+	afterEach(cleanup);
+
+	beforeEach(() => {
+		for (const fn of [
+			push,
+			toggleLike,
+			toast.success,
+			toast.error,
+			toast.info,
+		]) {
+			fn.mockClear();
+		}
+		toggleLike.mockImplementation(async () =>
+			edenResult(200, { liked: true, count: 4 }),
+		);
+	});
+
+	test("하트 옆에 찜 수를 숫자로 보여 주고, 버튼 이름은 그대로 읽어 준다", () => {
+		const view = renderActionBar({ loggedIn: false, count: 3 });
+
+		const like = view.getByRole("button", { name: "찜 3회" });
+		expect(like.textContent).toBe("3");
+		expect(like.getAttribute("aria-pressed")).toBe("false");
+	});
+
+	test("찜이 없으면 0을 보여 준다", () => {
+		const view = renderActionBar({ loggedIn: false, count: 0 });
+
+		const like = view.getByRole("button", { name: "찜 0회" });
+		expect(like.textContent).toBe("0");
+	});
+
+	test("찜하면 서버 응답을 기다리지 않고 숫자를 하나 올리고, 응답이 오면 서버 값으로 맞춘다", async () => {
+		let respond: (value: unknown) => void = () => {};
+		toggleLike.mockImplementationOnce(
+			() =>
+				new Promise((resolve) => {
+					respond = resolve;
+				}),
+		);
+		const view = renderActionBar({ loggedIn: true, count: 3 });
+
+		fireEvent.click(view.getByRole("button", { name: "찜 3회" }));
+
+		// 응답 전: 낙관적으로 올라간 숫자와 눌린 상태
+		const pending = await view.findByRole("button", { name: "찜 4회" });
+		expect(pending.textContent).toBe("4");
+		expect(pending.getAttribute("aria-pressed")).toBe("true");
+		await waitFor(() => expect(toggleLike).toHaveBeenCalledTimes(1));
+
+		// 그 사이 다른 사람도 찜해서 서버는 5를 돌려준다
+		respond(edenResult(200, { liked: true, count: 5 }));
+		const settled = await view.findByRole("button", { name: "찜 5회" });
+		expect(settled.textContent).toBe("5");
+		expect(settled.getAttribute("aria-pressed")).toBe("true");
+		expect(toast.error).not.toHaveBeenCalled();
+	});
+
+	test("찜을 취소하면 숫자가 하나 줄어든다", async () => {
+		toggleLike.mockImplementationOnce(async () =>
+			edenResult(200, { liked: false, count: 2 }),
+		);
+		const view = renderActionBar({ loggedIn: true, liked: true, count: 3 });
+
+		fireEvent.click(view.getByRole("button", { name: "찜 3회" }));
+
+		const like = await view.findByRole("button", { name: "찜 2회" });
+		expect(like.textContent).toBe("2");
+		expect(like.getAttribute("aria-pressed")).toBe("false");
+	});
+
+	test("내 상품은 찜할 수 없어서 숫자가 그대로다", () => {
+		const view = renderActionBar({ loggedIn: true, isOwner: true, count: 3 });
+
+		fireEvent.click(view.getByRole("button", { name: "찜 3회" }));
+
+		expect(toast.info).toHaveBeenCalledWith("내 상품은 찜할 수 없어요.");
+		expect(view.getByRole("button", { name: "찜 3회" }).textContent).toBe("3");
+		expect(toggleLike).not.toHaveBeenCalled();
 	});
 });

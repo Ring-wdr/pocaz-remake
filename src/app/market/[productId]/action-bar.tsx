@@ -52,6 +52,18 @@ const styles = stylex.create({
 		borderRadius: radius.sm,
 		cursor: "pointer",
 	},
+	// 하트 옆에 찜 수가 붙는 버튼. 정사각형 폭(44px)을 최소 폭으로 두고 숫자가 늘면 함께 넓어진다
+	likeButton: {
+		width: "auto",
+		minWidth: "44px",
+		gap: spacing.xxxs,
+		paddingLeft: spacing.xs,
+		paddingRight: spacing.xs,
+	},
+	likeCount: {
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.semibold,
+	},
 	chatButton: {
 		flex: 1,
 		display: "flex",
@@ -234,6 +246,7 @@ export function ActionBar({
 					aria-label={`찜 ${optimisticLike.count}회`}
 					{...stylex.props(
 						styles.actionButton,
+						styles.likeButton,
 						optimisticLike.liked && styles.actionButtonActive,
 					)}
 				>
@@ -241,6 +254,9 @@ export function ActionBar({
 						size={20}
 						fill={optimisticLike.liked ? "currentColor" : "none"}
 					/>
+					<span {...stylex.props(styles.likeCount)}>
+						{optimisticLike.count}
+					</span>
 				</button>
 			</form>
 			<button

@@ -19,17 +19,17 @@ interface MenuItem {
 }
 
 const btnList: MenuItem[] = [
-	{ id: 0, title: "HOME", icon: Home, to: "/" },
-	{ id: 1, title: "MARKET", icon: Store, to: "/market" },
+	{ id: 0, title: "홈", icon: Home, to: "/" },
+	{ id: 1, title: "마켓", icon: Store, to: "/market" },
 	{
 		id: 2,
-		title: "CHAT",
+		title: "채팅",
 		icon: MessageCircleHeart,
 		to: "/chat/list",
 		badge: ChatTabUnreadBadge,
 	},
-	{ id: 3, title: "FREEZONE", icon: Smile, to: "/community" },
-	{ id: 4, title: "MY PAGE", icon: User, to: "/mypage" },
+	{ id: 3, title: "커뮤니티", icon: Smile, to: "/community" },
+	{ id: 4, title: "마이페이지", icon: User, to: "/mypage" },
 ];
 
 const styles = stylex.create({

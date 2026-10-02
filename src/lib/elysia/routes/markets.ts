@@ -505,7 +505,7 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 	// DELETE /api/markets/:id - 장터 글 삭제
 	.delete(
 		"/:id",
-		async ({ auth, params, set }) => {
+		async ({ auth, params, set, status }) => {
 			const user = await userService.findBySupabaseId(auth.user.id);
 			if (!user) {
 				set.status = 401;
@@ -516,6 +516,11 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 			if (!isOwner) {
 				set.status = 403;
 				return { error: "Forbidden" };
+			}
+
+			// 거래 기록이 있는 상품은 지울 수 없다. Transaction.marketId가 Restrict라 그냥 지우면 DB 오류(500)가 난다
+			if (await marketService.hasTransactions(params.id)) {
+				return status(409, { error: "Market has transactions" });
 			}
 
 			await marketService.delete(params.id);
@@ -530,11 +535,13 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				200: MessageSchema,
 				401: ErrorSchema,
 				403: ErrorSchema,
+				409: ErrorSchema,
 			},
 			detail: {
 				tags: ["Markets"],
 				summary: "장터 글 삭제",
-				description: "장터 글을 삭제합니다.",
+				description:
+					"장터 글을 삭제합니다. 거래 기록이 있는 상품은 지울 수 없어 409를 돌려줍니다(판매완료 상태로 남겨 두세요).",
 			},
 		},
 	)
