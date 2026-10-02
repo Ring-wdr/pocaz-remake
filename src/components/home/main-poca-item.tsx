@@ -1,9 +1,8 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import useEmblaCarousel from "embla-carousel-react";
 import Link from "next/link";
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
 
 import {
 	colors,
@@ -17,7 +16,26 @@ import type { MarketItem } from "@/types/entities";
 const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
 
+// 한 화면에 2.4장이 보이고 카드 사이는 14px.
+// 간격은 슬라이드의 왼쪽 padding으로 주고 컨테이너를 그만큼 왼쪽으로 당겨, 마지막 카드가 오른쪽 끝에 맞춰 멈추게 한다
+const SLIDES_PER_VIEW = 2.4;
+const SLIDE_GAP = "14px";
+
 const styles = stylex.create({
+	viewport: {
+		overflow: "hidden",
+	},
+	container: {
+		display: "flex",
+		marginLeft: `calc(${SLIDE_GAP} * -1)`,
+	},
+	slide: {
+		flexGrow: 0,
+		flexShrink: 0,
+		flexBasis: `${100 / SLIDES_PER_VIEW}%`,
+		minWidth: 0,
+		paddingLeft: SLIDE_GAP,
+	},
 	slideButton: {
 		cursor: "pointer",
 		width: "100%",
@@ -85,50 +103,54 @@ interface MainPocaItemProps {
 }
 
 export default function MainPocaItem({ items }: MainPocaItemProps) {
+	const [emblaRef] = useEmblaCarousel({ align: "start" });
+
 	return (
-		<Swiper slidesPerView={2.4} spaceBetween={14}>
-			{items.map((market) => {
-				const thumbnail = market.images[0]?.imageUrl;
-				return (
-					<SwiperSlide key={market.id}>
-						<Link
-							href={`/market/${market.id}`}
-							{...stylex.props(styles.slideButton)}
-						>
-							<div {...stylex.props(styles.pocaThumb)}>
-								{thumbnail ? (
-									<img
-										src={thumbnail}
-										{...stylex.props(styles.pocaImage)}
-										alt={market.title}
-									/>
-								) : (
-									<div {...stylex.props(styles.placeholderImage)}>
-										이미지 없음
-									</div>
-								)}
-							</div>
-							<div {...stylex.props(styles.pocaListWrap)}>
-								<p {...stylex.props(styles.sellerName)}>
-									{market.user.nickname}
-								</p>
-								<p {...stylex.props(styles.pocaTitle)}>{market.title}</p>
-								{market.description && (
-									<p {...stylex.props(styles.pocaDesc)}>
-										{market.description.length > 20
-											? `${market.description.slice(0, 20)}...`
-											: market.description}
+		<div ref={emblaRef} {...stylex.props(styles.viewport)}>
+			<div {...stylex.props(styles.container)}>
+				{items.map((market) => {
+					const thumbnail = market.images[0]?.imageUrl;
+					return (
+						<div key={market.id} {...stylex.props(styles.slide)}>
+							<Link
+								href={`/market/${market.id}`}
+								{...stylex.props(styles.slideButton)}
+							>
+								<div {...stylex.props(styles.pocaThumb)}>
+									{thumbnail ? (
+										<img
+											src={thumbnail}
+											{...stylex.props(styles.pocaImage)}
+											alt={market.title}
+										/>
+									) : (
+										<div {...stylex.props(styles.placeholderImage)}>
+											이미지 없음
+										</div>
+									)}
+								</div>
+								<div {...stylex.props(styles.pocaListWrap)}>
+									<p {...stylex.props(styles.sellerName)}>
+										{market.user.nickname}
 									</p>
-								)}
-								<p {...stylex.props(styles.pocaPrice)}>
-									<span>{market.price?.toLocaleString() ?? "-"}</span>
-									<span {...stylex.props(styles.won)}>원</span>
-								</p>
-							</div>
-						</Link>
-					</SwiperSlide>
-				);
-			})}
-		</Swiper>
+									<p {...stylex.props(styles.pocaTitle)}>{market.title}</p>
+									{market.description && (
+										<p {...stylex.props(styles.pocaDesc)}>
+											{market.description.length > 20
+												? `${market.description.slice(0, 20)}...`
+												: market.description}
+										</p>
+									)}
+									<p {...stylex.props(styles.pocaPrice)}>
+										<span>{market.price?.toLocaleString() ?? "-"}</span>
+										<span {...stylex.props(styles.won)}>원</span>
+									</p>
+								</div>
+							</Link>
+						</div>
+					);
+				})}
+			</div>
+		</div>
 	);
 }
