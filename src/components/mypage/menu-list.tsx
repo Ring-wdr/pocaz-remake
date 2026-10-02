@@ -150,11 +150,14 @@ export default function MenuList() {
 		<div {...stylex.props(styles.container)}>
 			{menuItems.map((section) => (
 				<section key={section.id} {...stylex.props(mypageStyles.section)}>
-					<div {...stylex.props(mypageStyles.sectionHeader)}>
-						<h3 {...stylex.props(mypageStyles.sectionTitle)}>
-							{section.title}
-						</h3>
-					</div>
+					<h3
+						{...stylex.props(
+							mypageStyles.sectionHeader,
+							mypageStyles.sectionTitle,
+						)}
+					>
+						{section.title}
+					</h3>
 					<div {...stylex.props(mypageStyles.card)}>
 						{section.items.map((item) => {
 							const IconComponent = item.icon;
