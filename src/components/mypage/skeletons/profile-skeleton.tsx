@@ -4,6 +4,7 @@ import {
 	fontSize,
 	lineHeight,
 	radius,
+	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
 
@@ -17,15 +18,15 @@ const styles = stylex.create({
 		display: "flex",
 		alignItems: "center",
 		gap: spacing.sm,
+		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
-		marginBottom: spacing.sm,
-		borderBottomWidth: 1,
-		borderBottomStyle: "solid",
-		borderBottomColor: colors.borderPrimary,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
 	},
 	avatar: {
-		width: "72px",
-		height: "72px",
+		flexShrink: 0,
+		width: size.avatarLg,
+		height: size.avatarLg,
 		borderRadius: radius.full,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,
 		backgroundSize: "200% 100%",
@@ -36,10 +37,11 @@ const styles = stylex.create({
 	},
 	info: {
 		flex: 1,
+		minWidth: 0,
 	},
 	name: {
 		width: "64%",
-		height: `calc(20px * ${lineHeight.snug})`,
+		height: `calc(${fontSize.lg} * ${lineHeight.snug})`,
 		marginBottom: spacing.xxxs,
 		borderRadius: radius.xs,
 		backgroundImage: `linear-gradient(90deg, ${colors.skeletonBase} 25%, ${colors.skeletonHighlight} 50%, ${colors.skeletonBase} 75%)`,

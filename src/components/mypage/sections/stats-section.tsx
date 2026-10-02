@@ -4,38 +4,41 @@ import {
 	colors,
 	fontSize,
 	fontWeight,
-	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { mypageStyles } from "../mypage-styles.stylex";
 
 const styles = stylex.create({
 	container: {
 		display: "grid",
 		gridTemplateColumns: "repeat(3, 1fr)",
-		gap: spacing.xs,
-		marginBottom: spacing.md,
+		borderTopWidth: 1,
+		borderTopStyle: "solid",
+		borderTopColor: colors.borderPrimary,
 	},
 	item: {
-		paddingTop: spacing.sm,
-		paddingBottom: spacing.sm,
-		backgroundColor: colors.bgSecondary,
-		borderRadius: radius.md,
+		paddingTop: spacing.xs,
+		paddingBottom: spacing.xs,
 		textAlign: "center",
 		textDecoration: "none",
 		color: "inherit",
-		transition: "background-color 0.2s ease",
+	},
+	divider: {
+		borderLeftWidth: 1,
+		borderLeftStyle: "solid",
+		borderLeftColor: colors.borderPrimary,
 	},
 	number: {
+		margin: 0,
+		marginBottom: spacing.xxxs,
 		fontSize: fontSize.xl,
 		fontWeight: fontWeight.bold,
 		color: colors.textSecondary,
-		margin: 0,
-		marginBottom: spacing.xxxs,
 	},
 	label: {
+		margin: 0,
 		fontSize: fontSize.sm,
 		color: colors.textMuted,
-		margin: 0,
 	},
 });
 
@@ -48,20 +51,28 @@ interface StatsSectionProps {
 }
 
 export function StatsSection({ stats }: StatsSectionProps) {
+	const items = [
+		{ href: "/mypage/posts", value: stats.posts, label: "게시글" },
+		{ href: "/mypage/likes", value: stats.likes, label: "좋아요" },
+		{ href: "/mypage/trades", value: stats.trades, label: "거래" },
+	] as const;
+
 	return (
 		<div {...stylex.props(styles.container)}>
-			<Link href="/mypage/posts" {...stylex.props(styles.item)}>
-				<p {...stylex.props(styles.number)}>{stats.posts}</p>
-				<p {...stylex.props(styles.label)}>게시글</p>
-			</Link>
-			<Link href="/mypage/likes" {...stylex.props(styles.item)}>
-				<p {...stylex.props(styles.number)}>{stats.likes}</p>
-				<p {...stylex.props(styles.label)}>좋아요</p>
-			</Link>
-			<Link href="/mypage/trades" {...stylex.props(styles.item)}>
-				<p {...stylex.props(styles.number)}>{stats.trades}</p>
-				<p {...stylex.props(styles.label)}>거래</p>
-			</Link>
+			{items.map((item, index) => (
+				<Link
+					key={item.href}
+					href={item.href}
+					{...stylex.props(
+						styles.item,
+						index > 0 && styles.divider,
+						mypageStyles.interactive,
+					)}
+				>
+					<p {...stylex.props(styles.number)}>{item.value}</p>
+					<p {...stylex.props(styles.label)}>{item.label}</p>
+				</Link>
+			))}
 		</div>
 	);
 }

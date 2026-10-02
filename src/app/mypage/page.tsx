@@ -5,7 +5,7 @@ import { MyPageContent } from "@/components/mypage/mypage-content";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { FixedPageHeader } from "@/components/ui";
 import { createMetadata } from "@/lib/metadata";
-import { colors } from "../global-tokens.stylex";
+import { colors, spacing } from "../global-tokens.stylex";
 
 export const metadata = createMetadata({
 	title: "마이페이지 | POCAZ",
@@ -19,7 +19,17 @@ const styles = stylex.create({
 		flex: 1,
 		display: "flex",
 		flexDirection: "column",
-		backgroundColor: colors.bgPrimary,
+		backgroundColor: colors.bgCanvas,
+	},
+	content: {
+		flex: 1,
+		display: "flex",
+		flexDirection: "column",
+		gap: spacing.sm,
+		paddingTop: spacing.sm,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
+		paddingBottom: spacing.lg,
 	},
 });
 
@@ -27,8 +37,10 @@ export default function MyPage() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			<FixedPageHeader title="마이페이지" trailing={<NotificationBell />} />
-			<MyPageContent />
-			<MenuList />
+			<div {...stylex.props(styles.content)}>
+				<MyPageContent />
+				<MenuList />
+			</div>
 			<Footer />
 		</div>
 	);

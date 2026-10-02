@@ -3,6 +3,7 @@
 import * as stylex from "@stylexjs/stylex";
 import {
 	Bell,
+	BellRing,
 	ChevronRight,
 	FileText,
 	Headphones,
@@ -20,13 +21,15 @@ import {
 	fontSize,
 	fontWeight,
 	radius,
+	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { useSignOut } from "@/lib/hooks/use-sign-out";
+import { mypageStyles } from "./mypage-styles.stylex";
 
 interface MenuItem {
 	id: number;
-	icon: ComponentType<{ size?: number }>;
+	icon: ComponentType<{ size?: number; className?: string }>;
 	label: string;
 	href: string;
 }
@@ -46,7 +49,7 @@ const menuItems: MenuSection[] = [
 			{ id: 1, icon: Settings, label: "설정", href: "/mypage/settings" },
 			{
 				id: 2,
-				icon: Bell,
+				icon: BellRing,
 				label: "알림 설정",
 				href: "/mypage/notifications",
 			},
@@ -104,41 +107,13 @@ const menuItems: MenuSection[] = [
 ];
 
 const styles = stylex.create({
-	container: {},
-	section: {
-		marginBottom: spacing.md,
-	},
-	sectionTitle: {
-		fontSize: "13px",
-		fontWeight: fontWeight.semibold,
-		color: colors.textMuted,
-		margin: 0,
-		marginBottom: spacing.xs,
-		paddingLeft: spacing.xxxs,
-	},
-	list: {
-		backgroundColor: colors.bgSecondary,
-		borderRadius: radius.md,
-		overflow: "hidden",
-	},
-	item: {
+	container: {
 		display: "flex",
-		alignItems: "center",
-		gap: spacing.xs,
-		paddingTop: spacing.xs,
-		paddingBottom: spacing.xs,
-		paddingLeft: spacing.sm,
-		paddingRight: spacing.sm,
-		textDecoration: "none",
-		color: colors.textSecondary,
-		borderBottomWidth: 1,
-		borderBottomStyle: "solid",
-		borderBottomColor: colors.borderPrimary,
-	},
-	itemLast: {
-		borderBottomWidth: 0,
+		flexDirection: "column",
+		gap: spacing.sm,
 	},
 	icon: {
+		flexShrink: 0,
 		color: colors.textMuted,
 	},
 	label: {
@@ -147,24 +122,25 @@ const styles = stylex.create({
 		fontWeight: fontWeight.medium,
 	},
 	arrow: {
-		color: colors.textPlaceholder,
+		flexShrink: 0,
+		color: colors.textMuted,
 	},
 	logoutButton: {
-		width: "100%",
-		paddingTop: spacing.xs,
-		paddingBottom: spacing.xs,
+		alignSelf: "center",
+		minHeight: size.touchTarget,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
 		fontSize: fontSize.md,
 		fontWeight: fontWeight.medium,
 		color: colors.statusError,
-		backgroundColor: colors.statusErrorBgLight,
+		backgroundColor: {
+			default: "transparent",
+			":hover": colors.statusErrorBgLight,
+		},
 		borderWidth: 0,
-		borderRadius: radius.md,
+		borderRadius: radius.sm,
 		cursor: "pointer",
 		transition: "background-color 0.2s ease",
-	},
-	logoutButtonDisabled: {
-		opacity: 0.7,
-		cursor: "not-allowed",
 	},
 });
 
@@ -173,19 +149,23 @@ export default function MenuList() {
 	return (
 		<div {...stylex.props(styles.container)}>
 			{menuItems.map((section) => (
-				<div key={section.id} {...stylex.props(styles.section)}>
-					<h4 {...stylex.props(styles.sectionTitle)}>{section.title}</h4>
-					<div {...stylex.props(styles.list)}>
-						{section.items.map((item, index) => {
+				<section key={section.id} {...stylex.props(mypageStyles.section)}>
+					<h3
+						{...stylex.props(
+							mypageStyles.sectionHeader,
+							mypageStyles.sectionTitle,
+						)}
+					>
+						{section.title}
+					</h3>
+					<div {...stylex.props(mypageStyles.card)}>
+						{section.items.map((item) => {
 							const IconComponent = item.icon;
 							return (
 								<Link
 									key={item.id}
 									href={item.href}
-									{...stylex.props(
-										styles.item,
-										index === section.items.length - 1 && styles.itemLast,
-									)}
+									{...stylex.props(mypageStyles.row, mypageStyles.interactive)}
 								>
 									<IconComponent size={20} {...stylex.props(styles.icon)} />
 									<span {...stylex.props(styles.label)}>{item.label}</span>
@@ -194,10 +174,10 @@ export default function MenuList() {
 							);
 						})}
 					</div>
-				</div>
+				</section>
 			))}
 
-			<form action={signOut}>
+			<form action={signOut} {...stylex.props(styles.container)}>
 				<button type="submit" {...stylex.props(styles.logoutButton)}>
 					로그아웃
 				</button>

@@ -1,70 +1,44 @@
 import * as stylex from "@stylexjs/stylex";
 import Link from "next/link";
-import { colors, fontWeight } from "@/app/global-tokens.stylex";
+import {
+	colors,
+	fontSize,
+	fontWeight,
+	radius,
+	spacing,
+} from "@/app/global-tokens.stylex";
 import { formatDateTime } from "@/utils/date";
+import { mypageStyles } from "../mypage-styles.stylex";
 
 const styles = stylex.create({
-	container: {
-		marginBottom: "24px",
-	},
-	header: {
-		display: "flex",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginBottom: "12px",
-	},
-	title: {
-		fontSize: "16px",
-		fontWeight: 700,
-		color: colors.textSecondary,
-		margin: 0,
-	},
-	moreLink: {
-		fontSize: "13px",
-		color: colors.textMuted,
-		textDecoration: "none",
-	},
-	list: {},
-	item: {
-		display: "flex",
-		alignItems: "center",
-		gap: "12px",
-		paddingTop: "12px",
-		paddingBottom: "12px",
-		borderBottomWidth: 1,
-		borderBottomStyle: "solid",
-		borderBottomColor: colors.borderSecondary,
-		textDecoration: "none",
-		color: "inherit",
-	},
 	content: {
 		flex: 1,
 		minWidth: 0,
 	},
 	itemTitle: {
-		fontSize: "14px",
-		fontWeight: 500,
-		color: colors.textSecondary,
 		margin: 0,
-		marginBottom: "4px",
+		marginBottom: spacing.xxxs,
+		fontSize: fontSize.md,
+		fontWeight: fontWeight.medium,
+		color: colors.textSecondary,
 		overflow: "hidden",
 		textOverflow: "ellipsis",
 		whiteSpace: "nowrap",
 	},
 	meta: {
-		fontSize: "12px",
-		color: colors.textPlaceholder,
 		margin: 0,
+		fontSize: fontSize.sm,
+		color: colors.textMuted,
 	},
 	badge: {
-		paddingTop: "4px",
-		paddingBottom: "4px",
-		paddingLeft: "8px",
-		paddingRight: "8px",
-		fontSize: "11px",
-		fontWeight: 600,
-		borderRadius: "4px",
 		flexShrink: 0,
+		paddingTop: spacing.xxxs,
+		paddingBottom: spacing.xxxs,
+		paddingLeft: spacing.xxs,
+		paddingRight: spacing.xxs,
+		fontSize: fontSize.sm,
+		fontWeight: fontWeight.semibold,
+		borderRadius: radius.xs,
 	},
 	badgePost: {
 		color: colors.accentPrimary,
@@ -85,17 +59,16 @@ const styles = stylex.create({
 	badgeMarket: {
 		color: colors.textSecondary,
 		backgroundColor: colors.bgTertiary,
-		fontWeight: fontWeight.semibold,
 	},
 	emptyState: {
+		paddingTop: spacing.lg,
+		paddingBottom: spacing.lg,
 		textAlign: "center",
-		paddingTop: "32px",
-		paddingBottom: "32px",
-		color: colors.textPlaceholder,
 	},
 	emptyText: {
-		fontSize: "14px",
 		margin: 0,
+		fontSize: fontSize.md,
+		color: colors.textMuted,
 	},
 });
 
@@ -109,13 +82,13 @@ const typeLabels: Record<ActivityType, string> = {
 	market: "마켓",
 };
 
-const typeStyles: Record<ActivityType, keyof typeof styles> = {
+const typeStyles = {
 	post: "badgePost",
 	like: "badgeLike",
 	comment: "badgeComment",
 	trade: "badgeTrade",
 	market: "badgeMarket",
-};
+} as const satisfies Record<ActivityType, keyof typeof styles>;
 
 interface Activity {
 	id: string;
@@ -130,23 +103,28 @@ interface ActivitySectionProps {
 	activities: Activity[];
 }
 
+const isActivityType = (type: string): type is ActivityType =>
+	type in typeLabels;
+
 export function ActivitySection({ activities }: ActivitySectionProps) {
 	return (
-		<div {...stylex.props(styles.container)}>
-			<div {...stylex.props(styles.header)}>
-				<h3 {...stylex.props(styles.title)}>최근 활동</h3>
-				<Link href="/mypage/activity" {...stylex.props(styles.moreLink)}>
+		<section {...stylex.props(mypageStyles.section)}>
+			<div {...stylex.props(mypageStyles.sectionHeader)}>
+				<h3 {...stylex.props(mypageStyles.sectionTitle)}>최근 활동</h3>
+				<Link href="/mypage/activity" {...stylex.props(mypageStyles.moreLink)}>
 					전체보기
 				</Link>
 			</div>
-			{activities.length === 0 ? (
-				<div {...stylex.props(styles.emptyState)}>
-					<p {...stylex.props(styles.emptyText)}>아직 활동 내역이 없습니다</p>
-				</div>
-			) : (
-				<div {...stylex.props(styles.list)}>
-					{activities.map((activity) => {
-						const activityType = (activity.type as ActivityType) ?? "post";
+			<div {...stylex.props(mypageStyles.card)}>
+				{activities.length === 0 ? (
+					<div {...stylex.props(styles.emptyState)}>
+						<p {...stylex.props(styles.emptyText)}>아직 활동 내역이 없습니다</p>
+					</div>
+				) : (
+					activities.map((activity) => {
+						const activityType = isActivityType(activity.type)
+							? activity.type
+							: "post";
 						const badgeStyle = styles[typeStyles[activityType]];
 						const content = (
 							<>
@@ -170,7 +148,7 @@ export function ActivitySection({ activities }: ActivitySectionProps) {
 								<Link
 									key={activity.id}
 									href={activity.targetHref}
-									{...stylex.props(styles.item)}
+									{...stylex.props(mypageStyles.row, mypageStyles.interactive)}
 								>
 									{content}
 								</Link>
@@ -178,13 +156,13 @@ export function ActivitySection({ activities }: ActivitySectionProps) {
 						}
 
 						return (
-							<div key={activity.id} {...stylex.props(styles.item)}>
+							<div key={activity.id} {...stylex.props(mypageStyles.row)}>
 								{content}
 							</div>
 						);
-					})}
-				</div>
-			)}
-		</div>
+					})
+				)}
+			</div>
+		</section>
 	);
 }
