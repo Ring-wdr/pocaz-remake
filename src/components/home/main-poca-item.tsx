@@ -16,7 +16,6 @@ import type { MarketItem } from "@/types/entities";
 const MOBILE = "@media (max-width: 767px)" as const;
 const TABLET = "@media (max-width: 1023px)" as const;
 
-// 한 화면에 2.4장이 보이고 카드 사이는 14px.
 // 간격은 슬라이드의 왼쪽 padding으로 주고 컨테이너를 그만큼 왼쪽으로 당겨, 마지막 카드가 오른쪽 끝에 맞춰 멈추게 한다
 const SLIDES_PER_VIEW = 2.4;
 const SLIDE_GAP = "14px";

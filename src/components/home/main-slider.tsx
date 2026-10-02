@@ -139,11 +139,9 @@ const slides = [
 	},
 ];
 export default function MainSlider() {
-	// 루프 없이 한 장씩 넘긴다. 마지막 슬라이드에서는 처음으로 돌아가고, 사용자가 넘긴 뒤에도 자동 재생을 이어 간다
 	const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false }, [
 		Autoplay({ delay: 6000, stopOnInteraction: false }),
 	]);
-	// 현재 슬라이드는 Embla에서 읽고, 넘어갈 때마다(select) 다시 렌더한다. 초기화 전과 SSR에서는 첫 장
 	const selectedIndex = useSyncExternalStore(
 		(onChange) => {
 			emblaApi?.on("select", onChange).on("reInit", onChange);
@@ -154,7 +152,7 @@ export default function MainSlider() {
 		() => emblaApi?.selectedScrollSnap() ?? 0,
 		() => 0,
 	);
-	// 루프가 없고 슬라이드가 화면 폭 전체라 스냅 = 슬라이드이므로, 버튼 상태는 현재 위치에서 계산한다
+	// 루프를 켜거나 한 화면에 여러 장을 보여 주면 이 계산이 맞지 않는다
 	const canScrollPrev = selectedIndex > 0;
 	const canScrollNext = selectedIndex < slides.length - 1;
 
@@ -162,7 +160,6 @@ export default function MainSlider() {
 		if (!emblaApi) return;
 		if (direction === "prev") emblaApi.scrollPrev();
 		else emblaApi.scrollNext();
-		// 버튼으로 넘긴 직후 바로 다음 슬라이드로 넘어가지 않도록 타이머를 다시 잰다
 		emblaApi.plugins().autoplay?.reset();
 	};
 
