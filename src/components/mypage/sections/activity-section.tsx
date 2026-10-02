@@ -106,6 +106,16 @@ interface ActivitySectionProps {
 const isActivityType = (type: string): type is ActivityType =>
 	type in typeLabels;
 
+// 타입별 뱃지. StyleX 컴파일러(@stylexswc 0.18)는 map 콜백 안에서 만든 키로 styles를 조회하면
+// 정적으로 풀려다 실패하므로, 키를 prop으로 받는 컴포넌트로 분리한다
+function ActivityBadge({ type }: { type: ActivityType }) {
+	return (
+		<span {...stylex.props(styles.badge, styles[typeStyles[type]])}>
+			{typeLabels[type]}
+		</span>
+	);
+}
+
 export function ActivitySection({ activities }: ActivitySectionProps) {
 	return (
 		<section {...stylex.props(mypageStyles.section)}>
@@ -125,7 +135,6 @@ export function ActivitySection({ activities }: ActivitySectionProps) {
 						const activityType = isActivityType(activity.type)
 							? activity.type
 							: "post";
-						const badgeStyle = styles[typeStyles[activityType]];
 						const content = (
 							<>
 								<div {...stylex.props(styles.content)}>
@@ -137,9 +146,7 @@ export function ActivitySection({ activities }: ActivitySectionProps) {
 										{formatDateTime(activity.time)}
 									</p>
 								</div>
-								<span {...stylex.props(styles.badge, badgeStyle)}>
-									{typeLabels[activityType]}
-								</span>
+								<ActivityBadge type={activityType} />
 							</>
 						);
 
