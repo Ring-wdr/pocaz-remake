@@ -87,7 +87,7 @@ export const chatRoomService = {
 	},
 
 	/**
-	 * ChatRoom 조회
+	 * ChatRoom 조회. 연결된 상품에는 완료된 거래(있으면)를 함께 담는다.
 	 */
 	async findById(id: string) {
 		return prisma.chatRoom.findUnique({
@@ -114,6 +114,18 @@ export const chatRoomService = {
 						images: {
 							take: 1,
 							select: { imageUrl: true },
+						},
+						transactions: {
+							where: { status: "completed" },
+							orderBy: { completedAt: "desc" },
+							take: 1,
+							select: {
+								id: true,
+								buyerId: true,
+								sellerId: true,
+								price: true,
+								completedAt: true,
+							},
 						},
 					},
 				},

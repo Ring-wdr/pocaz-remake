@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { activityService } from "@/lib/services/activity";
 
 /**
  * Transaction 상태
@@ -18,6 +19,37 @@ export interface CreateTransactionDto {
 	sellerId: string;
 	marketId: string;
 	price: number;
+}
+
+/**
+ * 거래 완료 DTO
+ */
+export interface CompleteTradeDto {
+	marketId: string;
+	/** 완료를 요청한 사용자. 상품 주인이어야 한다 */
+	sellerId: string;
+	buyerId: string;
+	/** 생략하면 상품 가격(가격이 없으면 0) */
+	price?: number;
+}
+
+/**
+ * 요청 내용 때문에 거래를 완료할 수 없을 때. 라우트가 status와 메시지만 응답에 그대로 내보낸다.
+ */
+export class TradeError extends Error {
+	status: 400 | 403 | 404 | 409;
+	/** 409일 때 이미 완료된 거래의 id */
+	transactionId?: string;
+
+	constructor(
+		status: 400 | 403 | 404 | 409,
+		message: string,
+		transactionId?: string,
+	) {
+		super(message);
+		this.status = status;
+		this.transactionId = transactionId;
+	}
 }
 
 /**
@@ -106,6 +138,101 @@ export const transactionService = {
 					},
 				},
 			},
+		});
+	},
+
+	/**
+	 * 거래 완료. 구매자를 정해 거래를 남기고 상품을 판매완료로 바꾸며, 양쪽에 활동 기록을 남긴다.
+	 * 검사 순서: 상품 없음 404, 판매자 아님 403, 본인 400, 구매자 없음·탈퇴 400,
+	 * 이 상품의 채팅방 멤버 아님 400, 이미 완료된 거래 409(기존 거래 id 포함).
+	 */
+	async completeTrade(dto: CompleteTradeDto) {
+		const { marketId, sellerId, buyerId } = dto;
+
+		return prisma.$transaction(async (tx) => {
+			// DB에 상품당 완료 거래 하나라는 제약이 없어서, 같은 상품의 완료 요청끼리는 advisory lock으로 차례를 정한다.
+			// 잠금은 트랜잭션이 끝날 때 풀리므로, 아래 확인과 기록을 같은 트랜잭션에서 한다.
+			const lockKey = `complete-trade:${marketId}`;
+			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+
+			const market = await tx.market.findUnique({
+				where: { id: marketId },
+				select: { userId: true, title: true, price: true },
+			});
+			if (!market) {
+				throw new TradeError(404, "Market not found");
+			}
+			if (market.userId !== sellerId) {
+				throw new TradeError(403, "Forbidden");
+			}
+			if (buyerId === sellerId) {
+				throw new TradeError(400, "Cannot complete a trade with yourself");
+			}
+
+			const buyer = await tx.user.findUnique({
+				where: { id: buyerId, deletedAt: null },
+				select: { id: true },
+			});
+			if (!buyer) {
+				throw new TradeError(400, "Buyer not found");
+			}
+
+			// 엉뚱한 사용자에게 구매 내역이 생기지 않도록, 이 상품으로 대화한 사람만 구매자가 될 수 있다
+			const room = await tx.chatRoom.findFirst({
+				where: { marketId, members: { some: { userId: buyerId } } },
+				select: { id: true },
+			});
+			if (!room) {
+				throw new TradeError(
+					400,
+					"Buyer is not a member of a chat room for this market",
+				);
+			}
+
+			const completed = await tx.transaction.findFirst({
+				where: { marketId, status: "completed" },
+				select: { id: true },
+			});
+			if (completed) {
+				throw new TradeError(409, "Trade already completed", completed.id);
+			}
+
+			const transaction = await tx.transaction.create({
+				data: {
+					type: "purchase",
+					status: "completed",
+					price: dto.price ?? market.price ?? 0,
+					buyerId,
+					sellerId,
+					marketId,
+				},
+			});
+			await tx.market.update({
+				where: { id: marketId },
+				data: { status: "sold" },
+			});
+			await activityService.create(
+				{
+					userId: sellerId,
+					type: "trade",
+					description: `"${market.title}" 판매 완료`,
+					targetId: transaction.id,
+					targetType: "transaction",
+				},
+				tx,
+			);
+			await activityService.create(
+				{
+					userId: buyerId,
+					type: "trade",
+					description: `"${market.title}" 구매 완료`,
+					targetId: transaction.id,
+					targetType: "transaction",
+				},
+				tx,
+			);
+
+			return transaction;
 		});
 	},
 

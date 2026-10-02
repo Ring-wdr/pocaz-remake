@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
 import { LimitQuery } from "@/lib/elysia/schemas";
 import { marketImageService, marketService } from "@/lib/services/market";
+import { TradeError, transactionService } from "@/lib/services/transaction";
 import { userService } from "@/lib/services/user";
 
 // 공통 스키마
@@ -51,6 +52,21 @@ const ErrorSchema = t.Object({
 
 const MessageSchema = t.Object({
 	message: t.String(),
+});
+
+const TradeSchema = t.Object({
+	id: t.String(),
+	marketId: t.String(),
+	buyerId: t.String(),
+	sellerId: t.String(),
+	price: t.Number(),
+	completedAt: t.String(),
+});
+
+// 이미 완료된 거래가 있을 때 그 거래의 id를 함께 돌려준다
+const TradeConflictSchema = t.Object({
+	error: t.String(),
+	transactionId: t.String(),
 });
 
 /**
@@ -443,6 +459,67 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				tags: ["Markets"],
 				summary: "장터 글 삭제",
 				description: "장터 글을 삭제합니다.",
+			},
+		},
+	)
+	// POST /api/markets/:id/complete - 거래 완료 (구매자 지정)
+	.post(
+		"/:id/complete",
+		async ({ auth, params, body, status }) => {
+			const user = await userService.findBySupabaseId(auth.user.id);
+			if (!user) {
+				return status(401, { error: "User not found" });
+			}
+
+			try {
+				const trade = await transactionService.completeTrade({
+					marketId: params.id,
+					sellerId: user.id,
+					buyerId: body.buyerId,
+					price: body.price,
+				});
+
+				return status(201, {
+					id: trade.id,
+					marketId: trade.marketId,
+					buyerId: trade.buyerId,
+					sellerId: trade.sellerId,
+					price: trade.price,
+					completedAt: trade.completedAt.toISOString(),
+				});
+			} catch (error) {
+				if (!(error instanceof TradeError)) throw error;
+				if (error.status === 409 && error.transactionId) {
+					return status(409, {
+						error: error.message,
+						transactionId: error.transactionId,
+					});
+				}
+				return status(error.status, { error: error.message });
+			}
+		},
+		{
+			params: t.Object({
+				id: t.String(),
+			}),
+			body: t.Object({
+				buyerId: t.String({ minLength: 1 }),
+				// 생략하면 상품 가격. Transaction.price가 Int 컬럼이라 정수만 받는다
+				price: t.Optional(t.Integer({ minimum: 0, maximum: 2_147_483_647 })),
+			}),
+			response: {
+				201: TradeSchema,
+				400: ErrorSchema,
+				401: ErrorSchema,
+				403: ErrorSchema,
+				404: ErrorSchema,
+				409: TradeConflictSchema,
+			},
+			detail: {
+				tags: ["Markets"],
+				summary: "거래 완료",
+				description:
+					"구매자를 지정해 거래를 완료합니다. 상품이 판매완료로 바뀌고 양쪽 거래 내역에 남습니다. 구매자는 이 상품의 채팅방 멤버여야 합니다.",
 			},
 		},
 	)

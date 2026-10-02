@@ -50,6 +50,20 @@ const MarketInfoSchema = t.Object({
 	thumbnail: t.Nullable(t.String()),
 });
 
+// 채팅방 상세에서만 내려가는, 이 상품의 완료된 거래
+const MarketTransactionSchema = t.Object({
+	id: t.String(),
+	buyerId: t.String(),
+	sellerId: t.String(),
+	price: t.Number(),
+	completedAt: t.String(),
+});
+
+const RoomDetailMarketSchema = t.Composite([
+	MarketInfoSchema,
+	t.Object({ transaction: t.Nullable(MarketTransactionSchema) }),
+]);
+
 const RoomItemSchema = t.Object({
 	id: t.String(),
 	name: t.Nullable(t.String()),
@@ -66,7 +80,7 @@ const RoomDetailSchema = t.Object({
 	createdAt: t.String(),
 	members: t.Array(MemberSchema),
 	messageCount: t.Number(),
-	market: t.Nullable(MarketInfoSchema),
+	market: t.Nullable(RoomDetailMarketSchema),
 });
 
 const PaginatedMessagesSchema = t.Object({
@@ -300,6 +314,9 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				return { error: "Not a member of this chat room" };
 			}
 
+			// 이 상품의 완료된 거래(없으면 undefined)
+			const trade = room.market?.transactions[0];
+
 			return {
 				id: room.id,
 				name: room.name,
@@ -317,6 +334,15 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 							status: room.market.status,
 							userId: room.market.userId,
 							thumbnail: room.market.images[0]?.imageUrl ?? null,
+							transaction: trade
+								? {
+										id: trade.id,
+										buyerId: trade.buyerId,
+										sellerId: trade.sellerId,
+										price: trade.price,
+										completedAt: trade.completedAt.toISOString(),
+									}
+								: null,
 						}
 					: null,
 			};

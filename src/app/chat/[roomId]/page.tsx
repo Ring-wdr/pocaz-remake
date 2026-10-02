@@ -43,6 +43,7 @@ async function getChatRoomData(roomId: string, currentUserId: string) {
 				status: roomData.market.status,
 				userId: roomData.market.userId,
 				thumbnail: roomData.market.thumbnail,
+				transaction: roomData.market.transaction,
 			}
 		: null;
 

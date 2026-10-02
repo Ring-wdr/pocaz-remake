@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -44,10 +45,10 @@ export interface ActivityQueryOptions {
  */
 export const activityService = {
 	/**
-	 * 활동 기록 생성
+	 * 활동 기록 생성. 다른 쓰기와 한 트랜잭션으로 묶으려면 트랜잭션 클라이언트를 넘긴다.
 	 */
-	async create(dto: CreateActivityDto) {
-		return prisma.activity.create({
+	async create(dto: CreateActivityDto, db: Prisma.TransactionClient = prisma) {
+		return db.activity.create({
 			data: {
 				userId: dto.userId,
 				type: dto.type,
