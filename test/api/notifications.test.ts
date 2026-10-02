@@ -173,9 +173,11 @@ function listNotifications(account: TestAccount, query = "") {
 }
 
 /**
- * Notification 테이블에 쓰는 INSERT만 실패하게 만든다. Prisma 어댑터는 pg Client의 query를 거친다.
+ * Notification 테이블에 쓰는 문장 하나(기본은 INSERT)만 실패하게 만든다. Prisma 어댑터는 pg Client의 query를 거친다.
  */
-function failNotificationInserts() {
+function failNotificationWrites(
+	statement: "INSERT INTO" | "UPDATE" = "INSERT INTO",
+) {
 	const original = pg.Client.prototype.query as (...args: unknown[]) => unknown;
 	return spyOn(pg.Client.prototype, "query").mockImplementation(function (
 		this: pg.Client,
@@ -184,7 +186,7 @@ function failNotificationInserts() {
 		const first = args[0];
 		const text =
 			typeof first === "string" ? first : (first as { text?: string }).text;
-		if (!text?.includes('INSERT INTO "public"."Notification"')) {
+		if (!text?.includes(`${statement} "public"."Notification"`)) {
 			return original.apply(this, args);
 		}
 
@@ -778,6 +780,122 @@ describe.skipIf(!hasTestDb)("채팅 알림", () => {
 	});
 });
 
+describe.skipIf(!hasTestDb)("채팅방 읽음 처리와 채팅 알림", () => {
+	beforeEach(resetDb);
+	afterEach(() => mock.restore());
+
+	function readRoom(account: TestAccount, roomId: string) {
+		return callApi("POST", `/chat/rooms/${roomId}/read`, {
+			user: account.auth,
+		});
+	}
+
+	async function unreadCount(account: TestAccount) {
+		const res = await callApi("GET", "/notifications/unread-count", {
+			user: account.auth,
+		});
+		return res.body.count;
+	}
+
+	test("방을 읽음 처리하면 그 방의 안 읽은 채팅 알림도 읽음이 되고, 다른 방과 다른 사람의 알림은 그대로다", async () => {
+		const me = await createUser("나");
+		const partner = await createUser("상대");
+		const first = await createRoom([me, partner]);
+		const second = await createRoom([me, partner]);
+		await say(first.id, partner, "첫째 방");
+		await say(second.id, partner, "둘째 방");
+		// 내가 보낸 메시지로 상대도 안 읽은 알림을 하나 받는다
+		await say(first.id, me, "내가 보낸 답");
+		expect(await unreadCount(me)).toBe(2);
+
+		const res = await readRoom(me, first.id);
+
+		expect(res.status).toBe(200);
+		const readAtByHref = new Map(
+			(await notificationsOf(me)).map((row) => [row.href, row.readAt]),
+		);
+		expect(readAtByHref.get(`/chat/${first.id}`)).toBeInstanceOf(Date);
+		expect(readAtByHref.get(`/chat/${second.id}`)).toBeNull();
+		expect(
+			(await notificationsOf(partner)).map((row) => [row.href, row.readAt]),
+		).toEqual([[`/chat/${first.id}`, null]]);
+		expect(await unreadCount(me)).toBe(1);
+		expect(await unreadCount(partner)).toBe(1);
+	});
+
+	test("읽음 처리한 뒤에 온 메시지는 새 안 읽은 알림이 되고, 이미 읽은 알림의 읽은 시각은 그대로다", async () => {
+		const me = await createUser("나");
+		const partner = await createUser("상대");
+		const room = await createRoom([me, partner]);
+		await say(room.id, partner, "첫 메시지");
+		await readRoom(me, room.id);
+		const [read] = await notificationsOf(me);
+		expect(read.readAt).not.toBeNull();
+
+		await say(room.id, partner, "읽은 뒤의 메시지");
+		expect(await unreadCount(me)).toBe(1);
+		await readRoom(me, room.id);
+
+		const rows = await notificationsOf(me);
+		expect(rows).toHaveLength(2);
+		expect(rows[0].id).toBe(read.id);
+		expect(rows[0].readAt).toEqual(read.readAt);
+		expect(rows[1].readAt).not.toBeNull();
+		expect(await unreadCount(me)).toBe(0);
+	});
+
+	test("멤버가 아니면 403이고 알림은 그대로다", async () => {
+		const sender = await createUser("보낸이");
+		const receiver = await createUser("받는이");
+		const stranger = await createUser("낯선 사람");
+		const room = await createRoom([sender, receiver]);
+		await say(room.id, sender, "안녕");
+		// 방을 나간 옛 멤버처럼 이 방 경로의 안 읽은 알림이 남아 있어도, 멤버가 아니면 건드리지 않는다
+		await prisma.notification.create({
+			data: {
+				userId: stranger.user.id,
+				type: "chat",
+				title: "옛 알림",
+				href: `/chat/${room.id}`,
+			},
+		});
+
+		const res = await readRoom(stranger, room.id);
+
+		expect(res.status).toBe(403);
+		expect((await notificationsOf(stranger)).map((row) => row.readAt)).toEqual([
+			null,
+		]);
+		expect((await notificationsOf(receiver)).map((row) => row.readAt)).toEqual([
+			null,
+		]);
+	});
+
+	test("알림을 읽음 처리하지 못해도 방 읽음 처리는 성공하고 오류는 로그에만 남긴다", async () => {
+		const logged = spyOn(console, "error").mockImplementation(() => {});
+		const me = await createUser("나");
+		const partner = await createUser("상대");
+		const room = await createRoom([me, partner]);
+		await say(room.id, partner, "안녕");
+		failNotificationWrites("UPDATE");
+
+		const res = await readRoom(me, room.id);
+
+		expect(res.status).toBe(200);
+		expect(res.body.lastReadAt).toEqual(expect.any(String));
+		const member = await prisma.chatRoomMember.findUniqueOrThrow({
+			where: { roomId_userId: { roomId: room.id, userId: me.user.id } },
+		});
+		expect(member.lastReadAt).not.toBeNull();
+		expect((await notificationsOf(me)).map((row) => row.readAt)).toEqual([
+			null,
+		]);
+		expect(logged.mock.calls.map(([message]) => String(message))).toContain(
+			"[notification] markReadByHref failed",
+		);
+	});
+});
+
 // ==============================================
 // 설정, 본인 행동, 실패
 // ==============================================
@@ -912,7 +1030,7 @@ describe.skipIf(!hasTestDb)("알림을 만들지 않는 경우", () => {
 		const room = await createRoom([author, commenter]);
 		const market = await createTradeRoom(author, commenter);
 		await wish(commenter, market.id);
-		failNotificationInserts();
+		failNotificationWrites();
 
 		const commented = await comment(post.id, commenter, "댓글");
 		const liked = await like(post.id, commenter);

@@ -7,7 +7,11 @@ import {
 	chatRoomService,
 } from "@/lib/services/chat";
 import { marketService } from "@/lib/services/market";
-import { chatPreview, notificationService } from "@/lib/services/notification";
+import {
+	chatHref,
+	chatPreview,
+	notificationService,
+} from "@/lib/services/notification";
 import { userService } from "@/lib/services/user";
 
 // 공통 스키마
@@ -504,6 +508,9 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				return status(403, { error: "Not a member of this chat room" });
 			}
 
+			// 이 방의 안 읽은 채팅 알림도 읽은 것으로 처리해, 알림함과 종 아이콘에 남지 않게 한다
+			await notificationService.markReadByHref(user.id, chatHref(params.id));
+
 			return { lastReadAt: lastReadAt.toISOString() };
 		},
 		{
@@ -519,7 +526,7 @@ export const chatRoutes = new Elysia({ prefix: "/chat" })
 				tags: ["Chat"],
 				summary: "채팅방 읽음 처리",
 				description:
-					"채팅방을 지금 시각까지 읽은 것으로 기록합니다. 참여 중인 멤버만 할 수 있습니다.",
+					"채팅방을 지금 시각까지 읽은 것으로 기록하고, 그 방의 안 읽은 채팅 알림도 함께 읽음 처리합니다. 참여 중인 멤버만 할 수 있습니다.",
 			},
 		},
 	)

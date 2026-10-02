@@ -42,6 +42,7 @@ const menuItems: MenuSection[] = [
 		id: "account",
 		title: "계정 관리",
 		items: [
+			{ id: 10, icon: Bell, label: "알림", href: "/notifications" },
 			{ id: 1, icon: Settings, label: "설정", href: "/mypage/settings" },
 			{
 				id: 2,

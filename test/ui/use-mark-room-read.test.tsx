@@ -115,7 +115,7 @@ describe("채팅방 읽음 처리 훅", () => {
 		Reflect.deleteProperty(document, "visibilityState");
 	});
 
-	test("방에 들어오면 한 번 요청하고, 끝나면 목록과 안 읽음 수 쿼리를 무효화한다", async () => {
+	test("방에 들어오면 한 번 요청하고, 끝나면 목록·안 읽음 수·알림 쿼리를 무효화한다", async () => {
 		const invalidate = spyOn(queryClient, "invalidateQueries");
 
 		renderMarkRead();
@@ -123,11 +123,13 @@ describe("채팅방 읽음 처리 훅", () => {
 
 		expect(rooms).toHaveBeenCalledWith({ id: "room-1" });
 		expect(readPost).toHaveBeenCalledTimes(1);
-		expect(invalidate).toHaveBeenCalledTimes(2);
+		expect(invalidate).toHaveBeenCalledTimes(3);
 		expect(invalidate).toHaveBeenCalledWith({ queryKey: ["chat", "rooms"] });
 		expect(invalidate).toHaveBeenCalledWith({
 			queryKey: ["chat", "unread-count"],
 		});
+		// 서버가 이 방의 채팅 알림도 읽음 처리하므로 알림함과 종 아이콘도 새로 받는다
+		expect(invalidate).toHaveBeenCalledWith({ queryKey: ["notifications"] });
 	});
 
 	test("맨 아래가 아니면 요청하지 않고, 맨 아래로 돌아오면 요청한다", async () => {
@@ -293,7 +295,7 @@ describe("채팅방 읽음 처리 훅", () => {
 		await flush();
 
 		expect(readPost).toHaveBeenCalledTimes(2);
-		expect(invalidate).toHaveBeenCalledTimes(2);
+		expect(invalidate).toHaveBeenCalledTimes(3);
 	});
 
 	test("네트워크 오류로 요청이 던져져도 예외를 밖으로 내지 않는다", async () => {

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useEventListener } from "@/hooks/use-event-listener";
 import { chatUnreadCountQueryKey } from "@/lib/queries/chat";
 import { chatRoomsQueryKey } from "@/lib/queries/markets";
+import { notificationsQueryKey } from "@/lib/queries/notifications";
 import { api } from "@/utils/eden";
 
 /** 읽음 처리 요청 사이의 최소 간격(ms). 간격 안에 또 필요해지면 끝에 한 번만 보낸다 */
@@ -24,7 +25,8 @@ interface UseMarkRoomReadOptions {
  * - 맨 아래를 보는 중에 상대의 새 메시지가 올 때(위로 스크롤해 둔 사람이 맨 아래로 돌아왔을 때도)
  * - 다른 탭에 갔다가 돌아왔을 때(맨 아래를 보고 있을 때만)
  * 보이지 않는 탭에서는 읽은 것으로 치지 않는다. 요청은 1초에 한 번을 넘지 않고, 처리가 끝나면
- * 채팅방 목록과 안 읽음 수 쿼리를 무효화해 목록·하단 탭 뱃지가 바로 바뀌게 한다.
+ * 채팅방 목록·안 읽음 수·알림 쿼리를 무효화해 목록·하단 탭 뱃지·알림함·종 아이콘이 바로 바뀌게 한다
+ * (서버가 그 방의 안 읽은 채팅 알림도 함께 읽음 처리한다).
  * isAtBottom은 처음에 true여야 방에 들어올 때 요청이 나간다.
  */
 export function useMarkRoomRead({
@@ -55,6 +57,7 @@ export function useMarkRoomRead({
 			}
 			void queryClient.invalidateQueries({ queryKey: chatRoomsQueryKey });
 			void queryClient.invalidateQueries({ queryKey: chatUnreadCountQueryKey });
+			void queryClient.invalidateQueries({ queryKey: notificationsQueryKey });
 		} catch (err) {
 			console.error("Mark room read error:", err);
 			markedRef.current = null;

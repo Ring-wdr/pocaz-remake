@@ -96,7 +96,8 @@ const MARKET_STATUS_TITLE: Record<MarketStatus, string> = {
 
 const postHref = (postId: string) => `/community/posts/${postId}`;
 const marketHref = (marketId: string) => `/market/${marketId}`;
-const chatHref = (roomId: string) => `/chat/${roomId}`;
+/** 채팅방 알림의 이동 경로. 방을 읽음 처리할 때 이 경로로 그 방의 알림을 찾는다 */
+export const chatHref = (roomId: string) => `/chat/${roomId}`;
 
 // ==============================================
 // DTOs
@@ -264,8 +265,8 @@ async function createMany(dto: CreateManyNotificationsDto) {
 // ==============================================
 
 /**
- * Notification Service. 알림을 만드는 함수(create, createMany, createFor...)는 모두 실패해도 던지지 않는다.
- * 오류는 서버 로그에만 남기므로, 알림을 만드는 쪽의 요청은 알림 때문에 실패하지 않는다.
+ * Notification Service. 알림을 만드는 함수(create, createMany, createFor...)와 markReadByHref는 모두 실패해도 던지지 않는다.
+ * 오류는 서버 로그에만 남기므로, 이 함수들을 부르는 쪽의 요청은 알림 때문에 실패하지 않는다.
  */
 export const notificationService = {
 	/**
@@ -563,6 +564,25 @@ export const notificationService = {
 			data: { readAt: new Date() },
 		});
 		return count;
+	},
+
+	/**
+	 * 이동 경로가 href인 안 읽은 알림을 모두 읽음 처리하고, 바뀐 알림 수를 돌려준다.
+	 * 채팅방을 읽음 처리할 때 그 방의 채팅 알림(`/chat/<방 id>`)도 함께 읽음으로 만드는 데 쓴다.
+	 * 부가 처리라 실패해도 던지지 않고 0을 돌려주며, 오류는 서버 로그에만 남긴다.
+	 */
+	async markReadByHref(userId: string, href: string) {
+		return bestEffort(
+			"markReadByHref",
+			async () => {
+				const { count } = await prisma.notification.updateMany({
+					where: { userId, href, readAt: null },
+					data: { readAt: new Date() },
+				});
+				return count;
+			},
+			0,
+		);
 	},
 
 	/**

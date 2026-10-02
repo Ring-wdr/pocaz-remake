@@ -8,5 +8,6 @@
 export * from "./artist";
 export * from "./chat";
 export * from "./market";
+export * from "./notification";
 export * from "./post";
 export * from "./user";

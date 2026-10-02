@@ -3,7 +3,7 @@ import NotificationsPageClient from "./page.client";
 
 export const metadata = createMetadata({
 	title: "알림 설정 | POCAZ",
-	description: "푸시 알림과 마케팅 수신 여부를 관리하세요.",
+	description: "채팅, 좋아요, 댓글, 관심 상품, 거래 알림을 받을지 정하세요.",
 	path: "/mypage/notifications",
 	ogTitle: "Notifications",
 });
