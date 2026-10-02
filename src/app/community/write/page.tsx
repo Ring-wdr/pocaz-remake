@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
+import { loginHref } from "@/utils/url";
 
 import CommunityWritePageClient from "./page.client";
 
@@ -16,7 +17,7 @@ export default async function CommunityWritePage() {
 	const currentUser = await getCurrentUser();
 
 	if (!currentUser) {
-		redirect("/login?redirect=/community/write");
+		redirect(loginHref("/community/write"));
 	}
 
 	return <CommunityWritePageClient />;

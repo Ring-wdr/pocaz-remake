@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { Heart, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
 	Button,
@@ -22,6 +22,7 @@ import {
 } from "@/app/global-tokens.stylex";
 import { confirmAction } from "@/components/ui";
 import { api } from "@/utils/eden";
+import { loginHref } from "@/utils/url";
 
 const styles = stylex.create({
 	statItem: {
@@ -142,6 +143,7 @@ export function LikeButton({
 	isLoggedIn,
 }: LikeButtonProps) {
 	const router = useRouter();
+	const pathname = usePathname();
 	const [isLiked, setIsLiked] = useState(initialLiked);
 	const [likeCount, setLikeCount] = useState(initialCount);
 	const [isPending, startTransition] = useTransition();
@@ -151,7 +153,7 @@ export function LikeButton({
 			toast.error("로그인이 필요합니다", {
 				action: {
 					label: "로그인",
-					onClick: () => router.push("/login"),
+					onClick: () => router.push(loginHref(pathname)),
 				},
 			});
 			return;

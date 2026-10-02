@@ -2,7 +2,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
 	useActionState,
 	useEffect,
@@ -20,6 +20,7 @@ import {
 	spacing,
 } from "@/app/global-tokens.stylex";
 import { api } from "@/utils/eden";
+import { loginHref } from "@/utils/url";
 import type { MarketLikeState } from "./toggle-market-like";
 import { toggleMarketLike } from "./toggle-market-like";
 
@@ -103,6 +104,7 @@ export function ActionBar({
 	initialLikeState,
 }: ActionBarProps) {
 	const router = useRouter();
+	const pathname = usePathname();
 	const [isLoading, setIsLoading] = useState(false);
 	const [, startTransition] = useTransition();
 	const lastLikeAtRef = useRef(0);
@@ -131,7 +133,7 @@ export function ActionBar({
 	const handleLikeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
 		if (!currentUserId) {
 			event.preventDefault();
-			router.push("/login");
+			router.push(loginHref(pathname));
 			return;
 		}
 
@@ -193,7 +195,7 @@ export function ActionBar({
 
 	const handleChatClick = async () => {
 		if (!currentUserId) {
-			router.push("/login");
+			router.push(loginHref(pathname));
 			return;
 		}
 

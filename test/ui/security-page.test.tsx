@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { registerDom } from "../helpers/dom";
 
 const signOut = mock(async () => {});
@@ -17,7 +17,9 @@ function edenResult(status: number, value?: unknown) {
 }
 const toast = { loading: mock(), success: mock(), error: mock() };
 
-mock.module("@/lib/auth/actions", () => ({ signOut }));
+// mock.module은 같은 실행 안의 다른 테스트 파일에도 남으므로, signOut만 바꾸고 나머지 내보내기(signInWithGoogle 등)는 그대로 둔다
+const actualAuthActions = await import("@/lib/auth/actions");
+mock.module("@/lib/auth/actions", () => ({ ...actualAuthActions, signOut }));
 mock.module("@/utils/eden", () => ({
 	api: { users: { me: { delete: deleteMe } } },
 }));
@@ -47,8 +49,10 @@ async function deleteAccount() {
 }
 
 describe("회원 탈퇴", () => {
+	// 마지막 테스트의 화면이 남으면 다음 테스트 파일의 cleanup이 닫힌 DOM의 화면까지 지우려다 실패하므로 매번 끝에서 지운다
+	afterEach(cleanup);
+
 	beforeEach(() => {
-		cleanup();
 		queryClient = new QueryClient();
 		for (const fn of [signOut, deleteMe, toast.success, toast.error]) {
 			fn.mockClear();

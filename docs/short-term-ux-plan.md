@@ -23,7 +23,7 @@
 | 3b | 알림 백엔드 | 완료 |
 | 3c | 알림 UI와 알림 설정 | 완료 |
 | 4a | 판매자 공개 프로필 | 완료 |
-| 4b | 로그인 후 원래 화면 복귀 | 대기 |
+| 4b | 로그인 후 원래 화면 복귀 | 완료 |
 | 4c | 작은 수정 묶음 | 대기 |
 
 ## 공통 규칙 (서브 에이전트용)
@@ -185,6 +185,7 @@
 - `src/utils/url.ts`에 `sanitizeReturnPath(value)`: `/`로 시작하고 `//`·`://`·`\`가 없으면 그대로, 아니면 `/`. 단위 테스트 `test/utils`.
 - 로그인 페이지가 `searchParams.redirect`를 읽어 `LoginForm`에 넘기고, 폼은 hidden `next`로 보낸다. `signInWithGoogle`이 `formData.get("next")`를 정리해 `redirectTo = <base>/auth/callback?next=<encoded>`를 만든다. 콜백(`src/app/auth/callback/route.ts`)도 `next`를 정리한다.
 - 호출처 정리: 상품 상세 액션바(찜·채팅), 게시글 상세 좋아요·댓글 로그인 안내, 게시글 수정 페이지, `src/lib/supabase/middleware.ts`의 `/mypage`·`/chat` 보호 리다이렉트가 모두 `?redirect=<현재 경로>`를 붙인다.
+- 미들웨어 대신 unauthorized 화면 링크로 처리: 미들웨어는 세션만 갱신하고 리다이렉트하지 않는다. `/mypage`·`/chat`·`/notifications`는 레이아웃이 `unauthorized()`를 부르므로, `unauthorized.tsx`의 로그인 링크(`src/components/auth/login-link.tsx`의 `LoginLink`)가 현재 경로를 `?redirect=`로 붙인다. 로그인 화면으로 보내는 곳은 모두 `src/utils/url.ts`의 `loginHref`를 쓴다. 운영 반영 때 Supabase Auth의 Redirect URLs가 쿼리스트링이 붙은 `/auth/callback?next=…` 주소를 허용하는지 확인한다(프리뷰·로컬 도메인은 `/**` 패턴).
 
 ### 4c 작은 수정 묶음
 

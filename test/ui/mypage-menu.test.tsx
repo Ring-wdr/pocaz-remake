@@ -3,8 +3,10 @@ import { registerDom } from "../helpers/dom";
 
 const signOut = mock(async () => {});
 
-// 로그아웃 버튼이 쓰는 서버 액션은 Supabase 서버 클라이언트를 불러오므로 대체한다
-mock.module("@/lib/auth/actions", () => ({ signOut }));
+// 로그아웃 버튼이 쓰는 서버 액션은 Supabase 서버 클라이언트를 불러오므로 대체한다.
+// mock.module은 같은 실행 안의 다른 테스트 파일에도 남으므로, signOut만 바꾸고 나머지 내보내기는 그대로 둔다
+const actualAuthActions = await import("@/lib/auth/actions");
+mock.module("@/lib/auth/actions", () => ({ ...actualAuthActions, signOut }));
 
 registerDom();
 

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { sanitizeReturnPath } from "@/utils/url";
 
 export async function GET(request: Request) {
 	const { searchParams, origin } = new URL(request.url);
 	const code = searchParams.get("code");
-	const next = searchParams.get("next") ?? "/";
+	// 쿼리는 누구나 바꿀 수 있으므로 같은 사이트의 경로만 허용한다 (다른 사이트로 보내는 리다이렉트 방지)
+	const next = sanitizeReturnPath(searchParams.get("next"));
 
 	if (code) {
 		const supabase = await createSupabaseServerClient();

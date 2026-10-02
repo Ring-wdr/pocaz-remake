@@ -114,7 +114,12 @@ const styles = stylex.create({
 
 const initialState: SignInState = { error: undefined };
 
-export default function LoginForm() {
+interface LoginFormProps {
+	/** 로그인한 뒤 돌아갈 경로 (`sanitizeReturnPath`로 정리한 값) */
+	next: string;
+}
+
+export default function LoginForm({ next }: LoginFormProps) {
 	const [state, formAction, pending] = useActionState(
 		signInWithGoogle,
 		initialState,
@@ -123,6 +128,7 @@ export default function LoginForm() {
 	return (
 		<div {...stylex.props(styles.form)}>
 			<form action={formAction}>
+				<input type="hidden" name="next" value={next} />
 				<Button
 					type="submit"
 					variant="secondary"

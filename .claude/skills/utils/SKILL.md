@@ -55,6 +55,8 @@ const formattedDate = formatKoreanDate(date);
 |------|------|
 | `getBaseUrl` | 앱 기본 URL |
 | `getApiBaseUrl` | API 기본 URL |
+| `sanitizeReturnPath` | 로그인 뒤 돌아갈 경로를 같은 사이트의 경로로 정리한다(`//host`, `https://…`, `\`, 개행, `/login…`은 `/`). 쿼리나 폼으로 받은 `redirect`·`next`는 항상 이걸 거친다 |
+| `loginHref` | `/login?redirect=<경로>` 주소 만들기. 로그인 화면으로 보내는 곳은 `"/login"`을 직접 쓰지 말고 이걸 쓴다. 클라이언트 링크는 현재 경로를 자동으로 붙이는 `LoginLink`(`@/components/auth/login-link`) |
 
 ### Keyboard (`@/utils/keyboard`)
 

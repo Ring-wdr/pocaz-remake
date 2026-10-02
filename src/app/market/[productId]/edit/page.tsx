@@ -4,6 +4,7 @@ import { getArtistCatalog } from "@/components/market/get-artist-catalog";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
 import { api } from "@/utils/eden";
+import { loginHref } from "@/utils/url";
 import MarketEditPageClient from "./page.client";
 
 export async function generateMetadata({
@@ -31,8 +32,7 @@ export default async function MarketEditPage({
 
 	// 로그인 체크
 	if (!currentUser) {
-		const redirectUrl = encodeURIComponent(`/market/${productId}/edit`);
-		redirect(`/login?redirect=${redirectUrl}`);
+		redirect(loginHref(`/market/${productId}/edit`));
 	}
 
 	// 상품 존재 확인

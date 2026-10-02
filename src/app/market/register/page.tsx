@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getArtistCatalog } from "@/components/market/get-artist-catalog";
 import { createMetadata } from "@/lib/metadata";
 import { api } from "@/utils/eden";
+import { loginHref } from "@/utils/url";
 import MarketRegisterPageClient from "./page.client";
 
 export const metadata = createMetadata({
@@ -17,8 +18,7 @@ export default async function MarketRegisterPage() {
 		getArtistCatalog(),
 	]);
 	if (!data?.authenticated) {
-		const redirectUrl = encodeURIComponent("/market/register");
-		redirect(`/login?redirect=${redirectUrl}`);
+		redirect(loginHref("/market/register"));
 	}
 
 	return <MarketRegisterPageClient groups={groups} />;

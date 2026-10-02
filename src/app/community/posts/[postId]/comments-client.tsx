@@ -12,7 +12,6 @@ import {
 	Trash2,
 	X,
 } from "lucide-react";
-import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +24,7 @@ import {
 	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { LoginLink } from "@/components/auth/login-link";
 import { confirmAction } from "@/components/ui";
 import { formatRelativeTime } from "@/utils/date";
 import { api } from "@/utils/eden";
@@ -699,10 +699,10 @@ export function CommentsClient({
 			) : (
 				<div {...stylex.props(styles.loginPrompt)}>
 					<span>댓글을 작성하려면</span>
-					<Link href="/login" {...stylex.props(styles.loginLink)}>
+					<LoginLink {...stylex.props(styles.loginLink)}>
 						<LogIn size={14} />
 						로그인
-					</Link>
+					</LoginLink>
 					<span>해주세요</span>
 				</div>
 			)}
