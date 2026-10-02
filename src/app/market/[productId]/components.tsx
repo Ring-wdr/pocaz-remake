@@ -8,6 +8,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { MarketActions } from "./market-actions";
 
 const skeletonPulse = stylex.keyframes({
 	"0%": { opacity: 0.6 },
@@ -325,7 +326,13 @@ export const statusStyles: Record<MarketStatus, keyof typeof styles> = {
 	sold: "statusSold",
 };
 
-export function Header() {
+interface HeaderProps {
+	marketId: string;
+	/** 상품 주인이면 오른쪽에 더보기 메뉴(수정, 삭제)를 보여 준다 */
+	isOwner: boolean;
+}
+
+export function Header({ marketId, isOwner }: HeaderProps) {
 	return (
 		<header {...stylex.props(styles.header)}>
 			<Link
@@ -336,6 +343,7 @@ export function Header() {
 				<ArrowLeft size={20} />
 			</Link>
 			<h1 {...stylex.props(styles.headerTitle)}>상품 상세</h1>
+			<MarketActions marketId={marketId} isOwner={isOwner} />
 		</header>
 	);
 }

@@ -110,7 +110,7 @@ export default async function MarketDetailPage({
 
 	return (
 		<div {...stylex.props(styles.container)}>
-			<Header />
+			<Header marketId={productId} isOwner={isOwner} />
 
 			<div {...stylex.props(styles.content)}>
 				<div {...stylex.props(styles.imageSection)}>

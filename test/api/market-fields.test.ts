@@ -180,6 +180,107 @@ describe.skipIf(!hasTestDb)("PUT /markets/:id 상태·협상 가능 필드", () 
 	});
 });
 
+describe.skipIf(!hasTestDb)("PUT /markets/:id 가격", () => {
+	beforeEach(resetDb);
+
+	test("price에 null을 보내면 가격을 비운다(가격협의)", async () => {
+		const { user, auth } = await createUser("판매자");
+		const market = await prisma.market.create({
+			data: { title: "포카", price: 1000, userId: user.id },
+		});
+
+		const res = await callApi("PUT", `/markets/${market.id}`, {
+			user: auth,
+			body: { price: null, isNegotiable: true },
+		});
+
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({ price: null, isNegotiable: true });
+		const row = await prisma.market.findUniqueOrThrow({
+			where: { id: market.id },
+		});
+		expect(row).toMatchObject({ price: null, isNegotiable: true });
+		const detail = await callApi("GET", `/markets/${market.id}`);
+		expect(detail.body.price).toBeNull();
+	});
+
+	test("price를 생략하면 가격은 그대로다", async () => {
+		const { user, auth } = await createUser("판매자");
+		const market = await prisma.market.create({
+			data: { title: "포카", price: 1000, userId: user.id },
+		});
+
+		const res = await callApi("PUT", `/markets/${market.id}`, {
+			user: auth,
+			body: { title: "새 제목" },
+		});
+
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({ title: "새 제목", price: 1000 });
+		const row = await prisma.market.findUniqueOrThrow({
+			where: { id: market.id },
+		});
+		expect(row.price).toBe(1000);
+	});
+
+	test("가격이 없던 상품에 가격을 정할 수 있다", async () => {
+		const { user, auth } = await createUser("판매자");
+		const market = await prisma.market.create({
+			data: { title: "포카", isNegotiable: true, userId: user.id },
+		});
+
+		const res = await callApi("PUT", `/markets/${market.id}`, {
+			user: auth,
+			body: { price: 2500, isNegotiable: false },
+		});
+
+		expect(res.status).toBe(200);
+		expect(res.body).toMatchObject({ price: 2500, isNegotiable: false });
+	});
+
+	test("음수나 숫자가 아닌 price는 422이고 값은 바뀌지 않는다", async () => {
+		const { user, auth } = await createUser("판매자");
+		const market = await prisma.market.create({
+			data: { title: "포카", price: 1000, userId: user.id },
+		});
+
+		const negative = await callApi("PUT", `/markets/${market.id}`, {
+			user: auth,
+			body: { price: -1 },
+		});
+		const text = await callApi("PUT", `/markets/${market.id}`, {
+			user: auth,
+			body: { price: "free" },
+		});
+
+		expect(negative.status).toBe(422);
+		expect(text.status).toBe(422);
+		const row = await prisma.market.findUniqueOrThrow({
+			where: { id: market.id },
+		});
+		expect(row.price).toBe(1000);
+	});
+
+	test("주인이 아니면 price: null을 보내도 403이고 가격은 그대로다", async () => {
+		const owner = await createUser("판매자");
+		const other = await createUser("다른사람");
+		const market = await prisma.market.create({
+			data: { title: "포카", price: 1000, userId: owner.user.id },
+		});
+
+		const res = await callApi("PUT", `/markets/${market.id}`, {
+			user: other.auth,
+			body: { price: null },
+		});
+
+		expect(res.status).toBe(403);
+		const row = await prisma.market.findUniqueOrThrow({
+			where: { id: market.id },
+		});
+		expect(row.price).toBe(1000);
+	});
+});
+
 describe.skipIf(!hasTestDb)("상품 목록의 상태·협상 가능 필터", () => {
 	beforeEach(async () => {
 		await resetDb();

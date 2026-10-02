@@ -52,7 +52,8 @@ export interface CreateMarketDto {
 export interface UpdateMarketDto {
 	title?: string;
 	description?: string;
-	price?: number;
+	/** null이면 가격을 비운다(가격협의). 생략하면 그대로 둔다 */
+	price?: number | null;
 	condition?: MarketCondition;
 	isNegotiable?: boolean;
 	status?: MarketStatus;

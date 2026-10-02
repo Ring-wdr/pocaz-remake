@@ -399,7 +399,8 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 			body: t.Object({
 				title: t.Optional(t.String({ minLength: 1 })),
 				description: t.Optional(t.String()),
-				price: t.Optional(t.Number({ minimum: 0 })),
+				// null이면 가격을 비운다(가격협의). 생략하면 그대로 둔다
+				price: t.Optional(t.Nullable(t.Number({ minimum: 0 }))),
 				condition: t.Optional(ConditionEnum),
 				isNegotiable: t.Optional(t.Boolean()),
 				status: t.Optional(
@@ -427,7 +428,8 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 			detail: {
 				tags: ["Markets"],
 				summary: "장터 글 수정",
-				description: "장터 글을 수정합니다.",
+				description:
+					"장터 글을 수정합니다. 보내지 않은 필드는 그대로 두고, price에 null을 보내면 가격을 비웁니다(가격협의).",
 			},
 		},
 	)
