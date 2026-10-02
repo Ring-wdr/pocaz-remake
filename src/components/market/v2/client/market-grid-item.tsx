@@ -11,6 +11,7 @@ import {
 	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { formatMarketTraits } from "@/components/market/market-condition";
 import type { MarketListItem } from "../types";
 
 const styles = stylex.create({
@@ -80,10 +81,21 @@ const styles = stylex.create({
 		textOverflow: "ellipsis",
 		whiteSpace: "nowrap",
 	},
+	// 가격과 상태·협상 문구는 한 줄에 놓고, 좁으면 문구가 아래로 내려간다
+	priceRow: {
+		display: "flex",
+		flexWrap: "wrap",
+		alignItems: "baseline",
+		columnGap: spacing.xxs,
+	},
 	price: {
 		fontSize: "15px",
 		fontWeight: fontWeight.bold,
 		color: colors.textPrimary,
+	},
+	traits: {
+		fontSize: fontSize.sm,
+		color: colors.textMuted,
 	},
 });
 
@@ -111,11 +123,20 @@ type MarketGridItemProps = {
 
 export default function MarketGridItem({ item }: MarketGridItemProps) {
 	const statusKey = (item.status as MarketStatus) ?? "available";
+	const traits = formatMarketTraits(item);
+	const label = [
+		item.title,
+		statusLabels[statusKey],
+		formatPrice(item.price),
+		traits,
+	]
+		.filter(Boolean)
+		.join(", ");
 
 	return (
 		<Link
 			href={`/market/${item.id}`}
-			aria-label={`${item.title}, ${statusLabels[statusKey]}, ${formatPrice(item.price)}`}
+			aria-label={label}
 			{...stylex.props(styles.item)}
 		>
 			<div {...stylex.props(styles.imageWrap)}>
@@ -139,7 +160,10 @@ export default function MarketGridItem({ item }: MarketGridItemProps) {
 			<div {...stylex.props(styles.info)}>
 				<p {...stylex.props(styles.seller)}>{item.user.nickname}</p>
 				<h3 {...stylex.props(styles.title)}>{item.title}</h3>
-				<span {...stylex.props(styles.price)}>{formatPrice(item.price)}</span>
+				<div {...stylex.props(styles.priceRow)}>
+					<span {...stylex.props(styles.price)}>{formatPrice(item.price)}</span>
+					{traits && <span {...stylex.props(styles.traits)}>{traits}</span>}
+				</div>
 			</div>
 		</Link>
 	);

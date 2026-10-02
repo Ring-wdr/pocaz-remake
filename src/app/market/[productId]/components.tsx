@@ -182,6 +182,12 @@ export const styles = stylex.create({
 		margin: 0,
 		marginBottom: spacing.sm,
 	},
+	productBadges: {
+		display: "flex",
+		flexWrap: "wrap",
+		gap: spacing.xxs,
+		marginBottom: spacing.sm,
+	},
 	productMeta: {
 		fontSize: fontSize.sm,
 		color: colors.textMuted,

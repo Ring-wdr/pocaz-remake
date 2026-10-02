@@ -7,15 +7,10 @@ import { type ChangeEvent, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { colors, size } from "@/app/global-tokens.stylex";
+import { marketConditionOptions } from "@/components/market/market-condition";
 import { Button, Input } from "@/components/ui";
+import type { MarketCondition } from "@/types/entities";
 import { api } from "@/utils/eden";
-
-const conditions = [
-	{ id: "new", name: "새 상품" },
-	{ id: "like-new", name: "거의 새것" },
-	{ id: "good", name: "사용감 적음" },
-	{ id: "used", name: "사용감 있음" },
-];
 
 const MAX_IMAGE_COUNT = 10;
 const MAX_FILE_SIZE_MB = 20;
@@ -281,7 +276,7 @@ export default function MarketRegisterPage() {
 	const [images, setImages] = useState<SelectedImage[]>([]);
 	const [title, setTitle] = useState("");
 	const [price, setPrice] = useState("");
-	const [condition, setCondition] = useState<string | null>(null);
+	const [condition, setCondition] = useState<MarketCondition | null>(null);
 	const [description, setDescription] = useState("");
 	const [isNegotiable, setIsNegotiable] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
@@ -416,18 +411,13 @@ export default function MarketRegisterPage() {
 			const priceNumber = price.trim()
 				? Number.parseInt(price.replace(/,/g, ""), 10)
 				: undefined;
-			const conditionLabel =
-				conditions.find((c) => c.id === condition)?.name ?? "상태 미입력";
-			const metaLines = [
-				`상태: ${conditionLabel}`,
-				`가격 협상: ${isNegotiable ? "가능" : "불가"}`,
-			];
-			const fullDescription = `${description.trim()}\n\n---\n${metaLines.join(" · ")}`;
 
 			const { error } = await api.markets.post({
 				title: title.trim(),
-				description: fullDescription,
+				description: description.trim(),
 				price: priceNumber,
+				condition: condition ?? undefined,
+				isNegotiable,
 				imageUrls: uploadedUrls,
 			});
 
@@ -550,7 +540,7 @@ export default function MarketRegisterPage() {
 						<span {...stylex.props(styles.required)}>*</span>
 					</legend>
 					<div {...stylex.props(styles.conditionContainer)}>
-						{conditions.map((item) => (
+						{marketConditionOptions.map((item) => (
 							<button
 								key={item.id}
 								type="button"

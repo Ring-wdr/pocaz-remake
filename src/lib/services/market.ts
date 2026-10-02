@@ -5,6 +5,21 @@ import { prisma } from "@/lib/prisma";
  */
 export type MarketStatus = "available" | "sold" | "reserved";
 
+/**
+ * 상품 상태. 등록 폼의 선택지 id와 같다 (src/types/entities의 MarketCondition과 같은 값)
+ */
+const MARKET_CONDITIONS = ["new", "like-new", "good", "used"] as const;
+export type MarketCondition = (typeof MARKET_CONDITIONS)[number];
+
+/**
+ * DB의 condition 문자열을 응답에 쓸 값으로 좁힌다. 비어 있거나 모르는 값이면 null
+ */
+export function toMarketCondition(
+	value: string | null,
+): MarketCondition | null {
+	return MARKET_CONDITIONS.find((condition) => condition === value) ?? null;
+}
+
 export type MarketSort = "latest" | "priceAsc" | "priceDesc";
 
 function buildOrderBy(sort: MarketSort | undefined) {
@@ -25,6 +40,8 @@ export interface CreateMarketDto {
 	title: string;
 	description?: string;
 	price?: number;
+	condition?: MarketCondition;
+	isNegotiable?: boolean;
 	userId: string;
 	imageUrls?: string[];
 }
@@ -36,6 +53,8 @@ export interface UpdateMarketDto {
 	title?: string;
 	description?: string;
 	price?: number;
+	condition?: MarketCondition;
+	isNegotiable?: boolean;
 	status?: MarketStatus;
 }
 
@@ -49,53 +68,51 @@ export interface PaginationOptions {
 }
 
 /**
+ * 목록 조회 조건. 값이 없는 조건은 적용하지 않는다
+ */
+export interface MarketFilters extends PaginationOptions {
+	/** 이 사용자가 올린 상품만 */
+	userId?: string;
+	/** 제목이나 설명에 들어 있는 글자 (대소문자 무시) */
+	keyword?: string;
+	status?: MarketStatus;
+	condition?: MarketCondition;
+	/** true면 협상 가능한 상품만, false면 협상 불가인 상품만 */
+	negotiable?: boolean;
+}
+
+/**
  * Market Service
  */
 export const marketService = {
 	/**
-	 * Market 목록 조회 (커서 기반 페이지네이션)
+	 * Market 목록 조회 (커서 기반 페이지네이션). 목록·검색·상태별·사용자별 조회가 모두 이 함수를 쓴다
 	 */
-	async findAll(options: PaginationOptions = {}) {
-		const { cursor, limit = 20, sort } = options;
+	async findMany(filters: MarketFilters = {}) {
+		const {
+			cursor,
+			limit = 20,
+			sort,
+			userId,
+			keyword,
+			status,
+			condition,
+			negotiable,
+		} = filters;
 
 		const markets = await prisma.market.findMany({
-			take: limit + 1,
-			...(cursor && {
-				cursor: { id: cursor },
-				skip: 1,
-			}),
-			orderBy: buildOrderBy(sort),
-			include: {
-				user: {
-					select: {
-						id: true,
-						nickname: true,
-						profileImage: true,
-					},
-				},
-				images: true,
+			where: {
+				...(userId !== undefined && { userId }),
+				...(keyword && {
+					OR: [
+						{ title: { contains: keyword, mode: "insensitive" } },
+						{ description: { contains: keyword, mode: "insensitive" } },
+					],
+				}),
+				...(status && { status }),
+				...(condition && { condition }),
+				...(negotiable !== undefined && { isNegotiable: negotiable }),
 			},
-		});
-
-		const hasMore = markets.length > limit;
-		const items = hasMore ? markets.slice(0, -1) : markets;
-		const nextCursor = hasMore ? items[items.length - 1]?.id : null;
-
-		return {
-			items,
-			nextCursor,
-			hasMore,
-		};
-	},
-
-	/**
-	 * 특정 사용자의 Market 목록 조회
-	 */
-	async findByUserId(userId: string, options: PaginationOptions = {}) {
-		const { cursor, limit = 20, sort } = options;
-
-		const markets = await prisma.market.findMany({
-			where: { userId },
 			take: limit + 1,
 			...(cursor && {
 				cursor: { id: cursor },
@@ -153,6 +170,8 @@ export const marketService = {
 				title: dto.title,
 				description: dto.description,
 				price: dto.price,
+				condition: dto.condition,
+				isNegotiable: dto.isNegotiable,
 				userId: dto.userId,
 				...(dto.imageUrls &&
 					dto.imageUrls.length > 0 && {
@@ -184,6 +203,8 @@ export const marketService = {
 				title: dto.title,
 				description: dto.description,
 				price: dto.price,
+				condition: dto.condition,
+				isNegotiable: dto.isNegotiable,
 				status: dto.status,
 			},
 			include: {
@@ -217,89 +238,6 @@ export const marketService = {
 			select: { userId: true },
 		});
 		return market?.userId === userId;
-	},
-
-	/**
-	 * 검색
-	 */
-	async search(
-		keyword: string,
-		options: PaginationOptions & { status?: MarketStatus } = {},
-	) {
-		const { cursor, limit = 20, sort, status } = options;
-
-		const markets = await prisma.market.findMany({
-			where: {
-				OR: [
-					{ title: { contains: keyword, mode: "insensitive" } },
-					{ description: { contains: keyword, mode: "insensitive" } },
-				],
-				...(status && { status }),
-			},
-			take: limit + 1,
-			...(cursor && {
-				cursor: { id: cursor },
-				skip: 1,
-			}),
-			orderBy: buildOrderBy(sort),
-			include: {
-				user: {
-					select: {
-						id: true,
-						nickname: true,
-						profileImage: true,
-					},
-				},
-				images: true,
-			},
-		});
-
-		const hasMore = markets.length > limit;
-		const items = hasMore ? markets.slice(0, -1) : markets;
-		const nextCursor = hasMore ? items[items.length - 1]?.id : null;
-
-		return {
-			items,
-			nextCursor,
-			hasMore,
-		};
-	},
-
-	/**
-	 * 상태별 조회
-	 */
-	async findByStatus(status: MarketStatus, options: PaginationOptions = {}) {
-		const { cursor, limit = 20, sort } = options;
-
-		const markets = await prisma.market.findMany({
-			where: { status },
-			take: limit + 1,
-			...(cursor && {
-				cursor: { id: cursor },
-				skip: 1,
-			}),
-			orderBy: buildOrderBy(sort),
-			include: {
-				user: {
-					select: {
-						id: true,
-						nickname: true,
-						profileImage: true,
-					},
-				},
-				images: true,
-			},
-		});
-
-		const hasMore = markets.length > limit;
-		const items = hasMore ? markets.slice(0, -1) : markets;
-		const nextCursor = hasMore ? items[items.length - 1]?.id : null;
-
-		return {
-			items,
-			nextCursor,
-			hasMore,
-		};
 	},
 };
 

@@ -16,7 +16,6 @@ const styles = stylex.create({
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "flex-end",
-		marginBottom: spacing.sm,
 		gap: spacing.xxs,
 	},
 	label: {

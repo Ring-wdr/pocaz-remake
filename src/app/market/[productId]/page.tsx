@@ -3,6 +3,11 @@ import { User } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/home";
+import {
+	getMarketConditionLabel,
+	negotiableLabel,
+} from "@/components/market/market-condition";
+import { Badge } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/actions";
 import { createMetadata } from "@/lib/metadata";
 import { formatKoreanDate } from "@/utils/date";
@@ -94,6 +99,7 @@ export default async function MarketDetailPage({
 	}
 
 	const status = data.status as MarketStatus;
+	const conditionLabel = getMarketConditionLabel(data.condition);
 	const formattedDate = formatKoreanDate(data.createdAt);
 	const isOwner = currentUser?.id === data.user.id;
 	const initialLikeState: MarketLikeState = {
@@ -136,6 +142,14 @@ export default async function MarketDetailPage({
 					<p {...stylex.props(styles.productPrice)}>
 						{data.price ? `${data.price.toLocaleString()}원` : "가격협의"}
 					</p>
+					{(conditionLabel || data.isNegotiable) && (
+						<div {...stylex.props(styles.productBadges)}>
+							{conditionLabel && <Badge>{conditionLabel}</Badge>}
+							{data.isNegotiable && (
+								<Badge variant="primary">{negotiableLabel}</Badge>
+							)}
+						</div>
+					)}
 					<p {...stylex.props(styles.productMeta)}>{formattedDate}</p>
 
 					{data.description && (

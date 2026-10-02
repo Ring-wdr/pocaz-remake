@@ -1,7 +1,11 @@
 import { Elysia, t } from "elysia";
 import { authGuard } from "@/lib/elysia/auth";
 import { LimitQuery } from "@/lib/elysia/schemas";
-import { marketImageService, marketService } from "@/lib/services/market";
+import {
+	marketImageService,
+	marketService,
+	toMarketCondition,
+} from "@/lib/services/market";
 import { TradeError, transactionService } from "@/lib/services/transaction";
 import { userService } from "@/lib/services/user";
 
@@ -17,11 +21,21 @@ const ImageSchema = t.Object({
 	imageUrl: t.String(),
 });
 
+// 상품 상태. 등록 폼의 선택지 id와 같다
+const ConditionEnum = t.Union([
+	t.Literal("new"),
+	t.Literal("like-new"),
+	t.Literal("good"),
+	t.Literal("used"),
+]);
+
 const MarketItemSchema = t.Object({
 	id: t.String(),
 	title: t.String(),
 	description: t.Nullable(t.String()),
 	price: t.Nullable(t.Number()),
+	condition: t.Nullable(ConditionEnum),
+	isNegotiable: t.Boolean(),
 	status: t.String(),
 	createdAt: t.String(),
 	user: UserSchema,
@@ -46,6 +60,12 @@ const StatusEnum = t.Union([
 	t.Literal("sold"),
 ]);
 
+// 목록·검색·상태별 조회가 함께 쓰는 필터. negotiable이 true면 협상 가능한 상품만, false면 협상 불가인 상품만
+const FilterQuery = {
+	condition: t.Optional(ConditionEnum),
+	negotiable: t.Optional(t.Boolean()),
+};
+
 const ErrorSchema = t.Object({
 	error: t.String(),
 });
@@ -69,6 +89,26 @@ const TradeConflictSchema = t.Object({
 	transactionId: t.String(),
 });
 
+type MarketWithRelations = NonNullable<
+	Awaited<ReturnType<typeof marketService.findById>>
+>;
+
+// 목록·상세·작성 응답이 함께 쓰는 상품 항목 모양
+function toMarketItem(market: MarketWithRelations) {
+	return {
+		id: market.id,
+		title: market.title,
+		description: market.description,
+		price: market.price,
+		condition: toMarketCondition(market.condition),
+		isNegotiable: market.isNegotiable,
+		status: market.status,
+		createdAt: market.createdAt.toISOString(),
+		user: market.user,
+		images: market.images,
+	};
+}
+
 /**
  * Public Market Routes (인증 불필요)
  */
@@ -77,25 +117,16 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 	.get(
 		"/",
 		async ({ query }) => {
-			const result = await marketService.findAll({
+			const result = await marketService.findMany({
 				cursor: query.cursor,
 				limit: query.limit ?? 20,
-				sort:
-					(query.sort as "latest" | "priceAsc" | "priceDesc" | undefined) ??
-					"latest",
+				sort: query.sort,
+				condition: query.condition,
+				negotiable: query.negotiable,
 			});
 
 			return {
-				items: result.items.map((market) => ({
-					id: market.id,
-					title: market.title,
-					description: market.description,
-					price: market.price,
-					status: market.status,
-					createdAt: market.createdAt.toISOString(),
-					user: market.user,
-					images: market.images,
-				})),
+				items: result.items.map(toMarketItem),
 				nextCursor: result.nextCursor,
 				hasMore: result.hasMore,
 			};
@@ -105,12 +136,14 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				cursor: t.Optional(t.String()),
 				limit: LimitQuery,
 				sort: t.Optional(SortEnum),
+				...FilterQuery,
 			}),
 			response: PaginatedMarketsSchema,
 			detail: {
 				tags: ["Markets"],
 				summary: "장터 목록 조회",
-				description: "장터 목록을 페이지네이션하여 조회합니다.",
+				description:
+					"장터 목록을 페이지네이션하여 조회합니다. 상품 상태(condition)와 협상 가능 여부(negotiable)로 거를 수 있습니다.",
 			},
 		},
 	)
@@ -122,26 +155,18 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				return { items: [], nextCursor: null, hasMore: false };
 			}
 
-			const result = await marketService.search(query.keyword, {
+			const result = await marketService.findMany({
+				keyword: query.keyword,
 				cursor: query.cursor,
 				limit: query.limit ?? 20,
 				status: query.status,
-				sort:
-					(query.sort as "latest" | "priceAsc" | "priceDesc" | undefined) ??
-					"latest",
+				sort: query.sort,
+				condition: query.condition,
+				negotiable: query.negotiable,
 			});
 
 			return {
-				items: result.items.map((market) => ({
-					id: market.id,
-					title: market.title,
-					description: market.description,
-					price: market.price,
-					status: market.status,
-					createdAt: market.createdAt.toISOString(),
-					user: market.user,
-					images: market.images,
-				})),
+				items: result.items.map(toMarketItem),
 				nextCursor: result.nextCursor,
 				hasMore: result.hasMore,
 			};
@@ -153,12 +178,14 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				limit: LimitQuery,
 				sort: t.Optional(SortEnum),
 				status: t.Optional(StatusEnum),
+				...FilterQuery,
 			}),
 			response: PaginatedMarketsSchema,
 			detail: {
 				tags: ["Markets"],
 				summary: "장터 검색",
-				description: "키워드로 장터를 검색합니다.",
+				description:
+					"키워드로 장터를 검색합니다. 판매 상태, 상품 상태(condition), 협상 가능 여부(negotiable)로 함께 거를 수 있습니다.",
 			},
 		},
 	)
@@ -171,28 +198,17 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				return { items: [], nextCursor: null, hasMore: false };
 			}
 
-			const result = await marketService.findByStatus(
-				params.status as "available" | "sold" | "reserved",
-				{
-					cursor: query.cursor,
-					limit: query.limit ?? 20,
-					sort:
-						(query.sort as "latest" | "priceAsc" | "priceDesc" | undefined) ??
-						"latest",
-				},
-			);
+			const result = await marketService.findMany({
+				status: params.status as "available" | "sold" | "reserved",
+				cursor: query.cursor,
+				limit: query.limit ?? 20,
+				sort: query.sort,
+				condition: query.condition,
+				negotiable: query.negotiable,
+			});
 
 			return {
-				items: result.items.map((market) => ({
-					id: market.id,
-					title: market.title,
-					description: market.description,
-					price: market.price,
-					status: market.status,
-					createdAt: market.createdAt.toISOString(),
-					user: market.user,
-					images: market.images,
-				})),
+				items: result.items.map(toMarketItem),
 				nextCursor: result.nextCursor,
 				hasMore: result.hasMore,
 			};
@@ -205,13 +221,14 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 				cursor: t.Optional(t.String()),
 				limit: LimitQuery,
 				sort: t.Optional(SortEnum),
+				...FilterQuery,
 			}),
 			response: PaginatedMarketsSchema,
 			detail: {
 				tags: ["Markets"],
 				summary: "상태별 장터 조회",
 				description:
-					"장터 상태(available, sold, reserved)별로 목록을 조회합니다.",
+					"장터 상태(available, sold, reserved)별로 목록을 조회합니다. 상품 상태(condition)와 협상 가능 여부(negotiable)로 거를 수 있습니다.",
 			},
 		},
 	)
@@ -227,15 +244,8 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 			}
 
 			return {
-				id: market.id,
-				title: market.title,
-				description: market.description,
-				price: market.price,
-				status: market.status,
-				createdAt: market.createdAt.toISOString(),
+				...toMarketItem(market),
 				updatedAt: market.updatedAt.toISOString(),
-				user: market.user,
-				images: market.images,
 			};
 		},
 		{
@@ -248,6 +258,8 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 					title: t.String(),
 					description: t.Nullable(t.String()),
 					price: t.Nullable(t.Number()),
+					condition: t.Nullable(ConditionEnum),
+					isNegotiable: t.Boolean(),
 					status: t.String(),
 					createdAt: t.String(),
 					updatedAt: t.String(),
@@ -267,25 +279,15 @@ export const publicMarketRoutes = new Elysia({ prefix: "/markets" })
 	.get(
 		"/user/:userId",
 		async ({ params, query }) => {
-			const result = await marketService.findByUserId(params.userId, {
+			const result = await marketService.findMany({
+				userId: params.userId,
 				cursor: query.cursor,
 				limit: query.limit ?? 20,
-				sort:
-					(query.sort as "latest" | "priceAsc" | "priceDesc" | undefined) ??
-					"latest",
+				sort: query.sort,
 			});
 
 			return {
-				items: result.items.map((market) => ({
-					id: market.id,
-					title: market.title,
-					description: market.description,
-					price: market.price,
-					status: market.status,
-					createdAt: market.createdAt.toISOString(),
-					user: market.user,
-					images: market.images,
-				})),
+				items: result.items.map(toMarketItem),
 				nextCursor: result.nextCursor,
 				hasMore: result.hasMore,
 			};
@@ -328,27 +330,22 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				title: body.title,
 				description: body.description,
 				price: body.price,
+				condition: body.condition,
+				isNegotiable: body.isNegotiable,
 				userId: user.id,
 				imageUrls: body.imageUrls,
 			});
 
 			set.status = 201;
-			return {
-				id: market.id,
-				title: market.title,
-				description: market.description,
-				price: market.price,
-				status: market.status,
-				createdAt: market.createdAt.toISOString(),
-				user: market.user,
-				images: market.images,
-			};
+			return toMarketItem(market);
 		},
 		{
 			body: t.Object({
 				title: t.String({ minLength: 1 }),
 				description: t.Optional(t.String()),
 				price: t.Optional(t.Number({ minimum: 0 })),
+				condition: t.Optional(ConditionEnum),
+				isNegotiable: t.Optional(t.Boolean()),
 				imageUrls: t.Optional(t.Array(t.String())),
 			}),
 			response: MarketItemSchema,
@@ -379,6 +376,8 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				title: body.title,
 				description: body.description,
 				price: body.price,
+				condition: body.condition,
+				isNegotiable: body.isNegotiable,
 				status: body.status as "available" | "sold" | "reserved" | undefined,
 			});
 
@@ -387,6 +386,8 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				title: market.title,
 				description: market.description,
 				price: market.price,
+				condition: toMarketCondition(market.condition),
+				isNegotiable: market.isNegotiable,
 				status: market.status,
 				updatedAt: market.updatedAt.toISOString(),
 			};
@@ -399,6 +400,8 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 				title: t.Optional(t.String({ minLength: 1 })),
 				description: t.Optional(t.String()),
 				price: t.Optional(t.Number({ minimum: 0 })),
+				condition: t.Optional(ConditionEnum),
+				isNegotiable: t.Optional(t.Boolean()),
 				status: t.Optional(
 					t.Union([
 						t.Literal("available"),
@@ -413,6 +416,8 @@ export const marketRoutes = new Elysia({ prefix: "/markets" })
 					title: t.String(),
 					description: t.Nullable(t.String()),
 					price: t.Nullable(t.Number()),
+					condition: t.Nullable(ConditionEnum),
+					isNegotiable: t.Boolean(),
 					status: t.String(),
 					updatedAt: t.String(),
 				}),

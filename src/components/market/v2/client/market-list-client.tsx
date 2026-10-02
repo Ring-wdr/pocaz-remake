@@ -6,7 +6,9 @@ import { useRef, useState, useTransition } from "react";
 import { colors, fontSize, spacing } from "@/app/global-tokens.stylex";
 import { getMarketList } from "../data/get-market-list";
 import type {
+	MarketConditionFilterValue,
 	MarketFilterValue,
+	MarketListFilters,
 	MarketListItem,
 	MarketListState,
 	MarketSortValue,
@@ -28,11 +30,7 @@ const styles = stylex.create({
 
 type MarketListClientProps = {
 	initialState: MarketListState;
-	initialFilters: {
-		keyword: string;
-		status: MarketFilterValue;
-		sort: MarketSortValue;
-	};
+	initialFilters: MarketListFilters;
 	limit: number;
 };
 
@@ -56,6 +54,10 @@ export default function MarketListClient({
 	const [status, setStatus] = useState<MarketFilterValue>(
 		initialFilters.status,
 	);
+	const [condition, setCondition] = useState<MarketConditionFilterValue>(
+		initialFilters.condition,
+	);
+	const [negotiable, setNegotiable] = useState(initialFilters.negotiable);
 	const [sort, setSort] = useState<MarketSortValue>(initialFilters.sort);
 	const [keywordInput, setKeywordInput] = useState(initialFilters.keyword);
 	const [appliedFilters, setAppliedFilters] = useState(initialFilters);
@@ -63,11 +65,7 @@ export default function MarketListClient({
 	// 필터를 빠르게 바꾸면 요청이 겹친다. 마지막에 보낸 요청의 응답만 반영한다.
 	const latestRequestRef = useRef(0);
 
-	const replaceList = (nextFilters: {
-		keyword: string;
-		status: MarketFilterValue;
-		sort: MarketSortValue;
-	}) => {
+	const replaceList = (nextFilters: MarketListFilters) => {
 		setAppliedFilters(nextFilters);
 		updateMarketQueryString(nextFilters);
 		const requestId = ++latestRequestRef.current;
@@ -123,20 +121,39 @@ export default function MarketListClient({
 		});
 	};
 
+	// 입력창에 적어 둔 검색어까지 포함한, 지금 화면에 보이는 필터 값
+	const currentFilters: MarketListFilters = {
+		keyword: keywordInput.trim(),
+		status,
+		condition,
+		negotiable,
+		sort,
+	};
+
 	const handleKeywordSubmit = (value: string) => {
 		const nextKeyword = value.trim();
 		setKeywordInput(nextKeyword);
-		replaceList({ keyword: nextKeyword, status, sort });
+		replaceList({ ...currentFilters, keyword: nextKeyword });
 	};
 
 	const handleStatusChange = (value: MarketFilterValue) => {
 		setStatus(value);
-		replaceList({ keyword: keywordInput.trim(), status: value, sort });
+		replaceList({ ...currentFilters, status: value });
+	};
+
+	const handleConditionChange = (value: MarketConditionFilterValue) => {
+		setCondition(value);
+		replaceList({ ...currentFilters, condition: value });
+	};
+
+	const handleNegotiableChange = (value: boolean) => {
+		setNegotiable(value);
+		replaceList({ ...currentFilters, negotiable: value });
 	};
 
 	const handleSortChange = (value: MarketSortValue) => {
 		setSort(value);
-		replaceList({ keyword: keywordInput.trim(), status, sort: value });
+		replaceList({ ...currentFilters, sort: value });
 	};
 
 	const hasItems = state.items.length > 0;
@@ -146,10 +163,14 @@ export default function MarketListClient({
 		<FilterBar
 			keyword={keywordInput}
 			status={status}
+			condition={condition}
+			negotiable={negotiable}
 			sort={sort}
 			onKeywordChange={setKeywordInput}
 			onKeywordSubmit={handleKeywordSubmit}
 			onStatusChange={handleStatusChange}
+			onConditionChange={handleConditionChange}
+			onNegotiableChange={handleNegotiableChange}
 			onSortChange={handleSortChange}
 			disabled={isPending}
 		/>

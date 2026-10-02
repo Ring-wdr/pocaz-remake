@@ -9,6 +9,8 @@ type MarketListSectionProps = MarketSearchFilters & {
 export default async function MarketListSection({
 	keyword,
 	status,
+	condition,
+	negotiable,
 	sort,
 	cursor,
 	limit = 20,
@@ -16,6 +18,8 @@ export default async function MarketListSection({
 	const { data, error } = await getMarketList({
 		keyword,
 		status,
+		condition,
+		negotiable,
 		sort,
 		cursor,
 		limit,
@@ -31,7 +35,7 @@ export default async function MarketListSection({
 	return (
 		<MarketListClient
 			initialState={initialState}
-			initialFilters={{ keyword, status, sort }}
+			initialFilters={{ keyword, status, condition, negotiable, sort }}
 			limit={limit}
 		/>
 	);
