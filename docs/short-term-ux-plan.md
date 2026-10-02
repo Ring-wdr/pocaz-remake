@@ -203,6 +203,16 @@
 1. `bun run db:migrate:prod` 로 새 마이그레이션 적용.
 2. `supabase/enable-rls.sql` 다시 실행(새 테이블에 RLS를 켠다).
 3. `prisma/seed-catalog.ts` 명단을 확인한 뒤 `bun run db:seed:catalog`.
+4. Supabase Auth > URL Configuration의 Redirect URLs가 쿼리스트링이 붙은 `/auth/callback?next=…`를 허용하는지 확인한다(4b).
+5. 탈퇴 안내 문구는 실제 동작(계정 정보만 익명화, 글·댓글·판매글·채팅·거래·후기와 Supabase Auth 계정은 남음)에 맞춰 고쳤다. Auth 계정까지 지울지(`auth.admin.deleteUser`)는 개인정보 처리방침과 대조해 결정한다(4c).
+
+## 후속 후보 (작업 중 발견, 범위 밖)
+
+- 거래가 완료된 상품도 상태 변경으로 판매중으로 되돌릴 수 있다. 거래 기록이 있으면 막을지 결정 필요(1b).
+- 채팅 이미지 전송의 예외 경로는 실패 표시 없이 "전송 중..."에 머문다(4c).
+- 상품 이미지에 순서 필드가 없어 대표 이미지가 DB 반환 순서에 의존한다(2b).
+- `src/components/mypage/mypage-content.tsx`는 `@suspensive/react-query`를 import해 Bun 테스트에서 불러올 수 없다. `@suspensive/react-query-5`로 바꾸면 해결된다(3c).
+- `docs/opus-5.5-improvements.md`의 탈퇴 결정 항목은 옛 상태 그대로다(4c).
 
 ## 결정 사항 (검토 요청)
 
