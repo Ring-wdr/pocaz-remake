@@ -1,4 +1,11 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import {
+	afterEach,
+	describe,
+	expect,
+	mock,
+	setSystemTime,
+	test,
+} from "bun:test";
 import type { ReactNode } from "react";
 import type { ChatMessage, PaginatedMessages } from "@/types/entities";
 import { registerDom } from "../helpers/dom";
@@ -138,5 +145,30 @@ describe("useChatMessages의 markAsSending", () => {
 
 		expect(itemOf(hook, "첫 번째")?.status).toBe("failed");
 		expect(hook.result.current.items).toHaveLength(1);
+	});
+
+	// CI의 빠른 러너에서 두 메시지가 같은 밀리초에 쌓이면 정렬이 임시 id(무작위 UUID)에 좌우되어
+	// 순서가 뒤바뀌던 회귀. 시계를 멈춰 같은 밀리초를 강제한다.
+	test("같은 밀리초에 쌓인 메시지도 쌓은 순서를 지킨다", () => {
+		setSystemTime(new Date("2026-10-02T00:00:00.000Z"));
+		try {
+			for (let round = 0; round < 5; round++) {
+				const hook = renderChatMessages();
+				const first = appendFailed(hook, "첫 번째");
+				appendFailed(hook, "두 번째");
+				appendFailed(hook, "세 번째");
+
+				act(() => hook.result.current.markAsSending(first));
+
+				expect(hook.result.current.items.map((item) => item.content)).toEqual([
+					"첫 번째",
+					"두 번째",
+					"세 번째",
+				]);
+				hook.unmount();
+			}
+		} finally {
+			setSystemTime();
+		}
 	});
 });
