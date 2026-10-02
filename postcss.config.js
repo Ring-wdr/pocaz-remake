@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const path = require("path");
+const path = require("node:path");
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 module.exports = {
@@ -21,6 +21,5 @@ module.exports = {
 				treeshakeCompensation: true,
 			},
 		},
-		autoprefixer: {},
 	},
 };

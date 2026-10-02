@@ -87,14 +87,17 @@ describe("채팅 목록 항목의 안 읽음 뱃지", () => {
 		[99, "99"],
 		[100, "99+"],
 		[1234, "99+"],
-	])("%i개는 %s로 표기하고, 읽어 주는 이름에는 실제 개수를 쓴다", (count, text) => {
-		const view = render(
-			<ChatListItem room={makeRoom({ unreadCount: count })} />,
-		);
+	])(
+		"%i개는 %s로 표기하고, 읽어 주는 이름에는 실제 개수를 쓴다",
+		(count, text) => {
+			const view = render(
+				<ChatListItem room={makeRoom({ unreadCount: count })} />,
+			);
 
-		const badge = view.getByLabelText(`안 읽은 메시지 ${count}개`);
-		expect(badge.textContent).toBe(text);
-	});
+			const badge = view.getByLabelText(`안 읽은 메시지 ${count}개`);
+			expect(badge.textContent).toBe(text);
+		},
+	);
 
 	test("안 읽은 메시지가 없으면 뱃지를 그리지 않는다", () => {
 		const view = render(<ChatListItem room={makeRoom({ unreadCount: 0 })} />);
@@ -221,19 +224,24 @@ describe("하단 탭의 채팅 안 읽음 뱃지", () => {
 				throw new Error("network down");
 			},
 		],
-	])("%s이면 오류를 드러내지 않고 0으로 보고 뱃지를 숨긴다", async (_name, respond) => {
-		getUnreadCount.mockImplementation(respond);
-		const view = renderMenu();
+	])(
+		"%s이면 오류를 드러내지 않고 0으로 보고 뱃지를 숨긴다",
+		async (_name, respond) => {
+			getUnreadCount.mockImplementation(respond);
+			const view = renderMenu();
 
-		await waitFor(() => expect(getUnreadCount).toHaveBeenCalledTimes(1));
-		await waitFor(() =>
-			expect(queryClient.getQueryData<number>(chatUnreadCountQueryKey)).toBe(0),
-		);
-		expect(queryClient.getQueryState(chatUnreadCountQueryKey)?.status).toBe(
-			"success",
-		);
-		expect(view.queryByLabelText(unreadLabel)).toBeNull();
-	});
+			await waitFor(() => expect(getUnreadCount).toHaveBeenCalledTimes(1));
+			await waitFor(() =>
+				expect(queryClient.getQueryData<number>(chatUnreadCountQueryKey)).toBe(
+					0,
+				),
+			);
+			expect(queryClient.getQueryState(chatUnreadCountQueryKey)?.status).toBe(
+				"success",
+			);
+			expect(view.queryByLabelText(unreadLabel)).toBeNull();
+		},
+	);
 
 	test("쿼리 키를 무효화하면 새로 받아 뱃지가 바뀐다", async () => {
 		getUnreadCount.mockImplementation(async () =>

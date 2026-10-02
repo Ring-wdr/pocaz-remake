@@ -227,20 +227,23 @@ describe("상품 등록 저장", () => {
 			},
 			"이미지 업로드 중 오류가 발생했습니다.",
 		],
-	])("이미지 업로드(%s)가 실패하면 상품을 만들지 않고 이유를 알린다", async (_label, failure, message) => {
-		const logged = spyOn(console, "error").mockImplementation(() => {});
-		uploadFiles.mockImplementationOnce(failure);
-		const { submit } = renderFilledForm();
+	])(
+		"이미지 업로드(%s)가 실패하면 상품을 만들지 않고 이유를 알린다",
+		async (_label, failure, message) => {
+			const logged = spyOn(console, "error").mockImplementation(() => {});
+			uploadFiles.mockImplementationOnce(failure);
+			const { submit } = renderFilledForm();
 
-		fireEvent.click(submit());
+			fireEvent.click(submit());
 
-		await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
-		await waitFor(() => expect(submit().disabled).toBe(false));
-		expect(createMarket).not.toHaveBeenCalled();
-		expect(toast.success).not.toHaveBeenCalled();
-		expect(push).not.toHaveBeenCalled();
-		logged.mockRestore();
-	});
+			await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
+			await waitFor(() => expect(submit().disabled).toBe(false));
+			expect(createMarket).not.toHaveBeenCalled();
+			expect(toast.success).not.toHaveBeenCalled();
+			expect(push).not.toHaveBeenCalled();
+			logged.mockRestore();
+		},
+	);
 
 	test.each([
 		["500 응답", async () => edenResult(500, { error: "boom" })],
@@ -250,26 +253,29 @@ describe("상품 등록 저장", () => {
 				throw new Error("network down");
 			},
 		],
-	])("상품 생성(%s)이 실패하면 안내하고 이동하지 않으며 다시 등록할 수 있다", async (_label, failure) => {
-		const logged = spyOn(console, "error").mockImplementation(() => {});
-		createMarket.mockImplementationOnce(failure);
-		const { submit } = renderFilledForm();
+	])(
+		"상품 생성(%s)이 실패하면 안내하고 이동하지 않으며 다시 등록할 수 있다",
+		async (_label, failure) => {
+			const logged = spyOn(console, "error").mockImplementation(() => {});
+			createMarket.mockImplementationOnce(failure);
+			const { submit } = renderFilledForm();
 
-		fireEvent.click(submit());
+			fireEvent.click(submit());
 
-		await waitFor(() =>
-			expect(toast.error).toHaveBeenCalledWith(CREATE_FAILED),
-		);
-		await waitFor(() => expect(submit().disabled).toBe(false));
-		expect(toast.success).not.toHaveBeenCalled();
-		expect(push).not.toHaveBeenCalled();
+			await waitFor(() =>
+				expect(toast.error).toHaveBeenCalledWith(CREATE_FAILED),
+			);
+			await waitFor(() => expect(submit().disabled).toBe(false));
+			expect(toast.success).not.toHaveBeenCalled();
+			expect(push).not.toHaveBeenCalled();
 
-		// 입력한 내용이 그대로라서 다시 누르면 등록된다
-		fireEvent.click(submit());
-		await waitFor(() => expect(push).toHaveBeenCalledWith("/market"));
-		expect(createMarket).toHaveBeenCalledTimes(2);
-		logged.mockRestore();
-	});
+			// 입력한 내용이 그대로라서 다시 누르면 등록된다
+			fireEvent.click(submit());
+			await waitFor(() => expect(push).toHaveBeenCalledWith("/market"));
+			expect(createMarket).toHaveBeenCalledTimes(2);
+			logged.mockRestore();
+		},
+	);
 
 	test("등록하는 동안에는 버튼이 잠겨 한 번만 등록한다", async () => {
 		let finish: (value: unknown) => void = () => {};

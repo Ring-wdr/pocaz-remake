@@ -253,29 +253,32 @@ describe("후기 바텀시트", () => {
 		[400, FAILED_MESSAGE],
 		[422, FAILED_MESSAGE],
 		[500, FAILED_MESSAGE],
-	])("%i 오류면 안내 토스트를 띄우고 쓰던 내용을 남긴 채 다시 시도할 수 있다", async (status, message) => {
-		postReview.mockImplementationOnce(async () =>
-			edenResult(status, { error: "english message" }),
-		);
-		const { submit, textarea, star, onReviewed, onClose } = renderSheet();
-		fireEvent.click(star(2));
-		fireEvent.change(textarea, { target: { value: "아쉬웠어요" } });
+	])(
+		"%i 오류면 안내 토스트를 띄우고 쓰던 내용을 남긴 채 다시 시도할 수 있다",
+		async (status, message) => {
+			postReview.mockImplementationOnce(async () =>
+				edenResult(status, { error: "english message" }),
+			);
+			const { submit, textarea, star, onReviewed, onClose } = renderSheet();
+			fireEvent.click(star(2));
+			fireEvent.change(textarea, { target: { value: "아쉬웠어요" } });
 
-		fireEvent.click(submit);
+			fireEvent.click(submit);
 
-		await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
-		expect(toast.success).not.toHaveBeenCalled();
-		expect(onReviewed).not.toHaveBeenCalled();
-		expect(onClose).not.toHaveBeenCalled();
-		await waitFor(() => expect(submit.disabled).toBe(false));
-		expect(star(2).getAttribute("aria-pressed")).toBe("true");
-		expect(textarea.value).toBe("아쉬웠어요");
+			await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
+			expect(toast.success).not.toHaveBeenCalled();
+			expect(onReviewed).not.toHaveBeenCalled();
+			expect(onClose).not.toHaveBeenCalled();
+			await waitFor(() => expect(submit.disabled).toBe(false));
+			expect(star(2).getAttribute("aria-pressed")).toBe("true");
+			expect(textarea.value).toBe("아쉬웠어요");
 
-		fireEvent.click(submit);
-		await waitFor(() => expect(toast.success).toHaveBeenCalled());
-		expect(postReview).toHaveBeenCalledTimes(2);
-		expect(onReviewed).toHaveBeenCalledTimes(1);
-	});
+			fireEvent.click(submit);
+			await waitFor(() => expect(toast.success).toHaveBeenCalled());
+			expect(postReview).toHaveBeenCalledTimes(2);
+			expect(onReviewed).toHaveBeenCalledTimes(1);
+		},
+	);
 
 	test("이미 후기를 남긴 거래(409)면 안내하고, 화면을 서버 상태에 맞추도록 onReviewed를 부른다", async () => {
 		postReview.mockImplementationOnce(async () =>
@@ -397,37 +400,43 @@ describe("채팅방 배너의 후기 버튼", () => {
 	test.each([
 		["구매자", buyer.id, owner],
 		["판매자", owner.id, buyer],
-	])("거래의 %s에게는 후기 남기기 버튼이 보이고, 버튼은 상품 링크 안이 아니라 옆에 있다", (_role, currentUserId, partner) => {
-		const view = renderBanner({
-			market: makeMarket(),
-			currentUserId,
-			partner,
-		});
+	])(
+		"거래의 %s에게는 후기 남기기 버튼이 보이고, 버튼은 상품 링크 안이 아니라 옆에 있다",
+		(_role, currentUserId, partner) => {
+			const view = renderBanner({
+				market: makeMarket(),
+				currentUserId,
+				partner,
+			});
 
-		const button = view.getByRole("button", { name: "후기 남기기" });
-		expect(view.getByRole("link").contains(button)).toBe(false);
-		expect(isShown(view.queryByText("후기 작성 완료"))).toBe(false);
-		// 거래가 이미 있으므로 거래 완료 버튼은 없다
-		expect(isShown(view.queryByRole("button", { name: "거래 완료" }))).toBe(
-			false,
-		);
-	});
+			const button = view.getByRole("button", { name: "후기 남기기" });
+			expect(view.getByRole("link").contains(button)).toBe(false);
+			expect(isShown(view.queryByText("후기 작성 완료"))).toBe(false);
+			// 거래가 이미 있으므로 거래 완료 버튼은 없다
+			expect(isShown(view.queryByRole("button", { name: "거래 완료" }))).toBe(
+				false,
+			);
+		},
+	);
 
 	test.each([
 		["구매자", buyer.id, owner],
 		["판매자", owner.id, buyer],
-	])("이미 후기를 남긴 %s에게는 버튼 대신 후기 작성 완료가 보인다", (_role, currentUserId, partner) => {
-		const view = renderBanner({
-			market: makeMarket(withMyReviewed(true)),
-			currentUserId,
-			partner,
-		});
+	])(
+		"이미 후기를 남긴 %s에게는 버튼 대신 후기 작성 완료가 보인다",
+		(_role, currentUserId, partner) => {
+			const view = renderBanner({
+				market: makeMarket(withMyReviewed(true)),
+				currentUserId,
+				partner,
+			});
 
-		expect(isShown(view.queryByText("후기 작성 완료"))).toBe(true);
-		expect(isShown(view.queryByRole("button", { name: "후기 남기기" }))).toBe(
-			false,
-		);
-	});
+			expect(isShown(view.queryByText("후기 작성 완료"))).toBe(true);
+			expect(isShown(view.queryByRole("button", { name: "후기 남기기" }))).toBe(
+				false,
+			);
+		},
+	);
 
 	test("거래 당사자가 아닌 채팅방 멤버에게는 둘 다 보이지 않는다", () => {
 		const view = renderBanner({

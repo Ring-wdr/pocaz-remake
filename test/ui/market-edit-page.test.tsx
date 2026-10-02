@@ -303,28 +303,31 @@ describe("상품 수정 저장", () => {
 				throw new Error("network down");
 			},
 		],
-	])("정보 저장(%s)이 실패하면 안내만 하고 이미지에는 손대지 않는다", async (_label, failure) => {
-		const logged = spyOn(console, "error").mockImplementation(() => {});
-		put.mockImplementationOnce(async () => {
-			calls.push("put");
-			return failure();
-		});
-		const invalidate = spyOn(queryClient, "invalidateQueries");
-		const page = renderEditPage();
-		page.removeImage(0);
-		page.pickFiles(imageFile("fresh.png"));
+	])(
+		"정보 저장(%s)이 실패하면 안내만 하고 이미지에는 손대지 않는다",
+		async (_label, failure) => {
+			const logged = spyOn(console, "error").mockImplementation(() => {});
+			put.mockImplementationOnce(async () => {
+				calls.push("put");
+				return failure();
+			});
+			const invalidate = spyOn(queryClient, "invalidateQueries");
+			const page = renderEditPage();
+			page.removeImage(0);
+			page.pickFiles(imageFile("fresh.png"));
 
-		await save(page);
+			await save(page);
 
-		expect(toast.error).toHaveBeenCalledWith(INFO_FAILED);
-		expect(toast.success).not.toHaveBeenCalled();
-		expect(calls).toEqual(["put"]);
-		expect(push).not.toHaveBeenCalled();
-		expect(refresh).not.toHaveBeenCalled();
-		// 아무것도 바뀌지 않았으니 캐시도 그대로 둔다
-		expect(invalidate).not.toHaveBeenCalled();
-		logged.mockRestore();
-	});
+			expect(toast.error).toHaveBeenCalledWith(INFO_FAILED);
+			expect(toast.success).not.toHaveBeenCalled();
+			expect(calls).toEqual(["put"]);
+			expect(push).not.toHaveBeenCalled();
+			expect(refresh).not.toHaveBeenCalled();
+			// 아무것도 바뀌지 않았으니 캐시도 그대로 둔다
+			expect(invalidate).not.toHaveBeenCalled();
+			logged.mockRestore();
+		},
+	);
 
 	test.each([
 		[
@@ -348,32 +351,35 @@ describe("상품 수정 저장", () => {
 			},
 			"상품 정보는 저장했지만 이미지 업로드 중 오류가 발생했습니다.",
 		],
-	])("이미지 업로드(%s)가 실패하면 정보는 저장됐다고 알리고, 이미지는 건드리지 않는다", async (_label, failure, message) => {
-		const logged = spyOn(console, "error").mockImplementation(() => {});
-		uploadFiles.mockImplementationOnce(async () => {
-			calls.push("upload");
-			return failure();
-		});
-		const invalidate = spyOn(queryClient, "invalidateQueries");
-		const page = renderEditPage();
-		page.removeImage(0);
-		page.pickFiles(imageFile("fresh.png"));
+	])(
+		"이미지 업로드(%s)가 실패하면 정보는 저장됐다고 알리고, 이미지는 건드리지 않는다",
+		async (_label, failure, message) => {
+			const logged = spyOn(console, "error").mockImplementation(() => {});
+			uploadFiles.mockImplementationOnce(async () => {
+				calls.push("upload");
+				return failure();
+			});
+			const invalidate = spyOn(queryClient, "invalidateQueries");
+			const page = renderEditPage();
+			page.removeImage(0);
+			page.pickFiles(imageFile("fresh.png"));
 
-		await save(page);
+			await save(page);
 
-		expect(toast.error).toHaveBeenCalledWith(message);
-		expect(calls).toEqual(["put", "upload"]);
-		expect(push).not.toHaveBeenCalled();
-		// 정보는 이미 바뀌었으니 채팅 쪽 캐시는 새로 받는다
-		expect(invalidate).toHaveBeenCalledWith({ queryKey: ["chat", "rooms"] });
+			expect(toast.error).toHaveBeenCalledWith(message);
+			expect(calls).toEqual(["put", "upload"]);
+			expect(push).not.toHaveBeenCalled();
+			// 정보는 이미 바뀌었으니 채팅 쪽 캐시는 새로 받는다
+			expect(invalidate).toHaveBeenCalledWith({ queryKey: ["chat", "rooms"] });
 
-		// 다시 저장하면 이번에는 끝까지 간다
-		calls.length = 0;
-		await save(page);
-		await waitFor(() => expect(toast.success).toHaveBeenCalled());
-		expect(calls).toEqual(["put", "upload", "add-images", "delete:image-1"]);
-		logged.mockRestore();
-	});
+			// 다시 저장하면 이번에는 끝까지 간다
+			calls.length = 0;
+			await save(page);
+			await waitFor(() => expect(toast.success).toHaveBeenCalled());
+			expect(calls).toEqual(["put", "upload", "add-images", "delete:image-1"]);
+			logged.mockRestore();
+		},
+	);
 
 	test("새 이미지를 상품에 붙이지 못하면 기존 이미지는 지우지 않고, 다시 저장할 수 있다", async () => {
 		const logged = spyOn(console, "error").mockImplementation(() => {});

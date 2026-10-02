@@ -229,23 +229,26 @@ describe("상품 상세 헤더의 주인 메뉴", () => {
 		],
 		[500, "상품을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요."],
 		[403, "상품을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요."],
-	])("%i 오류면 실패를 알리고 이동하지 않으며 다시 시도할 수 있다", async (status, message) => {
-		deleteMarket.mockImplementationOnce(async () =>
-			edenResult(status, { error: "english message" }),
-		);
-		const logged = spyOn(console, "error").mockImplementation(() => {});
-		const { trigger, openDeleteConfirm } = renderHeader(true);
-		const dialog = await openDeleteConfirm();
+	])(
+		"%i 오류면 실패를 알리고 이동하지 않으며 다시 시도할 수 있다",
+		async (status, message) => {
+			deleteMarket.mockImplementationOnce(async () =>
+				edenResult(status, { error: "english message" }),
+			);
+			const logged = spyOn(console, "error").mockImplementation(() => {});
+			const { trigger, openDeleteConfirm } = renderHeader(true);
+			const dialog = await openDeleteConfirm();
 
-		fireEvent.click(within(dialog).getByRole("button", { name: "삭제" }));
+			fireEvent.click(within(dialog).getByRole("button", { name: "삭제" }));
 
-		await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
-		expect(toast.success).not.toHaveBeenCalled();
-		expect(push).not.toHaveBeenCalled();
-		expect(refresh).not.toHaveBeenCalled();
-		await waitFor(() => expect(trigger().disabled).toBe(false));
-		logged.mockRestore();
-	});
+			await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
+			expect(toast.success).not.toHaveBeenCalled();
+			expect(push).not.toHaveBeenCalled();
+			expect(refresh).not.toHaveBeenCalled();
+			await waitFor(() => expect(trigger().disabled).toBe(false));
+			logged.mockRestore();
+		},
+	);
 
 	test("네트워크 오류로 요청이 던져져도 실패 토스트를 띄우고 메뉴를 다시 연다", async () => {
 		const logged = spyOn(console, "error").mockImplementation(() => {});

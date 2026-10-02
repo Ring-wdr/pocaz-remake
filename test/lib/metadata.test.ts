@@ -59,12 +59,15 @@ describe("createMetadata의 공유 미리보기 이미지", () => {
 		["data:image/png;base64,AAAA"],
 		["ftp://example.com/card.png"],
 		["http://"],
-	])("http(s) 주소가 아니거나 읽을 수 없는 값(%s)이면 이미지를 넣지 않는다", (image) => {
-		const metadata = createMetadata({ baseUrl, image });
+	])(
+		"http(s) 주소가 아니거나 읽을 수 없는 값(%s)이면 이미지를 넣지 않는다",
+		(image) => {
+			const metadata = createMetadata({ baseUrl, image });
 
-		expect(metadata.openGraph).not.toHaveProperty("images");
-		expect(metadata.twitter).not.toHaveProperty("images");
-	});
+			expect(metadata.openGraph).not.toHaveProperty("images");
+			expect(metadata.twitter).not.toHaveProperty("images");
+		},
+	);
 
 	test("이미지 옵션은 나머지 필드를 바꾸지 않는다", () => {
 		const options = {

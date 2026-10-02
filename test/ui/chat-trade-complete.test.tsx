@@ -194,18 +194,24 @@ describe("채팅방 상품 배너의 거래 완료 버튼", () => {
 	test.each([
 		["주인", owner.id, buyer],
 		["구매자", buyer.id, owner],
-	])("거래가 있으면 %s에게도 상태 라벨 대신 거래 완료 뱃지가 보이고 버튼은 없다", (_role, currentUserId, partner) => {
-		const view = renderBanner({
-			market: makeMarket({ status: "sold", transaction: completedTransaction }),
-			currentUserId,
-			partner,
-		});
-		const link = within(view.getByRole("link"));
+	])(
+		"거래가 있으면 %s에게도 상태 라벨 대신 거래 완료 뱃지가 보이고 버튼은 없다",
+		(_role, currentUserId, partner) => {
+			const view = renderBanner({
+				market: makeMarket({
+					status: "sold",
+					transaction: completedTransaction,
+				}),
+				currentUserId,
+				partner,
+			});
+			const link = within(view.getByRole("link"));
 
-		expect(link.queryByText("거래 완료")).not.toBeNull();
-		expect(link.queryByText("판매완료")).toBeNull();
-		expect(view.queryByRole("button", { name: "거래 완료" })).toBeNull();
-	});
+			expect(link.queryByText("거래 완료")).not.toBeNull();
+			expect(link.queryByText("판매완료")).toBeNull();
+			expect(view.queryByRole("button", { name: "거래 완료" })).toBeNull();
+		},
+	);
 
 	test("확인하면 상대를 구매자로 거래를 완료하고, 화면과 캐시를 새로 받는다", async () => {
 		const invalidate = spyOn(queryClient, "invalidateQueries");
@@ -287,24 +293,31 @@ describe("채팅방 상품 배너의 거래 완료 버튼", () => {
 		],
 		[403, "거래 완료에 실패했습니다. 잠시 후 다시 시도해 주세요", 0],
 		[500, "거래 완료에 실패했습니다. 잠시 후 다시 시도해 주세요", 0],
-	])("%i 오류면 안내 토스트를 띄우고 완료로 취급하지 않는다", async (status, message, refreshCount) => {
-		completeTrade.mockImplementationOnce(async () =>
-			edenResult(status, { error: "english message" }),
-		);
-		const { view, button, dialog } = await openCompleteConfirm();
+	])(
+		"%i 오류면 안내 토스트를 띄우고 완료로 취급하지 않는다",
+		async (status, message, refreshCount) => {
+			completeTrade.mockImplementationOnce(async () =>
+				edenResult(status, { error: "english message" }),
+			);
+			const { view, button, dialog } = await openCompleteConfirm();
 
-		fireEvent.click(within(dialog).getByRole("button", { name: "거래 완료" }));
+			fireEvent.click(
+				within(dialog).getByRole("button", { name: "거래 완료" }),
+			);
 
-		await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
-		expect(toast.success).not.toHaveBeenCalled();
-		// 이미 완료된 거래(409)는 화면을 서버 상태에 맞추려고 새로 받는다
-		expect(refresh).toHaveBeenCalledTimes(refreshCount);
-		// 다시 시도할 수 있게 버튼은 살아 있다
-		await waitFor(() =>
-			expect((button as HTMLButtonElement).disabled).toBe(false),
-		);
-		expect(within(view.getByRole("link")).queryByText("거래 완료")).toBeNull();
-	});
+			await waitFor(() => expect(toast.error).toHaveBeenCalledWith(message));
+			expect(toast.success).not.toHaveBeenCalled();
+			// 이미 완료된 거래(409)는 화면을 서버 상태에 맞추려고 새로 받는다
+			expect(refresh).toHaveBeenCalledTimes(refreshCount);
+			// 다시 시도할 수 있게 버튼은 살아 있다
+			await waitFor(() =>
+				expect((button as HTMLButtonElement).disabled).toBe(false),
+			);
+			expect(
+				within(view.getByRole("link")).queryByText("거래 완료"),
+			).toBeNull();
+		},
+	);
 
 	test("네트워크 오류로 요청이 던져져도 실패 토스트를 띄우고 버튼을 다시 연다", async () => {
 		const logged = spyOn(console, "error").mockImplementation(() => {});

@@ -323,23 +323,26 @@ describe("알림 설정 페이지", () => {
 					throw new Error("network down");
 				},
 			],
-		])("%s로 저장하지 못하면 그 항목을 되돌리고 토스트로 알린다", async (_name, respond) => {
-			const logged = spyOn(console, "error").mockImplementation(() => {});
-			putSettings.mockImplementationOnce(respond);
-			const view = renderPage();
-			await loaded(view);
+		])(
+			"%s로 저장하지 못하면 그 항목을 되돌리고 토스트로 알린다",
+			async (_name, respond) => {
+				const logged = spyOn(console, "error").mockImplementation(() => {});
+				putSettings.mockImplementationOnce(respond);
+				const view = renderPage();
+				await loaded(view);
 
-			fireEvent.click(switchOf(view, "좋아요 알림"));
+				fireEvent.click(switchOf(view, "좋아요 알림"));
 
-			await waitFor(() =>
-				expect(toast.error).toHaveBeenCalledWith("설정을 저장하지 못했어요"),
-			);
-			expect(toast.error).toHaveBeenCalledTimes(1);
-			expect(isOn(view, "좋아요 알림")).toBe(true);
-			expect(serverSettings.like).toBe(true);
-			expect(logged).toHaveBeenCalled();
-			logged.mockRestore();
-		});
+				await waitFor(() =>
+					expect(toast.error).toHaveBeenCalledWith("설정을 저장하지 못했어요"),
+				);
+				expect(toast.error).toHaveBeenCalledTimes(1);
+				expect(isOn(view, "좋아요 알림")).toBe(true);
+				expect(serverSettings.like).toBe(true);
+				expect(logged).toHaveBeenCalled();
+				logged.mockRestore();
+			},
+		);
 
 		test("저장에 실패해 되돌린 뒤에는 다시 눌러 저장할 수 있다", async () => {
 			const logged = spyOn(console, "error").mockImplementation(() => {});
