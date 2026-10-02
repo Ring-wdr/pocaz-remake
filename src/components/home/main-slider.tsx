@@ -139,20 +139,19 @@ const slides = [
 	},
 ];
 export default function MainSlider() {
-	// 마지막 슬라이드에서는 처음으로 돌아가고, 사용자가 넘긴 뒤에도 자동 재생을 이어 간다
-	const [emblaRef, emblaApi] = useEmblaCarousel({}, [
+	// 루프 없이 한 장씩 넘긴다. 마지막 슬라이드에서는 처음으로 돌아가고, 사용자가 넘긴 뒤에도 자동 재생을 이어 간다
+	const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false }, [
 		Autoplay({ delay: 6000, stopOnInteraction: false }),
 	]);
 	const [selectedIndex, setSelectedIndex] = useState(0);
-	const [canScrollPrev, setCanScrollPrev] = useState(false);
-	const [canScrollNext, setCanScrollNext] = useState(slides.length > 1);
+	// 루프가 없고 슬라이드가 화면 폭 전체라 스냅 = 슬라이드이므로, 버튼 상태는 현재 위치에서 계산한다
+	const canScrollPrev = selectedIndex > 0;
+	const canScrollNext = selectedIndex < slides.length - 1;
 
 	useEffect(() => {
 		if (!emblaApi) return;
 		const onSelect = () => {
 			setSelectedIndex(emblaApi.selectedScrollSnap());
-			setCanScrollPrev(emblaApi.canScrollPrev());
-			setCanScrollNext(emblaApi.canScrollNext());
 		};
 		onSelect();
 		emblaApi.on("select", onSelect).on("reInit", onSelect);
