@@ -102,13 +102,16 @@ describe("알림 종 아이콘", () => {
 		[99, "99"],
 		[100, "99+"],
 		[1234, "99+"],
-	])("%i개는 %s로 표기하고, 읽어 주는 이름에는 실제 개수를 쓴다", async (count, text) => {
-		getUnreadCount.mockImplementation(async () => edenResult(200, { count }));
-		const view = renderWith(<NotificationBell />);
+	])(
+		"%i개는 %s로 표기하고, 읽어 주는 이름에는 실제 개수를 쓴다",
+		async (count, text) => {
+			getUnreadCount.mockImplementation(async () => edenResult(200, { count }));
+			const view = renderWith(<NotificationBell />);
 
-		const badge = await view.findByLabelText(`안 읽은 알림 ${count}개`);
-		expect(badge.textContent).toBe(text);
-	});
+			const badge = await view.findByLabelText(`안 읽은 알림 ${count}개`);
+			expect(badge.textContent).toBe(text);
+		},
+	);
 
 	test("0이면 뱃지를 숨기지만 링크는 그대로 보인다", async () => {
 		const view = renderWith(<NotificationBell />);
@@ -141,16 +144,19 @@ describe("알림 종 아이콘", () => {
 				throw new Error("network down");
 			},
 		],
-	])("%s이면 오류를 드러내지 않고 0으로 보고 뱃지를 숨긴다", async (_name, respond) => {
-		getUnreadCount.mockImplementation(respond);
-		const view = renderWith(<NotificationBell />);
+	])(
+		"%s이면 오류를 드러내지 않고 0으로 보고 뱃지를 숨긴다",
+		async (_name, respond) => {
+			getUnreadCount.mockImplementation(respond);
+			const view = renderWith(<NotificationBell />);
 
-		await untilCountLoaded();
-		expect(
-			queryClient.getQueryData<number>(notificationUnreadCountQueryKey),
-		).toBe(0);
-		expect(view.queryAllByLabelText(unreadLabel)).toHaveLength(0);
-	});
+			await untilCountLoaded();
+			expect(
+				queryClient.getQueryData<number>(notificationUnreadCountQueryKey),
+			).toBe(0);
+			expect(view.queryAllByLabelText(unreadLabel)).toHaveLength(0);
+		},
+	);
 
 	test("쿼리 키를 무효화하면 새로 받아 뱃지가 바뀐다", async () => {
 		getUnreadCount.mockImplementation(async () =>
