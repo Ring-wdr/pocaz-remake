@@ -33,6 +33,7 @@ import { formatTime } from "@/utils/date";
 import { api } from "@/utils/eden";
 import { isSubmitEnter } from "@/utils/keyboard";
 import { ChatImageUploadButton } from "./chat-image-upload-button";
+import { ChatMarketBanner } from "./chat-market-banner";
 import { ChatMessageList } from "./chat-message-list";
 import { OnlineStatusBadge } from "./online-status-badge";
 import { openChatRoomMenu } from "./open-chat-room-menu";
@@ -123,55 +124,6 @@ const styles = stylex.create({
 		cursor: "pointer",
 		color: colors.textTertiary,
 		fontSize: "20px",
-	},
-	productBanner: {
-		display: "flex",
-		alignItems: "center",
-		gap: spacing.xxs,
-		paddingTop: spacing.xxs,
-		paddingBottom: spacing.xxs,
-		paddingLeft: spacing.xs,
-		paddingRight: spacing.xs,
-		backgroundColor: colors.bgPrimary,
-		borderBottomWidth: 1,
-		borderBottomStyle: "solid",
-		borderBottomColor: colors.borderPrimary,
-		textDecoration: "none",
-		color: "inherit",
-	},
-	productImage: {
-		width: "44px",
-		height: "44px",
-		borderRadius: radius.sm,
-		objectFit: "cover",
-		backgroundColor: colors.bgTertiary,
-	},
-	productInfo: {
-		flex: 1,
-	},
-	productTitle: {
-		fontSize: "13px",
-		fontWeight: fontWeight.medium,
-		color: colors.textSecondary,
-		margin: 0,
-		marginBottom: "2px",
-	},
-	productPrice: {
-		fontSize: fontSize.md,
-		fontWeight: fontWeight.bold,
-		color: colors.textPrimary,
-		margin: 0,
-	},
-	productStatus: {
-		fontSize: "11px",
-		fontWeight: fontWeight.semibold,
-		color: colors.accentPrimary,
-		backgroundColor: colors.accentPrimaryBg,
-		paddingTop: spacing.xxxs,
-		paddingBottom: spacing.xxxs,
-		paddingLeft: spacing.xxs,
-		paddingRight: spacing.xxs,
-		borderRadius: radius.xs,
 	},
 	messages: {
 		flex: 1,
@@ -443,6 +395,8 @@ export default function ChatRoom({
 
 	// 상대방 찾기 (1:1 채팅 기준)
 	const partner = members.find((m) => m.id !== currentUserId) ?? members[0];
+	// 거래 상대는 나를 뺀 멤버만 된다. 상대가 방을 나갔다면 partner가 나 자신으로 대체되므로 따로 구한다
+	const tradePartner = members.find((m) => m.id !== currentUserId) ?? null;
 	const displayName = roomName || partner?.nickname || "채팅방";
 
 	const scrollToBottom = useCallback(
@@ -660,27 +614,11 @@ export default function ChatRoom({
 				</div>
 
 				{market && (
-					<Link
-						href={`/market/${market.id}`}
-						{...stylex.props(styles.productBanner)}
-					>
-						{market.thumbnail && (
-							<img
-								src={market.thumbnail}
-								alt={market.title}
-								{...stylex.props(styles.productImage)}
-							/>
-						)}
-						<div {...stylex.props(styles.productInfo)}>
-							<p {...stylex.props(styles.productTitle)}>{market.title}</p>
-							<p {...stylex.props(styles.productPrice)}>
-								{market.price
-									? `${market.price.toLocaleString()}원`
-									: "가격협의"}
-							</p>
-						</div>
-						<span {...stylex.props(styles.productStatus)}>{market.status}</span>
-					</Link>
+					<ChatMarketBanner
+						market={market}
+						currentUserId={currentUserId}
+						partner={tradePartner}
+					/>
 				)}
 			</div>
 
