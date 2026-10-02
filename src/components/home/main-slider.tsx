@@ -4,7 +4,7 @@ import * as stylex from "@stylexjs/stylex";
 import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { fontSize, fontWeight, spacing } from "@/app/global-tokens.stylex";
 
 const VisualMotion = stylex.keyframes({
@@ -143,22 +143,20 @@ export default function MainSlider() {
 	const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false }, [
 		Autoplay({ delay: 6000, stopOnInteraction: false }),
 	]);
-	const [selectedIndex, setSelectedIndex] = useState(0);
+	// 현재 슬라이드는 Embla에서 읽고, 넘어갈 때마다(select) 다시 렌더한다. 초기화 전과 SSR에서는 첫 장
+	const selectedIndex = useSyncExternalStore(
+		(onChange) => {
+			emblaApi?.on("select", onChange).on("reInit", onChange);
+			return () => {
+				emblaApi?.off("select", onChange).off("reInit", onChange);
+			};
+		},
+		() => emblaApi?.selectedScrollSnap() ?? 0,
+		() => 0,
+	);
 	// 루프가 없고 슬라이드가 화면 폭 전체라 스냅 = 슬라이드이므로, 버튼 상태는 현재 위치에서 계산한다
 	const canScrollPrev = selectedIndex > 0;
 	const canScrollNext = selectedIndex < slides.length - 1;
-
-	useEffect(() => {
-		if (!emblaApi) return;
-		const onSelect = () => {
-			setSelectedIndex(emblaApi.selectedScrollSnap());
-		};
-		onSelect();
-		emblaApi.on("select", onSelect).on("reInit", onSelect);
-		return () => {
-			emblaApi.off("select", onSelect).off("reInit", onSelect);
-		};
-	}, [emblaApi]);
 
 	const scrollBy = (direction: "prev" | "next") => {
 		if (!emblaApi) return;
