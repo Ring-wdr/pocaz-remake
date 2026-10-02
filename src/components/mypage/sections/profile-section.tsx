@@ -1,69 +1,71 @@
 import * as stylex from "@stylexjs/stylex";
-import { User } from "lucide-react";
+import { ChevronRight, User } from "lucide-react";
 import Link from "next/link";
 import {
 	colors,
 	fontSize,
 	fontWeight,
 	radius,
+	size,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { mypageStyles } from "../mypage-styles.stylex";
 
 const styles = stylex.create({
 	container: {
 		display: "flex",
 		alignItems: "center",
 		gap: spacing.sm,
+		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
-		marginBottom: spacing.sm,
-		borderBottomWidth: 1,
-		borderBottomStyle: "solid",
-		borderBottomColor: colors.borderPrimary,
+		paddingLeft: spacing.sm,
+		paddingRight: spacing.sm,
+		textDecoration: "none",
+		color: "inherit",
 	},
 	avatar: {
-		width: "72px",
-		height: "72px",
-		borderRadius: "36px",
+		width: size.avatarLg,
+		height: size.avatarLg,
+		borderRadius: radius.full,
 		objectFit: "cover",
+		flexShrink: 0,
 		backgroundColor: colors.bgTertiary,
 	},
 	avatarPlaceholder: {
-		width: "72px",
-		height: "72px",
-		borderRadius: "36px",
-		backgroundColor: colors.bgTertiary,
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
-		color: colors.textPlaceholder,
+		color: colors.textMuted,
 	},
 	info: {
 		flex: 1,
+		minWidth: 0,
 	},
 	name: {
-		fontSize: "20px",
-		fontWeight: fontWeight.bold,
-		color: colors.textSecondary,
 		margin: 0,
 		marginBottom: spacing.xxxs,
+		fontSize: fontSize.lg,
+		fontWeight: fontWeight.bold,
+		color: colors.textSecondary,
+		overflow: "hidden",
+		textOverflow: "ellipsis",
+		whiteSpace: "nowrap",
 	},
 	email: {
+		margin: 0,
 		fontSize: fontSize.md,
 		color: colors.textMuted,
-		margin: 0,
+		overflow: "hidden",
+		textOverflow: "ellipsis",
+		whiteSpace: "nowrap",
 	},
-	editButton: {
-		paddingTop: spacing.xxs,
-		paddingBottom: spacing.xxs,
-		paddingLeft: spacing.xs,
-		paddingRight: spacing.xs,
-		fontSize: "13px",
+	edit: {
+		display: "flex",
+		alignItems: "center",
+		flexShrink: 0,
+		fontSize: fontSize.sm,
 		fontWeight: fontWeight.medium,
-		color: colors.textTertiary,
-		backgroundColor: colors.bgTertiary,
-		borderRadius: radius.sm,
-		textDecoration: "none",
-		transition: "background-color 0.2s ease",
+		color: colors.textMuted,
 	},
 });
 
@@ -77,16 +79,19 @@ interface ProfileSectionProps {
 
 export function ProfileSection({ profile }: ProfileSectionProps) {
 	return (
-		<div {...stylex.props(styles.container)}>
+		<Link
+			href="/mypage/edit"
+			{...stylex.props(styles.container, mypageStyles.interactive)}
+		>
 			{profile.profileImage ? (
 				<img
 					src={profile.profileImage}
-					alt={profile.nickname}
+					alt=""
 					{...stylex.props(styles.avatar)}
 				/>
 			) : (
-				<div {...stylex.props(styles.avatarPlaceholder)}>
-					<User size={32} />
+				<div {...stylex.props(styles.avatar, styles.avatarPlaceholder)}>
+					<User size={28} aria-hidden />
 				</div>
 			)}
 			<div {...stylex.props(styles.info)}>
@@ -95,9 +100,10 @@ export function ProfileSection({ profile }: ProfileSectionProps) {
 					<p {...stylex.props(styles.email)}>{profile.email}</p>
 				)}
 			</div>
-			<Link href="/mypage/edit" {...stylex.props(styles.editButton)}>
+			<span {...stylex.props(styles.edit)}>
 				프로필 수정
-			</Link>
-		</div>
+				<ChevronRight size={16} aria-hidden />
+			</span>
+		</Link>
 	);
 }

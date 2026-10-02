@@ -7,9 +7,9 @@ import {
 	colors,
 	fontSize,
 	fontWeight,
-	radius,
 	spacing,
 } from "@/app/global-tokens.stylex";
+import { mypageStyles } from "@/components/mypage/mypage-styles.stylex";
 import {
 	ActivitySection,
 	ProfileSection,
@@ -29,49 +29,23 @@ import {
 
 const styles = stylex.create({
 	content: {
-		flex: 1,
-		paddingTop: spacing.md,
-		paddingLeft: spacing.sm,
-		paddingRight: spacing.sm,
-		paddingBottom: spacing.lg,
-	},
-	profileError: {
 		display: "flex",
-		alignItems: "center",
+		flexDirection: "column",
 		gap: spacing.sm,
-		paddingBottom: spacing.sm,
-		marginBottom: spacing.sm,
-		paddingLeft: spacing.sm,
-		paddingRight: spacing.sm,
-		backgroundColor: colors.bgSecondary,
-		borderRadius: radius.md,
-		borderLeftWidth: 4,
-		borderLeftStyle: "solid",
-		borderLeftColor: colors.statusError,
 	},
-	statsError: {
+	error: {
 		paddingTop: spacing.sm,
 		paddingBottom: spacing.sm,
 		paddingLeft: spacing.sm,
 		paddingRight: spacing.sm,
-		marginBottom: spacing.md,
-		backgroundColor: colors.bgSecondary,
-		borderRadius: radius.md,
 		borderLeftWidth: 4,
 		borderLeftStyle: "solid",
 		borderLeftColor: colors.statusError,
 	},
-	activityError: {
-		marginBottom: spacing.md,
-		paddingTop: spacing.md,
-		paddingBottom: spacing.md,
-		paddingLeft: spacing.sm,
-		paddingRight: spacing.sm,
-		backgroundColor: colors.bgSecondary,
-		borderRadius: radius.md,
-		borderLeftWidth: 4,
-		borderLeftStyle: "solid",
-		borderLeftColor: colors.statusError,
+	errorDivided: {
+		borderTopWidth: 1,
+		borderTopStyle: "solid",
+		borderTopColor: colors.borderPrimary,
 	},
 	errorTitle: {
 		margin: 0,
@@ -90,21 +64,16 @@ const styles = stylex.create({
 interface ErrorFallbackProps {
 	title: string;
 	description?: string;
-	variant?: "profile" | "stats" | "activity";
+	divided?: boolean;
 }
 
-const variantStyles = {
-	profile: styles.profileError,
-	stats: styles.statsError,
-	activity: styles.activityError,
-};
-function ErrorFallback({
-	title,
-	description,
-	variant = "stats",
-}: ErrorFallbackProps) {
+// Rendered inside a card, so it only draws the error accent, not its own box.
+function ErrorFallback({ title, description, divided }: ErrorFallbackProps) {
 	return (
-		<div {...stylex.props(variantStyles[variant])}>
+		<div
+			role="alert"
+			{...stylex.props(styles.error, divided && styles.errorDivided)}
+		>
 			<p {...stylex.props(styles.errorTitle)}>{title}</p>
 			{description && <p {...stylex.props(styles.errorDesc)}>{description}</p>}
 		</div>
@@ -114,53 +83,55 @@ function ErrorFallback({
 export function MyPageContent() {
 	return (
 		<div {...stylex.props(styles.content)}>
-			<QueryErrorBoundary
-				fallback={() => (
-					<ErrorFallback
-						title="프로필을 불러오지 못했습니다"
-						description="잠시 후 다시 시도해주세요"
-						variant="profile"
-					/>
-				)}
-			>
-				<Suspense clientOnly fallback={<ProfileSkeleton />}>
-					<SuspenseQuery {...userProfileQueryOptions()}>
-						{({ data: profile }) => <ProfileSection profile={profile} />}
-					</SuspenseQuery>
-				</Suspense>
-			</QueryErrorBoundary>
+			<div {...stylex.props(mypageStyles.card)}>
+				<QueryErrorBoundary
+					fallback={() => (
+						<ErrorFallback
+							title="프로필을 불러오지 못했습니다"
+							description="잠시 후 다시 시도해주세요"
+						/>
+					)}
+				>
+					<Suspense clientOnly fallback={<ProfileSkeleton />}>
+						<SuspenseQuery {...userProfileQueryOptions()}>
+							{({ data: profile }) => <ProfileSection profile={profile} />}
+						</SuspenseQuery>
+					</Suspense>
+				</QueryErrorBoundary>
+
+				<QueryErrorBoundary
+					fallback={() => (
+						<ErrorFallback
+							title="통계를 불러오지 못했습니다"
+							description="잠시 후 다시 시도해주세요"
+							divided
+						/>
+					)}
+				>
+					<Suspense clientOnly fallback={<StatsSkeleton />}>
+						<SuspenseQuery {...userStatsQueryOptions()}>
+							{({ data }) => (
+								<StatsSection
+									stats={{
+										posts: data.posts ?? 0,
+										likes: data.likes ?? 0,
+										trades: data.trades ?? 0,
+									}}
+								/>
+							)}
+						</SuspenseQuery>
+					</Suspense>
+				</QueryErrorBoundary>
+			</div>
 
 			<QueryErrorBoundary
 				fallback={() => (
-					<ErrorFallback
-						title="통계를 불러오지 못했습니다"
-						description="잠시 후 다시 시도해주세요"
-						variant="stats"
-					/>
-				)}
-			>
-				<Suspense clientOnly fallback={<StatsSkeleton />}>
-					<SuspenseQuery {...userStatsQueryOptions()}>
-						{({ data }) => (
-							<StatsSection
-								stats={{
-									posts: data.posts ?? 0,
-									likes: data.likes ?? 0,
-									trades: data.trades ?? 0,
-								}}
-							/>
-						)}
-					</SuspenseQuery>
-				</Suspense>
-			</QueryErrorBoundary>
-
-			<QueryErrorBoundary
-				fallback={() => (
-					<ErrorFallback
-						title="활동 내역을 불러오지 못했습니다"
-						description="잠시 후 다시 시도해주세요"
-						variant="activity"
-					/>
+					<div {...stylex.props(mypageStyles.card)}>
+						<ErrorFallback
+							title="활동 내역을 불러오지 못했습니다"
+							description="잠시 후 다시 시도해주세요"
+						/>
+					</div>
 				)}
 			>
 				<Suspense clientOnly fallback={<ActivitySkeleton />}>

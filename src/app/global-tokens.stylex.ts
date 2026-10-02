@@ -205,6 +205,11 @@ export const colors = stylex.defineVars({
 	bgSecondary: { default: "#f9fafb", [DARK_MODE]: "#171717" },
 	bgTertiary: { default: "#f3f4f6", [DARK_MODE]: "#262626" },
 	bgInverse: { default: "#000000", [DARK_MODE]: "#ffffff" },
+	// Grouped layout (gray canvas + raised cards). The canvas stays at #f9fafb
+	// so textMuted on it keeps 4.5:1 (4.63:1); #f3f4f6 would drop it to 4.39:1.
+	// Cards differ only slightly from the canvas, so pair bgSurface with a border.
+	bgCanvas: { default: "#f9fafb", [DARK_MODE]: "#0a0a0a" },
+	bgSurface: { default: "#ffffff", [DARK_MODE]: "#171717" },
 
 	// Text colors
 	textPrimary: { default: "#000000", [DARK_MODE]: "#ffffff" },
